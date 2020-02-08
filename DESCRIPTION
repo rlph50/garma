@@ -1,0 +1,26 @@
+Package: tsggbr
+Type: Package
+Title: tsggbr provides support for estimating, and fitting Gegenbauer Seasonal/Cyclical time series models.
+Version: 0.1.0
+Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
+  role = c("aut", "cre"))
+Maintainer: Richard Hunt<maint@huntemail.id.au>
+Description: This package provides methods for estimating long memory-seasonal/cyclical Gegenbauer univariate time series proceses.
+    refer to the vignette for details of fitting these processes.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+    tidyverse,
+    forecast,
+    ggplot2,
+    Matrix,
+    signal,
+    nloptr,
+    pracma,
+    FKF,
+    BB,
+    GA,
+    pso,
+    dfoptim
+

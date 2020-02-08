@@ -1,0 +1,18 @@
+.ggbr.coef<-function(n,d,u) {
+  cf<-c(1,2*d*u,2*d*(d+1)*(u^2)-d)
+  for (j in 4:n) cf[j]<-(2*u*(j+d-2)*cf[j-1]-(j-1+2*d-2)*cf[j-2])/(j-1)
+  return(cf)
+}
+
+.a_fcn<-function(a_vec,freq){
+  # this is a utility function used to find the short-memory spectral density.
+  n_freq <- length(freq)
+  cos_sum <- rep(0.0,n_freq)
+  a_len<-length(a_vec)
+  for (i in 1:a_len) cos_sum <- cos_sum + a_vec[i]*cos(2*i*pi*freq)
+  sin_sum <- rep(0.0,n_freq)
+  for (i in 1:a_len) sin_sum <- sin_sum + a_vec[i]*sin(2*i*pi*freq)
+
+  return( (1+cos_sum)^2+sin_sum^2)
+}
+
