@@ -1,3 +1,10 @@
+
+#' Estimate a Ggbr model using a CSS (Conditional Sum-of-Squares) method.
+#' css.ggbr.obj - objective function to be minimised to get CSS estimates.
+#' called from function "garma"
+#' @param par - the parameters to evaluate the function at
+#' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
+#' @return The value of the objective at the point par.
 css.ggbr.obj<-function(par,params) {
   # Objective function to be minimised for CSS estimates
   y <- params$y
@@ -35,3 +42,4 @@ css.ggbr.obj<-function(par,params) {
   if (!is.finite(ret)|is.na(ret)) ret<-(1e99)
   return(ret)
 }
+

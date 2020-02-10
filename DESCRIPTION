@@ -11,16 +11,17 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:
-    tidyverse,
-    forecast,
-    ggplot2,
     Matrix,
-    signal,
-    nloptr,
-    pracma,
     FKF,
+    signal,
+    pracma,
+    nloptr,
+    Rdpack (>= 0.7)
+Suggests:
+    forecast,
     BB,
     GA,
     pso,
-    dfoptim
-
+    dfoptim,
+    testthat
+RoxygenNote: 7.0.1

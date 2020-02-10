@@ -1,14 +1,74 @@
+#' Estimate the parmaeters of a GARMA model.
+#'
+#' The garma function is the main function for the tsggbr package. Depending on the parameters it will
+#' calculate the parameter estimates for the GARMA process, and if available the standard errors (se's)
+#' for those parameters.
+#'
+#' The GARMA model is specified as
+#' \deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(Y_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) Y(t) = \theta(B) \epsilon(t)}
+#'
+#' where
+#' \itemize{
+#' \item \eqn{\phi(B)}{\phi(B)} represents the short-memory Autoregressive component of order p,
+#' \item \eqn{\theta(B)}{\theta(B)} represents the short-memory Moving Average component of order q,
+#' \item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in general be k of these),
+#' \item \eqn{Y_{t}}{Y(t)} represents the observed process,
+#' \item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
+#'       Generally the routines in this package will work best if these have an approximate Gaussian distribution.
+#' \item \eqn{B}{B} represents the Backshift operator, defined by \eqn{B Y_{t}=Y_{t-1}}{B Y(t) = Y(t-1)}.
+#' }
+#' when k=0, then this is just a short memory model as fit by the stats "arima" function.
+#'
+#' @param py (num) This should be a numeric vector representing the process to estimate. A minimum length of 96 is required.
+#' @param order (list) This should be a list (similar to the stats::arima order parameter) which will give the order of the process to fit.
+#'     The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
+#'     autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
+#'     differencing to apply prior to any fitting.
+#' @param k (int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.
+#' @param include.mean (bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
+#'     it generally does not make sense to fit a mean term.
+#' @param method (character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
+#'     The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
+#'     distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
+#'     'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
+#'     'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016).
+#'     'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
+#'     However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.
+#' @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
+#'     of the Gegenbauer term is allowed. This can be set to FALSE to force the routine to find a positive value.
+#' @param maxeval (int) the maximum function eveluations to be allowed during each optimisation.
+#' @param opt.method (character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
+#'     R algorithm called 'optim'. For some data or some models, however, other methods may work well. Other allowed values are
+#'     \itemize{
+#'     \item cobyla algorithm in package nloptr
+#'     \item directL algorithm in package nloptr
+#'     \item BBoptim from package BB
+#'     \item psoptim from package pso
+#'     \item hjkb from dfoptim package
+#'     \item nmkb from dfoptim package
+#'     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run.
+#'     }
+#' @param m_trunc Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.
+#' @return An S3 object of class "ggbr_model".
+#'
+#' \preformatted{
+#' References:
+#' C Chung. A generalized fractionally integrated autoregressive moving-average process. Journal of Time Series Analysis, 17(2):111–140, 1996.
+#' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
+#' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
+#' }
+
 garma<-function(py,
                 order=list(0,0,0),
                 k=1,
                 include.mean=TRUE,
-                method='CSS',
+                method='Whittle',
                 allow_neg_d=TRUE,
                 maxeval=10000,
                 opt.method='optim',
                 m_trunc=50) {
-  if (length(py)<12)
-    stop('y should have at least 12 observations.')
+  if (length(py)<96)
+    stop('y should have at least 96 observations.')
   if (is.data.frame(py)) {
     if (ncol(py)>1)
       stop('y should be a numeric vector - not an entire data frame. Please select a single column and try again.')
@@ -21,9 +81,9 @@ garma<-function(py,
     stop('order parameter must be a 3 integers only.')
   if ((k!=0)&(k!=1))
     stop('Sorry. Only k=0 or k=1 is supported for now.')
-  allowed_methods <- c('CSS','Whittle','BNP','QML')
+  allowed_methods <- c('CSS','Whittle','WLL','QML')
   if (!method%in%allowed_methods)
-    stop('Method must be one of CSS, Whittle, QML or BNP.')
+    stop('Method must be one of CSS, Whittle, QML or WLL.')
 
   allowed_optimisations <- c('optim','cobyla','directL','BBoptim','psoptim','hjkb','nmkb','best')
   optimisation_packages <- c('optim'='stats','cobyla'='nloptr','directL'='nloptr','BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','best'='stats')
@@ -73,7 +133,7 @@ garma<-function(py,
     ub_finite <- c(ub_finite,1.0,1.0)
   }
   n_pars    <- n_pars + p + q
-  methods_to_estimate_var <- c('BNP')#,'QML')
+  methods_to_estimate_var <- c('BNP')
   if (p+q>0) {
     a    <- arima(y,order=c(p,0,q),include.mean=FALSE)
     pars <- c(pars,a$coef)
@@ -100,12 +160,12 @@ garma<-function(py,
   }
 
   # create a list of all possible params any 'method' might need. The various objective functions can extract the parameters which are relevant to that method.
-  params <- list(y=y, ss=ss, p=p,q=q,k=k,include.mean=include.mean,scale=sd_y)
+  params <- list(y=y, ss=ss, p=p,q=q,k=k,include.mean=include.mean,scale=sd_y,m_trunc=m_trunc)
   message <- c()
 
   # First we make a first pass at optimisation using "optim".
   # If the method chosen is optim then that finishes things; but otherwise the solution found becomes the starting point for the next optimisation.
-  fcns <- list('CSS'=css.ggbr.obj,'Whittle'=whittle.ggbr.obj,'QML'=qml.ggbr.obj,'BNP'=bnp.ggbr.obj)
+  fcns <- list('CSS'=css.ggbr.obj,'Whittle'=whittle.ggbr.obj,'QML'=qml.ggbr.obj,'WLL'=wll.ggbr.obj)
   fit <- optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
                hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
   if (fit$convergence==52) {   # Error in line search, then try again
@@ -186,7 +246,7 @@ garma<-function(py,
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
   }
 
-  if (fit$convergence>=0&method!='BNP') {
+  if (fit$convergence>=0&method!='WLL') {
     # Next, find the c <- alc se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment
@@ -211,7 +271,7 @@ garma<-function(py,
 
     if (length(se)<length(fit$par)) se<-c(se,NA)
   }
-  if (method=='BNP') {
+  if (method=='WLL') {
     se<-rep(NA,length(par))
     if (k>0) se[2] <- bnp_d_se(fit$par[1],ss)
   }
@@ -221,7 +281,7 @@ garma<-function(py,
   if (p>0) nm<-c(nm,paste0('AR',1:p))
   if (q>0) nm<-c(nm,paste0('MA',1:q))
 
-  if (method=='BNP') {
+  if (method=='WLL') {
     # adjust sigma2 for bias...
     fit$par[length(fit$par)] <- fit$par[length(fit$par)]/(2*pi) * exp(-digamma(1))
   }
@@ -230,7 +290,7 @@ garma<-function(py,
   coef <- t(matrix(round(c(fit$par[1:n_coef],se[1:n_coef]),4),nrow=n_coef))
   colnames(coef) <- nm
   rownames(coef) <- c('coef','se')
-  if (method=='BNP')          sigma2 <- fit$par[length(fit$par)]
+  if (method=='WLL')          sigma2 <- fit$par[length(fit$par)]
   else if (method=='QML')     sigma2 <- qml.ggbr.se2(fit$par, params=params)
   #if (method%in%methods_to_estimate_var) sigma2 <- fit$par[length(fit$par)]
   else if (method=='CSS')     sigma2 <- fit$value/length(y)
@@ -285,3 +345,7 @@ summary.ggbr_model<-function(mdl) {
   }
 }
 print.ggbr_model<-function(mdl) {summary(mdl)}
+
+is.installed <- function(mypkg){
+  is.element(mypkg, installed.packages()[,1])
+}

@@ -1,4 +1,11 @@
-bnp.ggbr.obj<-function(par,params) {
+#' Estimate a Ggbr model using the Whittle-like-Log (WLL) method.
+#'
+#' wll.ggbr.obj - objective function to be minimised to get WLL estimates.
+#' It is not anticipated that an end-ser would have a need to call this function directly.
+#' @param par - the parameters to evaluate the function at
+#' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
+#' @return The value of the objective at the point par.
+wll.ggbr.obj<-function(par,params) {
   # Objective function to be minimised for the BNP estimates
   ss <- params$ss
   p  <- params$p
@@ -22,8 +29,8 @@ bnp.ggbr.obj<-function(par,params) {
 
   cos_2_pi_f <- cos(2*pi*freq)
   mod_phi <- mod_theta <- 1
-  if (p>0) mod_phi   <- a_fcn(phi_vec,ss$freq)
-  if (q>0) mod_theta <- a_fcn(theta_vec,ss$freq)
+  if (p>0) mod_phi   <- .a_fcn(phi_vec,ss$freq)
+  if (q>0) mod_theta <- .a_fcn(theta_vec,ss$freq)
   #phi <- (-phi_vec[1])
   #mod_phi <- (1+phi^2-2*phi*cos_2_pi_f)
   spec_den_inv <- 2.0*pi / sigma2 * mod_phi / mod_theta    # Inverse of spectral density
@@ -38,7 +45,7 @@ bnp.ggbr.obj<-function(par,params) {
   #cat(sprintf("ret %.4f\n",res))
   return(res)
 }
-bnp_d_se<-function(u,ss) {
+wll_d_se<-function(u,ss) {
   x_j <- log(4*((cos(2*pi*ss$freq)-u)^2))
   return (pi^2/(6*sqrt(sum(x_j^2,na.rm=T))))
 }

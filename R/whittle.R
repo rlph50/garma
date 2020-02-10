@@ -1,3 +1,9 @@
+#' Estimate a Ggbr model using the Whittle method.
+#' whittle.ggbr.obj - objective function to be minimised to get Whittle estimates.
+#' called from function "garma"
+#' @param par - the parameters to evaluate the function at
+#' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
+#' @return The value of the objective at the point par.
 whittle.ggbr.obj<-function(par,params) {
   # objective function to be minimised for Whittle estimates
   ss <- params$ss
@@ -20,8 +26,8 @@ whittle.ggbr.obj<-function(par,params) {
 
   cos_2_pi_f <- cos(2*pi*freq)
   mod_phi <- mod_theta <- 1
-  if (p>0) mod_phi   <- a_fcn(phi_vec,freq)
-  if (q>0) mod_theta <- a_fcn(theta_vec,freq)
+  if (p>0) mod_phi   <- .a_fcn(phi_vec,freq)
+  if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   specDen_inv <- mod_phi / mod_theta    # Inverse of spectral density
   if (k==1) specDen_inv <- specDen_inv * (4*((cos_2_pi_f-u)^2))^fd
 
