@@ -16,7 +16,8 @@ Imports:
     signal,
     pracma,
     nloptr,
-    Rdpack (>= 0.7)
+    Rdpack (>= 0.7),
+    assertthat
 Suggests:
     forecast,
     BB,
