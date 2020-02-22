@@ -12,12 +12,12 @@ Encoding: UTF-8
 LazyData: true
 Imports:
     Matrix,
+    assertthat,
     FKF,
     signal,
     pracma,
     nloptr,
-    Rdpack (>= 0.7),
-    assertthat
+    Rdpack (>= 0.7)
 Suggests:
     forecast,
     BB,

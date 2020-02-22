@@ -309,7 +309,7 @@ garma<-function(py,
             'method'=method,
             'opt.method'=opt.method,
             'maxeval'=maxeval,
-            'order'=order,'k'=k,'y'=py,'mean_y'=mean(y),'m_trunc'=m_trunc)
+            'order'=order,'k'=k,'y'=py,'include.mean'=include.mean,'mean_y'=mean(y),'m_trunc'=m_trunc)
   if (opt.method=='best') res<-c(res,'opt.method.selected'=best_method)
   if (k==1)
     res<-c(res,
@@ -350,7 +350,7 @@ is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
 }
 
-predict.ggbr_model<-function(mdl,h=1) {
+predict.ggbr_model<-function(mdl,n.ahead=1) {
   assert_that(class(mdl)=='ggbr_model')
 
   ydm <- mdl$y - mdl$mean_y
@@ -358,7 +358,7 @@ predict.ggbr_model<-function(mdl,h=1) {
 
   coef <- mdl$coefficients[1,]
 
-  if (include.mean) {
+  if (mdl$include.mean) {
     beta0  <- coef[1]
     start  <- 2
   }
@@ -366,25 +366,22 @@ predict.ggbr_model<-function(mdl,h=1) {
     beta0  <- 0
     start  <- 1
   }
-  if (k==1) {
+  if (mdl$k==1) {
     u      <- coef[start]
     d      <- coef[start+1]
     start  <- start+2
   } else u<-d<-0.0
 
-  if (p>0) phi_vec   <- c(1,-(coef[start:(start+p-1)] ))         else phi_vec   <- 1
-  if (q>0) theta_vec <- c(1,-(coef[(p+start):(length(coef)-1)])) else theta_vec <- 1
-
-  print(phi_vec)
-  print(theta_vec)
+  if (mdl$p>0) phi_vec   <- c(1,-(coef[start:(start+mdl$p-1)] ))         else phi_vec   <- 1
+  if (mdl$q>0) theta_vec <- c(1,-(coef[(mdl$p+start):(length(coef)-1)])) else theta_vec <- 1
 
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(length(y_dash),d,u))
+  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(length(y_dash),d,u))
 
   #y_dash <- y-beta0
   for (i in 1:h) {
     eps <- signal::filter(arma_filter, ydm)
-    if (k>0) eps <- signal::filter(ggbr_filter, eps)
+    if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
     ydm[n+i] <- eps[length(eps)]
   }
   return(ydm[(n+1):length(ydm)]+mdl$mean_y)
