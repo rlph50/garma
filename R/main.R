@@ -350,7 +350,7 @@ is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
 }
 
-predict.ggbr_model<<-function(mdl,h=1) {
+predict.ggbr_model<-function(mdl,h=1) {
   assert_that(class(mdl)=='ggbr_model')
 
   ydm <- mdl$y - mdl$mean_y
@@ -382,24 +382,10 @@ predict.ggbr_model<<-function(mdl,h=1) {
   if (k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(length(y_dash),d,u))
 
   #y_dash <- y-beta0
-  eps <- signal::filter(arma_filter, ydm)
-  if (k>0) eps <- signal::filter(ggbr_filter, eps)
-
+  for (i in 1:h) {
+    eps <- signal::filter(arma_filter, ydm)
+    if (k>0) eps <- signal::filter(ggbr_filter, eps)
+    ydm[n+i] <- eps[length(eps)]
+  }
+  return(ydm[(n+1):length(ydm)]+mdl$mean_y)
 }
-
-y<-diff(log(AirPassengers))
-a1<-arima(y,order=c(4,0,0),include.mean=FALSE)
-a2<-garma(y,order=c(4,0,0),k=0,include.mean=FALSE,method='CSS')
-
-predict(a1,h=1)
-predict(a2,h=1)
-
-ydm <- a2$y - mean(a2$y)
-n <- length(ydm)
-#phi_vec<-a2$coefficients[1,]
-phi_vec<-a1$coef
-theta_vec<-1
-arma_filter <- signal::Arma(a = theta_vec, b = unname(phi_vec))
-eps <- signal::filter(arma_filter, ydm)
-eps[143]
-predict(a1,h=1)$pred
