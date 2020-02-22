@@ -309,7 +309,12 @@ garma<-function(py,
             'method'=method,
             'opt.method'=opt.method,
             'maxeval'=maxeval,
-            'order'=order,'k'=k,'y'=py,'include.mean'=include.mean,'mean_y'=mean(y),'m_trunc'=m_trunc)
+            'order'=order,
+            'k'=k,
+            'y'=py,
+            'include.mean'=include.mean,
+            'mean_y'=mean(y),
+            'm_trunc'=m_trunc)
   if (opt.method=='best') res<-c(res,'opt.method.selected'=best_method)
   if (k==1)
     res<-c(res,
@@ -376,10 +381,9 @@ predict.ggbr_model<-function(mdl,n.ahead=1) {
   if (mdl$q>0) theta_vec <- c(1,-(coef[(mdl$p+start):(length(coef)-1)])) else theta_vec <- 1
 
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(length(y_dash),d,u))
+  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(n,d,u))
 
-  #y_dash <- y-beta0
-  for (i in 1:h) {
+  for (i in 1:n.ahead) {
     eps <- signal::filter(arma_filter, ydm)
     if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
     ydm[n+i] <- eps[length(eps)]
