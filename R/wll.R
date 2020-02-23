@@ -37,7 +37,7 @@ wll.ggbr.obj<-function(par,params) {
   #spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
   if (k==1) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u)^2))^fd
 
-  spec_den_inv[is.infinite(spec_den_inv)] <- 1.0e500
+  spec_den_inv[is.infinite(spec_den_inv)] <- NA #1.0e500
   spec_den_inv[spec_den_inv<=0] <- NA
   #print(spec_den_inv)
   I_f <- spec*spec_den_inv
