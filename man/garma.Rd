@@ -5,29 +5,30 @@
 \title{Estimate the parmaeters of a GARMA model.}
 \usage{
 garma(
-  py,
+  x,
   order = list(0, 0, 0),
   k = 1,
-  include.mean = TRUE,
+  include.mean = (order[2] == 0),
   method = "Whittle",
   allow_neg_d = TRUE,
   maxeval = 10000,
-  opt.method = "optim",
+  opt_method = "optim",
   m_trunc = 50
 )
 }
 \arguments{
-\item{py}{(num) This should be a numeric vector representing the process to estimate. A minimum length of 96 is required.}
+\item{x}{(num) This should be a numeric vector representing the process to estimate. A minimum length of 96 is required.}
 
 \item{order}{(list) This should be a list (similar to the stats::arima order parameter) which will give the order of the process to fit.
 The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
 autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
-differencing to apply prior to any fitting.}
+differencing to apply prior to any fitting. Note however that only d=1 or d=0 is currently supported.}
 
 \item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.}
 
 \item{include.mean}{(bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
-it generally does not make sense to fit a mean term.}
+it generally does not make sense to fit a mean term. Because of this, the default here is to fit a mean time when d (in the "order" parmaeter)
+is zero and otherwise not.}
 
 \item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
 The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
@@ -42,7 +43,7 @@ of the Gegenbauer term is allowed. This can be set to FALSE to force the routine
 
 \item{maxeval}{(int) the maximum function eveluations to be allowed during each optimisation.}
 
-\item{opt.method}{(character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
+\item{opt_method}{(character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
 R algorithm called 'optim'. For some data or some models, however, other methods may work well. Other allowed values are
 \itemize{
 \item cobyla algorithm in package nloptr
@@ -65,6 +66,7 @@ C Chung. A generalized fractionally integrated autoregressive moving-average pro
 G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
 L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
 }
+mean_y'=mean(y),
 }
 \description{
 The garma function is the main function for the tsggbr package. Depending on the parameters it will
@@ -73,17 +75,17 @@ for those parameters.
 }
 \details{
 The GARMA model is specified as
-\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(Y_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) Y(t) = \theta(B) \epsilon(t)}
+\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) X(t) = \theta(B) \epsilon(t)}
 
 where
 \itemize{
 \item \eqn{\phi(B)}{\phi(B)} represents the short-memory Autoregressive component of order p,
 \item \eqn{\theta(B)}{\theta(B)} represents the short-memory Moving Average component of order q,
 \item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in general be k of these),
-\item \eqn{Y_{t}}{Y(t)} represents the observed process,
+\item \eqn{X_{t}}{X(t)} represents the observed process,
 \item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
       Generally the routines in this package will work best if these have an approximate Gaussian distribution.
-\item \eqn{B}{B} represents the Backshift operator, defined by \eqn{B Y_{t}=Y_{t-1}}{B Y(t) = Y(t-1)}.
+\item \eqn{B}{B} represents the Backshift operator, defined by \eqn{B X_{t}=X_{t-1}}{B X(t) = X(t-1)}.
 }
 when k=0, then this is just a short memory model as fit by the stats "arima" function.
 }

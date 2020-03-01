@@ -5,7 +5,7 @@
 #' @param par - the parameters to evaluate the function at
 #' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
 #' @return The value of the objective at the point par.
-wll.ggbr.obj<-function(par,params) {
+.wll.ggbr.obj<-function(par,params) {
   # Objective function to be minimised for the BNP estimates
   ss <- params$ss
   p  <- params$p
@@ -45,7 +45,7 @@ wll.ggbr.obj<-function(par,params) {
   #cat(sprintf("ret %.4f\n",res))
   return(res)
 }
-wll_d_se<-function(u,ss) {
+.wll_d_se<-function(u,ss) {
   x_j <- log(4*((cos(2*pi*ss$freq)-u)^2))
   return (pi^2/(6*sqrt(sum(x_j^2,na.rm=T))))
 }

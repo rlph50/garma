@@ -26,7 +26,8 @@
 #'     differencing to apply prior to any fitting. Note however that only d=1 or d=0 is currently supported.
 #' @param k (int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.
 #' @param include.mean (bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
-#'     it generally does not make sense to fit a mean term.
+#'     it generally does not make sense to fit a mean term. Because of this, the default here is to fit a mean time when d (in the "order" parmaeter)
+#'     is zero and otherwise not.
 #' @param method (character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
 #'     The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
 #'     distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
@@ -37,7 +38,7 @@
 #' @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
 #'     of the Gegenbauer term is allowed. This can be set to FALSE to force the routine to find a positive value.
 #' @param maxeval (int) the maximum function eveluations to be allowed during each optimisation.
-#' @param opt.method (character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
+#' @param opt_method (character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
 #'     R algorithm called 'optim'. For some data or some models, however, other methods may work well. Other allowed values are
 #'     \itemize{
 #'     \item cobyla algorithm in package nloptr
@@ -61,11 +62,11 @@
 garma<-function(x,
                 order=list(0,0,0),
                 k=1,
-                include.mean=TRUE,
+                include.mean=(order[2]==0),
                 method='Whittle',
                 allow_neg_d=TRUE,
                 maxeval=10000,
-                opt.method='optim',
+                opt_method='optim',
                 m_trunc=50) {
   if (length(x)<96)
     stop('y should have at least 96 observations.')
@@ -74,6 +75,12 @@ garma<-function(x,
       stop('x should be a numeric vector - not an entire data frame. Please select a single column and try again.')
     else x<-x[,1]
   }
+
+  # now save the ts elements, if any
+  x_start <- start(x)
+  x_end   <- end(x)
+  x_freq  <- frequency(x)
+
   x<-as.numeric(x)
   if (!is.numeric(x))
     stop('x should be numeric.')
@@ -87,11 +94,11 @@ garma<-function(x,
 
   allowed_optimisations <- c('optim','cobyla','directL','BBoptim','psoptim','hjkb','nmkb','best')
   optimisation_packages <- c('optim'='stats','cobyla'='nloptr','directL'='nloptr','BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','best'='stats')
-  if (!opt.method%in%allowed_optimisations)
+  if (!opt_method%in%allowed_optimisations)
     stop('\nSorry - supported packages are:\n', paste0(allowed_optimisations,'\n'))
 
-  if (!is.installed(optimisation_packages[[opt.method]]))
-    stop(sprintf('package %s needs to be installed to use method ',optimisation_packages[[opt.method]],opt.method))
+  if (!.is.installed(optimisation_packages[[opt_method]]))
+    stop(sprintf('package %s needs to be installed to use method ',optimisation_packages[[opt_method]],opt_method))
 
   #
   # First calc parameter  estimates
@@ -99,8 +106,9 @@ garma<-function(x,
   d=as.integer(order[2])
   q=as.integer(order[3])
   if ((d!=0)&(d!=1))
-    stop('Sorry. Only d=0 or d=1 is supported for now (for the integer portion of d).')
+    stop('Sorry. Only d=0 or d=1 is supported for now (for the integer portion of d).\nWe suggest you manually difference the series using diff() if you need more than this.')
   storage.mode(x) <- 'double'
+
   if (d>0) y<-diff(x,differences=d) else y<-x
   mean_y <- mean(y)
   sd_y   <- sd(y)
@@ -162,12 +170,12 @@ garma<-function(x,
   }
 
   # create a list of all possible params any 'method' might need. The various objective functions can extract the parameters which are relevant to that method.
-  params <- list(y=y, ss=ss, p=p,q=q,k=k,include.mean=include.mean,scale=sd_y,m_trunc=m_trunc)
+  params <- list(y=y, ss=ss, p=p,q=q,k=k,include.mean=include.mean,est_mean=ifelse(method%in%mean_methods,TRUE,FALSE),scale=sd_y,m_trunc=m_trunc)
   message <- c()
 
   # First we make a first pass at optimisation using "optim".
   # If the method chosen is optim then that finishes things; but otherwise the solution found becomes the starting point for the next optimisation.
-  fcns <- list('CSS'=css.ggbr.obj,'Whittle'=whittle.ggbr.obj,'QML'=qml.ggbr.obj,'WLL'=wll.ggbr.obj)
+  fcns <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
   fit <- optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
                hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
   if (fit$convergence==52) {   # Error in line search, then try again using nloptr
@@ -179,39 +187,39 @@ garma<-function(x,
     hh   <- fit$hessian
   }
 
-  if (opt.method=='cobyla') {
+  if (opt_method=='cobyla') {
     tryCatch(fit <- cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-10)),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='directL') {
+  } else if (opt_method=='directL') {
     tryCatch(fit <- directL(fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxeval=maxeval,xtol_rel=1e-10)),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='BBoptim') {
+  } else if (opt_method=='BBoptim') {
     pars[1] <- pars[1]-0.1
     tryCatch(fit <- BB::BBoptim(par=pars, fcns[[method]], lower=lb, upper=ub, control=list(trace=FALSE,maxit=maxeval,ftol=1e-15,gtol=1e-8),
                                 params=params,quiet=TRUE),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='psoptim') {
+  } else if (opt_method=='psoptim') {
     tryCatch(fit <- psoptim(par=pars, fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxit=maxeval)),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='hjkb') {
+  } else if (opt_method=='hjkb') {
     tryCatch(fit <- dfoptim::hjkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='nmkb') {
+  } else if (opt_method=='nmkb') {
     tryCatch(fit <- dfoptim::nmkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
              error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
     )
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-  } else if (opt.method=='best') {
+  } else if (opt_method=='best') {
     message <- c()
     fit.optim<-fit.cobyla<-fit.directL<-fit.bboptim<-fit.psoptim<-fit.hjkb<-fit.nmkb<-list(value=Inf,message=c(message,cond),convergece=999,par=pars) #default to set environment
     tryCatch(
@@ -246,89 +254,107 @@ garma<-function(x,
     hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
   }
 
-  if (fit$convergence>=0&method!='WLL') {
+  # log lik
+  loglik <- numeric(0)
+  if (method=='CSS')
+    loglik <- -0.5 *(length(y)*fit$value + length(y) + length(y) * log(2 * pi))
+  if (method=='QML')
+    loglik <- -fit$value
+  if (method=='Whittle')
+    loglik <- .whittle.ggbr.likelihood(fit$par,params)
+
+  if (method=='WLL') {
+  }
+  # sigma2
+  if (method=='WLL') {
+    # adjust sigma2 for theoretical bias...
+    sigma2 <- fit$par[length(fit$par)] <- fit$par[length(fit$par)]/(2*pi) * exp(-digamma(1))
+  }
+  else if (method=='QML')     sigma2 <- sqrt(.qml.ggbr.se2(fit$par, params=params))
+  else if (method=='CSS')     sigma2 <- exp(2*fit$value)/length(y)
+  else if (method=='Whittle') sigma2 <- 2/length(y) * var(y) * fit$value  # 1997 Ferrara & Geugen eqn 3.7
+
+  se <- numeric(length(fit$par))
+  if (fit$convergence>=0&method!='WLL'&!is.null(hh)) {
     # Next, find the c <- alc se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment
     if (include.mean) start<-2
-    nn <- nrow(hh)
-    err_flag<-FALSE
-    tryCatch({
-      # find a version of the Hessian we can invert..
-      err_flag<-FALSE
-      if (abs(det(hh))<1e-50) {
-        # remove last row&col - sometimes the last param cannot be estimated.
-        nn     <- nrow(hh)-1
-        hh     <- hh[1:nn,1:nn]
-        hh_det <- abs(det(hh))
-        if (hh_det>1e-50) { # try again
-          nn     <- nrow(hh)-1
-          hh     <- hh[2:(nn+1),2:(nn+1)]
-          hh_det <- abs(det(hh))
-          if (hh_det<=1e-50) err_flag<-TRUE
-        }
+    if (method=='Whittle') se <- sqrt(diag(solve(hh)))
+    if (method=='CSS')     se <- sqrt(diag(solve(hh*length(y))))
+    if (method=='QML')     {
+      se <- sqrt(diag(solve(hh))*length(y))
+      if (k==1) {
+        if (include.mean) se <- se[1:3]
+        else se <- se[1:2]
       }
-    },
-    error=function(cond) {err_flag<-TRUE; message<-c(message,cond)}
-    )
-    if (!err_flag) {
-      if (method=='Whittle') se <- sqrt(diag(solve(hh*length(y)))*length(y))
-      if (method=='CSS')     se <- sqrt(diag(solve(hh*length(y))))
-      if (method=='QML')     se <- sqrt(diag(solve(hh*length(y))))
-      if (length(se)<length(fit$par)) se<-c(se,NA)
-    } else se <- rep(NA,length(fit$par))
+    }
+    if (length(se)<length(fit$par)) se<-c(se,NA)
   }
   if (method=='WLL') {
     se<-rep(NA,length(par))
-    if (k>0) se[2] <- bnp_d_se(fit$par[1],ss)
+    if (k>0) se[2] <- .wll_d_se(fit$par[1],ss)
   }
   nm<-list()
-  if (include.mean&method%in%mean_methods) nm <- c(nm,'Intercept')
+  if (include.mean) nm <- c(nm,'intercept')
   if (k==1) nm<-c(nm,'u','fd')
   if (p>0) nm<-c(nm,paste0('ar',1:p))
   if (q>0) nm<-c(nm,paste0('ma',1:q))
 
-  if (method=='WLL') {
-    # adjust sigma2 for theoretical bias...
-    fit$par[length(fit$par)] <- fit$par[length(fit$par)]/(2*pi) * exp(-digamma(1))
+  n_coef    <- ifelse(method%in%methods_to_estimate_var,length(fit$par)-1,length(fit$par))  # ignore var on end if it is there
+  temp_coef <- fit$par[1:n_coef]
+  temp_se   <- se[1:n_coef]
+  if (include.mean&!method%in%mean_methods) {# then add an Intercept anyway; use Kunsch 1987 result for se
+    temp_coef <- c(mean(y),temp_coef)
+    # calc se of mean using Kunsch (1987) thm 1; 1-H = 1-(d+.5) = .5-d
+    if (k==0) mean_se <- sqrt(sigma2/length(y))
+    else mean_se <- sqrt(sigma2/(length(y)^(0.5-fit$par[2])))
+    temp_se   <- c(mean_se, temp_se)
+    n_coef <- n_coef+1
   }
-
-  n_coef <- ifelse(method%in%methods_to_estimate_var,length(fit$par)-1,length(fit$par))  # ignore var on end if it is there
-  coef <- t(matrix(round(c(fit$par[1:n_coef],se[1:n_coef]),4),nrow=n_coef))
+  coef <- t(matrix(round(c(temp_coef,temp_se),4),nrow=n_coef))
   colnames(coef) <- nm
   rownames(coef) <- c('','s.e.')
-  if (method=='WLL')          sigma2 <- fit$par[length(fit$par)]
-  else if (method=='QML')     sigma2 <- qml.ggbr.se2(fit$par, params=params)
-  #if (method%in%methods_to_estimate_var) sigma2 <- fit$par[length(fit$par)]
-  else if (method=='CSS')     sigma2 <- fit$value/length(y)
-  else if (method=='Whittle') sigma2 <- 2/length(y) * var(y) * fit$value  # 1997 Ferrara & Geugen eqn 3.7
 
   if (k>0) {
-    fd <- fit$par[which(nm=='fd')]
-    u  <- fit$par[which(nm=='u')]
+    fd <- coef[1,][['fd']]
+    u  <- coef[1,][['u']]
   }
+
+  # get fitted values and residuals
+  fitted <- .fitted_values(fit$par,params)
 
   res<-list('call' = match.call(),
             'coef'=coef,
             'sigma2'=sigma2,
-            'fit_value'=fit$value,
+            'obj_value'=fit$value,
+            'loglik'=loglik,
             'convergence'=fit$convergence,
             'conv_message'=c(fit$message,message),
             'method'=method,
-            'opt.method'=opt.method,
+            'opt_method'=opt_method,
             'maxeval'=maxeval,
             'order'=order,
             'k'=k,
             'y'=x,
+            'y_start'=x_start,
+            'y_end'=x_end,
+            'y_freq'=x_freq,
             'include.mean'=include.mean,
-            'mean_y'=mean(y),
+            'fitted_values'=ts(fitted$fitted_values,start=x_start,end=x_end,frequency=x_freq),
+            'residuals'=ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
+            #'mean_y'=mean(y),
             'm_trunc'=m_trunc)
-  if (opt.method=='best') res<-c(res,'opt.method.selected'=best_method)
-  if (k==1)
+  if (opt_method=='best') res<-c(res,'opt_method.selected'=best_method)
+  if (k==1) {
+    fd <- coef[1,][['fd']]
+    u  <- coef[1,][['u']]
     res<-c(res,
            'ggbr_freq'=acos(u)/2/pi,
            'ggbr_period'=2*pi/acos(u),
            'ggbr_d'=fd)
+  }
+
   class(res)<-'ggbr_model'
 
   return(res)
@@ -339,16 +365,16 @@ summary.ggbr_model<-function(mdl,verbose=TRUE) {
   if (verbose) {
     with(mdl,
          cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
-                     method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),mdl$opt.method,mdl$maxeval))
+                     method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),mdl$opt_method,mdl$maxeval))
     )
-    if (mdl$opt.method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt.method.selected))
+    if (mdl$opt_method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method.selected))
     cat(sprintf('Optimal Value: %0.4f\n\n',mdl$fit_value))
   }
   if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
   else {
     if (mdl$convergence>0)
       cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (%d)\nIt is suggested you increase the maxeval parameter, or try an alternative method.\n\n',
-                  ifelse(mdl$opt.method=='best',mdl$opt.method.selected,mdl$opt.method),mdl$conv_message,mdl$convergence))
+                  ifelse(mdl$opt_method=='best',mdl$opt_method.selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
     cat('Coefficients:\n')
     print.default(mdl$coef, print.gap = 2)
 
@@ -358,19 +384,20 @@ summary.ggbr_model<-function(mdl,verbose=TRUE) {
       if (mdl$ggbr_d>0 & mdl$ggbr_d<0.5) cat(sprintf('Fractional Dimension:  %1.4f\n',1.5-mdl$ggbr_d))
       if (mdl$ggbr_d>0.5) cat('WARNING: Fractional Exponent > 0.5 suggesting the process may not be stationary.\n')
     }
-    cat(sprintf('\nsigma^2 estimated as %0.4f\n',mdl$sigma2))
+    cat(sprintf('\nsigma^2 estimated as %0.4f',mdl$sigma2))
+    if (mdl$method=='CSS') cat(sprintf(':  part log likelihood = %f',mdl$loglik))
+    if (mdl$method=='QML') cat(sprintf(':  log likelihood = %f',mdl$loglik))
+    if (mdl$method=='Whittle') cat(sprintf(':  log likelihood = %f',mdl$loglik))
+    cat('\n')
   }
 }
 print.ggbr_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
 
-is.installed <- function(mypkg){
+.is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
 }
 
 predict.ggbr_model<-function(mdl,n.ahead=1) {
-  ydm <- mdl$y - mdl$mean_y
-  n <- length(ydm)
-
   coef <- unname(mdl$coef[1,])
   p<-mdl$order[1]
   q<-mdl$order[3]
@@ -391,28 +418,92 @@ predict.ggbr_model<-function(mdl,n.ahead=1) {
 
   if (p>0) phi_vec   <- c(-(coef[start:(start+p-1)] ))           else phi_vec   <- 1
   if (q>0) theta_vec <- c(1,-(coef[(p+start):(length(coef)-1)])) else theta_vec <- 1
+  #print('phi')
+  #print(phi_vec)
+
+  if (mdl$order[2]==0)
+    ydm <- mdl$y - beta0
+  else if (mdl$order[2]==1)
+    ydm <- diff(mdl$y) - beta0
+
+  n <- length(ydm)
 
   # set up filters
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = ggbr.coef(n,d,u))
+  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = .ggbr.coef(n,d,u))
 
   # generate forecasts
   for (i in 1:n.ahead) {
     eps <- signal::filter(arma_filter, ydm)
     if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
-    if (mdl$order[2]==1) ydm[n+i] <- ydm[n+i-1] + (-eps[length(eps)])
-    else ydm[n+i] <- (-eps[length(eps)])
+    ydm[n+i] <- (-eps[length(eps)])
+    #print (-eps[length(eps)])
   }
+  if (mdl$order[2]==1) { # if differenced then...
+    ydm2 <- mdl$y
+    n    <- length(ydm2)
+    for (i in 1:n.ahead)
+      ydm2[n+i] <- ydm2[n+i-1] + ydm[n+i-1]
+  }
+  else ydm2 <-ydm
 
   # Now we have the forecasts, we set these up as a "ts" object - as does "predict.arima"
-  end_y = end(y)
-  if (frequency(y) >= end_y[2]) {
-    end_y[1] <- end_y[1]+1
-    end_y[2] <- end_y[2]-frequency(y)+1
-  }
-  else end_y[2] <- end_y[2] + 1
-  res <- ts(tail(ydm,n.ahead)+beta0,start=end_y,frequency=frequency(y))
-  return(res)
+  y_end = mdl$y_end
+  if(length(y_end)>1) {
+    if (mdl$y_freq >= y_end[2]) {
+      y_end[1] <- y_end[1]+1
+      y_end[2] <- y_end[2]-mdl$y_freq+1
+    }
+    else y_end[2] <- y_end[2] + 1
+  } else y_end <- y_end +1
+  res <- ts(tail(ydm2,n.ahead)+beta0,start=y_end,frequency=mdl$y_freq)
+  return(list(pred=res))
 }
 
 forecast.ggbr_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
+
+plot.ggbr_model<-function(mdl,h=24,...) {
+  # plot forecasts from model
+  actuals <- zoo(ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
+  fitted <- zoo(mdl$fitted_values)
+  fc <- zoo(predict(mdl,n.ahead=h)$pred)
+  plot(actuals,col='black',type='l',xlim=c(start(actuals)[1],end(fc)[1]),...)
+  lines(fitted,col='blue')
+  lines(fc,col='blue')
+  abline(v=mdl$y_end,col='red',lty=2)
+}
+
+.fitted_values<-function(par,params) { # Generate fitted values and residuals for GARMA process
+  y <- params$y
+  p <- params$p
+  q <- params$q
+  k <- params$k
+  include.mean <- params$include.mean
+  est_mean <- params$est_mean
+
+  if (include.mean&est_mean) {
+    beta0  <- par[1]
+    start  <- 2
+  }
+  else {
+    beta0  <- 0
+    start  <- 1
+  }
+  if (k==1) {
+    u      <- par[start]
+    d      <- par[start+1]
+    start  <- start+2
+  } else u<-d<-0.0
+
+  y_dash <- y-beta0
+  if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))        else phi_vec   <- 1
+  if (q>0) theta_vec <- c(1,-(par[(p+start):(length(par)-1)])) else theta_vec <- 1
+
+  arma_filter   <- signal::Arma(a = theta_vec, b = phi_vec)
+  eps           <- signal::filter(arma_filter, y_dash)
+  if (k>0) {
+    ggbr_filter <- signal::Arma(b = 1, a = .ggbr.coef(length(y_dash),d,u))
+    eps         <- signal::filter(ggbr_filter, eps)
+  }
+  return(list(fitted_values=(y-eps),residuals=eps))
+}
