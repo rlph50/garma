@@ -1,4 +1,4 @@
 library(testthat)
-library(tsggbr)
+library(garma)
 
-test_check("tsggbr")
+test_check("garma")

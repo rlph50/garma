@@ -1,6 +1,6 @@
-Package: tsggbr
+Package: garma
 Type: Package
-Title: tsggbr provides support for estimating, and fitting Gegenbauer Seasonal/Cyclical time series models.
+Title: GARMA provides support for estimating, and fitting Gegenbauer Seasonal/Cyclical time series models.
 Version: 0.1.0
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
@@ -14,6 +14,7 @@ Imports:
     Matrix,
     assertthat,
     zoo,
+    lubridate,
     FKF,
     signal,
     pracma,
@@ -21,6 +22,7 @@ Imports:
     Rdpack (>= 0.7)
 Suggests:
     forecast,
+    ggplot2,
     BB,
     GA,
     pso,

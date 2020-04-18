@@ -1,6 +1,11 @@
+# WHERE AM I UP TO?
+#
+# Need to fix k>1!
+#
+#
 #' Estimate the parmaeters of a GARMA model.
 #'
-#' The garma function is the main function for the tsggbr package. Depending on the parameters it will
+#' The garma function is the main function for the garma package. Depending on the parameters it will
 #' calculate the parameter estimates for the GARMA process, and if available the standard errors (se's)
 #' for those parameters.
 #'
@@ -86,8 +91,8 @@ garma<-function(x,
     stop('x should be numeric.')
   if (length(order)!=3)
     stop('order parameter must be a 3 integers only.')
-  if ((k!=0)&(k!=1))
-    stop('Sorry. Only k=0 or k=1 is supported for now.')
+  # if ((k!=0)&(k!=1))
+  #   stop('Sorry. Only k=0 or k=1 is supported for now.')
   allowed_methods <- c('CSS','Whittle','WLL','QML')
   if (!method%in%allowed_methods)
     stop('Method must be one of CSS, Whittle, QML or WLL.')
@@ -355,12 +360,12 @@ garma<-function(x,
            'ggbr_d'=fd)
   }
 
-  class(res)<-'ggbr_model'
+  class(res)<-'garma_model'
 
   return(res)
 }
 
-summary.ggbr_model<-function(mdl,verbose=TRUE) {
+summary.garma_model<-function(mdl,verbose=TRUE) {
   cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
   if (verbose) {
     with(mdl,
@@ -379,10 +384,12 @@ summary.ggbr_model<-function(mdl,verbose=TRUE) {
     print.default(mdl$coef, print.gap = 2)
 
     if (mdl$k>0) {
-      cat(sprintf('\nGegenbauer parameters:\nGegenbauer Frequency:  %0.4f\nGegenbauer Period:    %7.4f\nFractional Exponent:   %0.4f\n',
-                  mdl$ggbr_freq,mdl$ggbr_period,mdl$ggbr_d))
-      if (mdl$ggbr_d>0 & mdl$ggbr_d<0.5) cat(sprintf('Fractional Dimension:  %1.4f\n',1.5-mdl$ggbr_d))
-      if (mdl$ggbr_d>0.5) cat('WARNING: Fractional Exponent > 0.5 suggesting the process may not be stationary.\n')
+      for (k1 in 1:(mdl$k)) {
+        cat(sprintf('\nGegenbauer parameters:\nGegenbauer Frequency:  %0.4f\nGegenbauer Period:    %7.4f\nFractional Exponent:   %0.4f\n',
+                    mdl$ggbr_freq,mdl$ggbr_period,mdl$ggbr_d))
+        if (mdl$ggbr_d>0 & mdl$ggbr_d<0.5) cat(sprintf('Fractional Dimension:  %1.4f\n',1.5-mdl$ggbr_d))
+        if (mdl$ggbr_d>0.5) cat('WARNING: Fractional Exponent > 0.5 suggesting the process may not be stationary.\n')
+      }
     }
     cat(sprintf('\nsigma^2 estimated as %0.4f',mdl$sigma2))
     if (mdl$method=='CSS') cat(sprintf(':  part log likelihood = %f',mdl$loglik))
@@ -391,13 +398,13 @@ summary.ggbr_model<-function(mdl,verbose=TRUE) {
     cat('\n')
   }
 }
-print.ggbr_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
+print.garma_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
 
 .is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
 }
 
-predict.ggbr_model<-function(mdl,n.ahead=1) {
+predict.garma_model<-function(mdl,n.ahead=1) {
   coef <- unname(mdl$coef[1,])
   p<-mdl$order[1]
   q<-mdl$order[3]
@@ -430,16 +437,19 @@ predict.ggbr_model<-function(mdl,n.ahead=1) {
 
   # set up filters
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (mdl$k>0) ggbr_filter <- signal::Arma(b = 1, a = .ggbr.coef(n,d,u))
+  if (mdl$k>0) ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,d,u))
 
   # generate forecasts
   for (i in 1:n.ahead) {
-    eps <- signal::filter(arma_filter, ydm)
+    eps <- ydm
     if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
+    eps <- signal::filter(arma_filter, eps)
     ydm[n+i] <- (-eps[length(eps)])
     #print (-eps[length(eps)])
   }
-  if (mdl$order[2]==1) { # if differenced then...
+
+  # if (integer) differenced then...
+  if (mdl$order[2]==1) {
     ydm2 <- mdl$y
     n    <- length(ydm2)
     for (i in 1:n.ahead)
@@ -460,9 +470,9 @@ predict.ggbr_model<-function(mdl,n.ahead=1) {
   return(list(pred=res))
 }
 
-forecast.ggbr_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
+forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 
-plot.ggbr_model<-function(mdl,h=24,...) {
+plot.garma_model<-function(mdl,h=24,...) {
   # plot forecasts from model
   actuals <- zoo(ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
   fitted <- zoo(mdl$fitted_values)
@@ -472,6 +482,29 @@ plot.ggbr_model<-function(mdl,h=24,...) {
   lines(fc,col='blue')
   abline(v=mdl$y_end,col='red',lty=2)
 }
+
+ggplot.garma_model<-function(mdl,h=24) {
+  # plot forecasts from model
+  fc <- predict(mdl,n.ahead=h)
+
+  if (mdl$y_freq>1) { # then we have actual dates not just an index
+    idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],15),by=mdl$y_freq,length.out=(length(mdl$y)+h))
+    day(idx) <- days_in_month(idx)
+    cutoff <- lubridate::make_date(mdl$y_end[1],mdl$y_end[2],15)
+  } else {
+    idx <- (mdl$y_start[1]):(mdl$y_end[1]+h)
+    cutoff <- mdl$y_end[1]+1
+  }
+
+  df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
+  df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted_values),fc$pred))
+  df <- rbind(df1,df2)
+  ggplot(df[!is.na(df$value),],aes(x=dt,y=value,color=grp)) + geom_line() + ylab('') + xlab('') +
+    geom_vline(xintercept=cutoff,color='red',linetype=2) +
+    theme_bw() + theme(legend.title=element_blank()) +
+    scale_colour_manual(values=c('gray20','dodgerblue4',rep('gray',10)))
+}
+
 
 .fitted_values<-function(par,params) { # Generate fitted values and residuals for GARMA process
   y <- params$y
