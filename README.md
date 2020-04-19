@@ -1,5 +1,5 @@
 # garma - R package for estimation of Gegenbauer Seasonal/Cyclical long memory processes.
-[![Lifecycle: beta](https://img.shields.io/badge/build-beta-orange)]https://img.shields.io/badge/build-beta-orange)
+[![Lifecycle: beta](https://img.shields.io/badge/build-beta-orange)]
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 ## Overview & Introduction
