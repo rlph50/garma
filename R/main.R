@@ -3,14 +3,14 @@
 # Need to fix k>1!
 #
 #
-#' Estimate the parmaeters of a GARMA model.
+#' Estimate the parameters of a GARMA model.
 #'
 #' The garma function is the main function for the garma package. Depending on the parameters it will
 #' calculate the parameter estimates for the GARMA process, and if available the standard errors (se's)
 #' for those parameters.
 #'
 #' The GARMA model is specified as
-#' \deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) X(t) = \theta(B) \epsilon(t)}
+#' \deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) (X(t) - \mu) = \theta(B) \epsilon(t)}
 #'
 #' where
 #' \itemize{
@@ -63,6 +63,13 @@
 #' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
 #' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
 #' }
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F))
+#' # Compare with the built-in arima function
+#' print(arima(ap,order=c(9,1,0),include.mean=F))
+#' @export
 
 garma<-function(x,
                 order=list(0,0,0),
@@ -348,7 +355,7 @@ garma<-function(x,
             'include.mean'=include.mean,
             'fitted_values'=ts(fitted$fitted_values,start=x_start,end=x_end,frequency=x_freq),
             'residuals'=ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
-            #'mean_y'=mean(y),
+            # mean_y=mean(y),
             'm_trunc'=m_trunc)
   if (opt_method=='best') res<-c(res,'opt_method.selected'=best_method)
   if (k==1) {
