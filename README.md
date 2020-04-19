@@ -1,4 +1,7 @@
 # garma - R package for support for of Gegenbauer Seasonal/Cyclical long memory processes.
+[![Lifecycle: retired](https://img.shields.io/badge/lifecycle-retired-orange.svg)](https://www.tidyverse.org/lifecycle/#retired)
+[![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
 ## Overview & Introduction
 This package fits a GARMA model (refer documentation) to a univariate time series.
 
@@ -13,18 +16,18 @@ However only k=1 models may be fit (ie only a single Gegenbauer factor) and also
 ## Installation.
 Ensure you have the "devtools" package installed:
 
-```
+```s
 > install.packages('devtools')
 ```
 
 After this you can install this package by typing:
-```
-> install_github('rlph50/garma')
+```s
+> remotes::install_github('rlph50/garma')
 ```
 
 ## Documentation
 Unfortunately the only documentation currently available is in the help files - after installing the package, type:
-```
+```s
 > library('garma')
 > help('garma')
 ```
