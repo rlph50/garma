@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{garma}
 \alias{garma}
-\title{Estimate the parmaeters of a GARMA model.}
+\title{Estimate the parameters of a GARMA model.}
 \usage{
 garma(
   x,
@@ -58,7 +58,7 @@ R algorithm called 'optim'. For some data or some models, however, other methods
 \item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
 }
 \value{
-An S3 object of class "ggbr_model".
+An S3 object of class "garma_model".
 
 \preformatted{
 References:
@@ -66,16 +66,15 @@ C Chung. A generalized fractionally integrated autoregressive moving-average pro
 G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
 L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
 }
-mean_y'=mean(y),
 }
 \description{
-The garma function is the main function for the tsggbr package. Depending on the parameters it will
+The garma function is the main function for the garma package. Depending on the parameters it will
 calculate the parameter estimates for the GARMA process, and if available the standard errors (se's)
 for those parameters.
 }
 \details{
 The GARMA model is specified as
-\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) X(t) = \theta(B) \epsilon(t)}
+\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) (X(t) - \mu) = \theta(B) \epsilon(t)}
 
 where
 \itemize{
@@ -88,4 +87,11 @@ where
 \item \eqn{B}{B} represents the Backshift operator, defined by \eqn{B X_{t}=X_{t-1}}{B X(t) = X(t-1)}.
 }
 when k=0, then this is just a short memory model as fit by the stats "arima" function.
+}
+\examples{
+data(AirPassengers)
+ap  <- as.numeric(diff(AirPassengers,12))
+print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F))
+# Compare with the built-in arima function
+print(arima(ap,order=c(9,1,0),include.mean=F))
 }

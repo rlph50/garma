@@ -2,7 +2,7 @@
 % Please edit documentation in R/whittle.R
 \name{.whittle.ggbr.obj}
 \alias{.whittle.ggbr.obj}
-\title{Estimate a Ggbr model using the Whittle method.
+\title{Evaluate the Whittle (log-) likelihood
 whittle.ggbr.obj - objective function to be minimised to get Whittle estimates.
 called from function "garma"}
 \usage{
@@ -17,7 +17,7 @@ called from function "garma"}
 The value of the objective at the point par.
 }
 \description{
-Estimate a Ggbr model using the Whittle method.
+Evaluate the Whittle (log-) likelihood
 whittle.ggbr.obj - objective function to be minimised to get Whittle estimates.
 called from function "garma"
 }

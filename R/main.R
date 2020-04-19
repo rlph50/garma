@@ -55,7 +55,7 @@
 #'     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run.
 #'     }
 #' @param m_trunc Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.
-#' @return An S3 object of class "ggbr_model".
+#' @return An S3 object of class "garma_model".
 #'
 #' \preformatted{
 #' References:
@@ -355,7 +355,6 @@ garma<-function(x,
             'include.mean'=include.mean,
             'fitted_values'=ts(fitted$fitted_values,start=x_start,end=x_end,frequency=x_freq),
             'residuals'=ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
-            # mean_y=mean(y),
             'm_trunc'=m_trunc)
   if (opt_method=='best') res<-c(res,'opt_method.selected'=best_method)
   if (k==1) {
@@ -371,6 +370,15 @@ garma<-function(x,
 
   return(res)
 }
+
+#' The summary function provides a summary of a "garma_model" object.
+#' @param mdl (garma_model) The garma_model from which to print the values.
+#' @param verbose (bool) whether to print out the verbose version of the model or not. Default: TRUE
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' summary(mdl)
 
 summary.garma_model<-function(mdl,verbose=TRUE) {
   cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
@@ -405,11 +413,30 @@ summary.garma_model<-function(mdl,verbose=TRUE) {
     cat('\n')
   }
 }
+
+#' The print function prints a summary of a "garma_model" object.
+#' @param mdl (garma_model) The garma_model from which to print the values.
+#' @param verbose (bool) whether to print out the verbose version of the model or not. Default: FALSE
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' print(mdl)
 print.garma_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
 
 .is.installed <- function(mypkg){
   is.element(mypkg, installed.packages()[,1])
 }
+
+#' The predict function predicts future values of a "garma_model" object.
+#' @param mdl (garma_model) The garma_model from which to predict the values.
+#' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
+#' @return A "ts" object containing the requested forecasts.
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' predict(mdl, n.ahead=12)
 
 predict.garma_model<-function(mdl,n.ahead=1) {
   coef <- unname(mdl$coef[1,])
@@ -477,8 +504,27 @@ predict.garma_model<-function(mdl,n.ahead=1) {
   return(list(pred=res))
 }
 
+#' The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.
+#' @param mdl (garma_model) The garma_model from which to forecast the values.
+#' @param h (int) The number of time periods to predict ahead. Default: 1
+#' @return - a "ts" object containing the requested forecasts.
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' forecast(mdl, h=12)
 forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 
+#' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
+#' @param mdl (garma_model) The garma_model from which to plot the values.
+#' @param h (int) The number of time periods to predict ahead. Default: 24
+#' @param ... other arguments to be passed to the "plot" function.
+#' @return An R "plot" object.
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' plot(mdl)
 plot.garma_model<-function(mdl,h=24,...) {
   # plot forecasts from model
   actuals <- zoo(ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
@@ -490,6 +536,16 @@ plot.garma_model<-function(mdl,h=24,...) {
   abline(v=mdl$y_end,col='red',lty=2)
 }
 
+#' The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
+#' @param mdl (garma_model) The garma_model from which to ggplot the values.
+#' @param h (int) The number of time periods to predict ahead. Default: 24
+#' @param ... other arguments to be passed to the "plot" function.
+#' @return A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be used to enhance the default output.
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' ggplot(mdl)
 ggplot.garma_model<-function(mdl,h=24) {
   # plot forecasts from model
   fc <- predict(mdl,n.ahead=h)
