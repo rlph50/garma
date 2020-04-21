@@ -1,6 +1,5 @@
-#' Estimate a Ggbr model using a QML (Quasi-Maximum-Likelihood) method.
-#' qml_matricies - geterate the statespace matrices needed for QML method.
-#' @return - the QML matricies in a list.
+# Estimate a Ggbr model using a QML (Quasi-Maximum-Likelihood) method.
+# qml_matricies - geterate the statespace matrices needed for QML method.
 .qml_matricies<-function(par,p,q,k,include.mean,m_trunc) {
   # add in ARMA factors
   start1 <- 1
@@ -35,7 +34,7 @@
   for(j in 1:(m_trunc-1)){
     entry[j] <- sum(diag(si_sq[-1:-j,-(m_trunc+2-j):-(m_trunc+1)]))
   }
-  P0 <- toeplitz(c(sum(diag(si_sq)),entry[1:(m_trunc-1)],si_sq[1,m_trunc+1]))
+  P0 <- pracma::toeplitz(c(sum(diag(si_sq)),entry[1:(m_trunc-1)],si_sq[1,m_trunc+1]))
 
   return(list(a0 = a0, P0 = P0, ct = ct, dt = dt, Zt = Zt, Tt = Tt, GGt = GGt, HHt = HHt))
 }

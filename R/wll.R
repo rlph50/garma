@@ -1,10 +1,10 @@
-#' Estimate a Ggbr model using the Whittle-like-Log (WLL) method.
-#'
-#' wll.ggbr.obj - objective function to be minimised to get WLL estimates.
-#' It is not anticipated that an end-ser would have a need to call this function directly.
-#' @param par - the parameters to evaluate the function at
-#' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
-#' @return The value of the objective at the point par.
+# Estimate a Ggbr model using the Whittle-like-Log (WLL) method.
+#
+# wll.ggbr.obj - objective function to be minimised to get WLL estimates.
+# It is not anticipated that an end-ser would have a need to call this function directly.
+# @param par - the parameters to evaluate the function at
+# @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
+# @return The value of the objective at the point par.
 .wll.ggbr.obj<-function(par,params) {
   # Objective function to be minimised for the BNP estimates
   ss <- params$ss

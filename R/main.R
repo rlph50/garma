@@ -1,8 +1,3 @@
-# WHERE AM I UP TO?
-#
-# Need to fix k>1!
-#
-#
 #' Estimate the parameters of a GARMA model.
 #'
 #' The garma function is the main function for the garma package. Depending on the parameters it will
@@ -70,6 +65,12 @@
 #' # Compare with the built-in arima function
 #' print(arima(ap,order=c(9,1,0),include.mean=F))
 #' @export
+
+# library(nloptr)
+# library(FKF)
+# library(assertthat)
+# library(zoo)
+# library(ggplot2)
 
 garma<-function(x,
                 order=list(0,0,0),
@@ -157,7 +158,7 @@ garma<-function(x,
   n_pars    <- n_pars + p + q
   methods_to_estimate_var <- c('WLL')
   if (p+q>0) {
-    a    <- arima(y,order=c(p,0,q),include.mean=FALSE)
+    a    <- stats::arima(y,order=c(p,0,q),include.mean=FALSE)
     pars <- c(pars,a$coef)
     if (method%in%methods_to_estimate_var) pars <- c(pars,a$sigma2)
     if (p==1&q==0) { # special limits for AR(1)
@@ -191,7 +192,7 @@ garma<-function(x,
   fit <- optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
                hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
   if (fit$convergence==52) {   # Error in line search, then try again using nloptr
-    fit2<-lbfgs(x0=fit$par, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-8))
+    fit2<-nloptr::lbfgs(x0=fit$par, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-8))
     if (fit2$value<fit$value&fit2$convergence>=0) fit<-fit2
   }
   if (fit$convergence>=0) {
@@ -459,8 +460,6 @@ predict.garma_model<-function(mdl,n.ahead=1) {
 
   if (p>0) phi_vec   <- c(-(coef[start:(start+p-1)] ))           else phi_vec   <- 1
   if (q>0) theta_vec <- c(1,-(coef[(p+start):(length(coef)-1)])) else theta_vec <- 1
-  #print('phi')
-  #print(phi_vec)
 
   if (mdl$order[2]==0)
     ydm <- mdl$y - beta0
@@ -479,7 +478,6 @@ predict.garma_model<-function(mdl,n.ahead=1) {
     if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
     eps <- signal::filter(arma_filter, eps)
     ydm[n+i] <- (-eps[length(eps)])
-    #print (-eps[length(eps)])
   }
 
   # if (integer) differenced then...
@@ -603,3 +601,6 @@ ggplot.garma_model<-function(mdl,h=24) {
   }
   return(list(fitted_values=(y-eps),residuals=eps))
 }
+
+fitted.garma_model<-function(mdl) {return(mdl.fitted_values)}
+residuals.garma_model<-function(mdl) {return(mdl.residuals)}

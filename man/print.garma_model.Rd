@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{print.garma_model}
 \alias{print.garma_model}
-\title{The print function print a summary of a "garma_model" object.}
+\title{The print function prints a summary of a "garma_model" object.}
 \usage{
 \method{print}{garma_model}(mdl, verbose = FALSE)
 }
@@ -12,7 +12,7 @@
 \item{verbose}{(bool) whether to print out the verbose version of the model or not. Default: FALSE}
 }
 \description{
-The print function print a summary of a "garma_model" object.
+The print function prints a summary of a "garma_model" object.
 }
 \examples{
 data(AirPassengers)

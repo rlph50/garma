@@ -1,9 +1,9 @@
-#' Evaluate the Whittle (log-) likelihood
-#' whittle.ggbr.obj - objective function to be minimised to get Whittle estimates.
-#' called from function "garma"
-#' @param par - the parameters to evaluate the function at
-#' @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
-#' @return The value of the objective at the point par.
+# Evaluate the Whittle (log-) likelihood
+# whittle.ggbr.obj - objective function to be minimised to get Whittle estimates.
+# called from function "garma"
+# @param par - the parameters to evaluate the function at
+# @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
+# @return The value of the objective at the point par.
 .whittle.ggbr.obj<-function(par,params) {
   # objective function to be minimised for Whittle estimates
   ss <- params$ss
