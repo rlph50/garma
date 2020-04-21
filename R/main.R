@@ -1,4 +1,4 @@
-# WHERE AM I UP TO?
+  # WHERE AM I UP TO?
 #
 # Need to fix k>1!
 #
@@ -603,3 +603,6 @@ ggplot.garma_model<-function(mdl,h=24) {
   }
   return(list(fitted_values=(y-eps),residuals=eps))
 }
+
+fitted.garma_model<-function(mdl) {return(mdl.fitted_values)}
+residuals.garma_model<-function(mdl) {return(mdl.residuals)}

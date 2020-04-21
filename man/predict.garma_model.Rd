@@ -12,7 +12,7 @@
 \item{n.ahead}{(int) The number of time periods to predict ahead. Default: 1}
 }
 \value{
-- a "ts" object containing the requested forecasts.
+A "ts" object containing the requested forecasts.
 }
 \description{
 The predict function predicts future values of a "garma_model" object.
