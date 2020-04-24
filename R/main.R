@@ -380,7 +380,7 @@ garma<-function(x,
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' summary(mdl)
-
+#' @export
 summary.garma_model<-function(mdl,verbose=TRUE) {
   cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
   if (verbose) {
@@ -423,6 +423,7 @@ summary.garma_model<-function(mdl,verbose=TRUE) {
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' print(mdl)
+#' @export
 print.garma_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
 
 .is.installed <- function(mypkg){
@@ -438,7 +439,7 @@ print.garma_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' predict(mdl, n.ahead=12)
-
+#' @export
 predict.garma_model<-function(mdl,n.ahead=1) {
   coef <- unname(mdl$coef[1,])
   p<-mdl$order[1]
@@ -511,6 +512,7 @@ predict.garma_model<-function(mdl,n.ahead=1) {
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' forecast(mdl, h=12)
+#' @export
 forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 
 #' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
@@ -523,6 +525,7 @@ forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' plot(mdl)
+#' @export
 plot.garma_model<-function(mdl,h=24,...) {
   # plot forecasts from model
   actuals <- zoo(ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
@@ -544,6 +547,7 @@ plot.garma_model<-function(mdl,h=24,...) {
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' ggplot(mdl)
+#' @export
 ggplot.garma_model<-function(mdl,h=24) {
   # plot forecasts from model
   fc <- predict(mdl,n.ahead=h)
