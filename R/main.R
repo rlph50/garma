@@ -506,7 +506,7 @@ predict.garma_model<-function(mdl,n.ahead=1) {
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' forecast(mdl, h=12)
 #' @export
-forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
+forecast<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 
 #' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
 #' @param mdl (garma_model) The garma_model from which to plot the values.
