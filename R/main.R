@@ -176,7 +176,7 @@ garma<-function(x,
   }
 
   # create a list of all possible params any 'method' might need. The various objective functions can extract the parameters which are relevant to that method.
-  params <- list(y=y, ss=ss, p=p,q=q,k=k,include.mean=include.mean,est_mean=ifelse(method%in%mean_methods,TRUE,FALSE),scale=sd_y,m_trunc=m_trunc)
+  params <- list(y=y, ss=ss, p=p,q=q,d=d,k=k,include.mean=include.mean,est_mean=ifelse(method%in%mean_methods,TRUE,FALSE),scale=sd_y,m_trunc=m_trunc)
   message <- c()
 
   # First we make a first pass at optimisation using "optim".
@@ -569,6 +569,7 @@ ggplot.garma_model<-function(mdl,h=24) {
   y <- params$y
   p <- params$p
   q <- params$q
+  d <- params$d
   k <- params$k
   include.mean <- params$include.mean
   est_mean <- params$est_mean
@@ -597,8 +598,21 @@ ggplot.garma_model<-function(mdl,h=24) {
     ggbr_filter <- signal::Arma(b = 1, a = .ggbr.coef(length(y_dash),d,u))
     eps         <- signal::filter(ggbr_filter, eps)
   }
-  return(list(fitted_values=(y-eps),residuals=eps))
+
+  # if (integer) differenced then...
+  if (d==1) {
+    ydm2 <- y
+    n    <- length(ydm2)
+    for (i in 1:n.ahead)
+      ydm2[n+i] <- ydm2[n+i-1] + y[n+i-1]
+  }
+  else ydm2 <-y
+
+  return(list(fitted_values=(ydm2-eps),residuals=eps))
 }
 
+#' @export
 fitted.garma_model<-function(mdl) {return(mdl.fitted_values)}
+#' @export
 residuals.garma_model<-function(mdl) {return(mdl.residuals)}
+
