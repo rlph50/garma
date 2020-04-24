@@ -65,13 +65,6 @@
 #' # Compare with the built-in arima function
 #' print(arima(ap,order=c(9,1,0),include.mean=F))
 #' @export
-
-# library(nloptr)
-# library(FKF)
-# library(assertthat)
-# library(zoo)
-# library(ggplot2)
-
 garma<-function(x,
                 order=list(0,0,0),
                 k=1,
@@ -554,7 +547,7 @@ ggplot.garma_model<-function(mdl,h=24) {
 
   if (mdl$y_freq>1) { # then we have actual dates not just an index
     idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],15),by=mdl$y_freq,length.out=(length(mdl$y)+h))
-    day(idx) <- days_in_month(idx)
+    lubridate::day(idx) <- lubridate::days_in_month(idx)
     cutoff <- lubridate::make_date(mdl$y_end[1],mdl$y_end[2],15)
   } else {
     idx <- (mdl$y_start[1]):(mdl$y_end[1]+h)

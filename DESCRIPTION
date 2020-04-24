@@ -19,10 +19,10 @@ Imports:
     signal,
     pracma,
     nloptr,
+    ggplot2,
     Rdpack (>= 0.7)
 Suggests:
     forecast,
-    ggplot2,
     BB,
     GA,
     pso,
