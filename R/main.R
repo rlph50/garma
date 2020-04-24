@@ -563,7 +563,8 @@ ggplot.garma_model<-function(mdl,h=24) {
   ggplot(df[!is.na(df$value),],aes(x=dt,y=value,color=grp)) + geom_line() + ylab('') + xlab('') +
     geom_vline(xintercept=cutoff,color='red',linetype=2) +
     theme_bw() + theme(legend.title=element_blank()) +
-    scale_colour_manual(values=c('gray20','dodgerblue4',rep('gray',10)))
+    scale_color_brewer(palette="Set2")
+    #scale_colour_manual(values=c('gray20','dodgerblue4',rep('gray',10)))
 }
 
 
