@@ -9,8 +9,6 @@
     d     <- par[start1+1]
     start1 <- start1+2
   } else u<-d<-0.0
-  # sigma2  <- par[length(par)]
-  # if ((sigma2<1e-15)|(!is.finite(sigma2))|is.na(sigma2)) sigma2 <- 1.0e-15
   sigma2<-1
 
   if (p>0) phi_vec   <- c(1,-(par[start1:(start1+p-1)] ))      else phi_vec   <- 1
@@ -34,7 +32,7 @@
   for(j in 1:(m_trunc-1)){
     entry[j] <- sum(diag(si_sq[-1:-j,-(m_trunc+2-j):-(m_trunc+1)]))
   }
-  P0 <- pracma::toeplitz(c(sum(diag(si_sq)),entry[1:(m_trunc-1)],si_sq[1,m_trunc+1]))
+  P0 <- stats::toeplitz(c(sum(diag(si_sq)),entry[1:(m_trunc-1)],si_sq[1,m_trunc+1]))
 
   return(list(a0 = a0, P0 = P0, ct = ct, dt = dt, Zt = Zt, Tt = Tt, GGt = GGt, HHt = HHt))
 }
@@ -53,11 +51,11 @@
   sp  <- .qml_matricies(par,p,q,k,include.mean,m_trunc)
   if (include.mean) beta0 <- par[1] else beta0<-0
 
-  ans <- fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt-beta0))
+  ans <- FKF::fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt-beta0))
   return(-ans$logLik)
 }
 
-.qml.ggbr.se2 <- function(par,params) {
+.qml.ggbr.se2 <- function(pars,params) {
   # objective function to be minimised for QML estimates
   y  <- params$y
   yt <- rbind(y)
@@ -67,11 +65,10 @@
   include.mean <- params$include.mean
   m_trunc <- params$m_trunc
 
-  sp  <- .qml_matricies(par,p,q,k,include.mean,m_trunc)
+  sp  <- .qml_matricies(pars,p,q,k,include.mean,m_trunc)
   if (include.mean) beta0 <- par[1] else beta0<-0
 
-  #ans <- fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt))
-  ans <- fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt-beta0))
+  ans <- FKF::fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt-beta0))
 
   return(sum(ans$vt[1,]^2/ans$Ft[1,1,],na.rm=TRUE))
 }

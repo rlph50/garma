@@ -16,11 +16,18 @@
   spec<-ss$spec[1:n_freq]
 
   start=1
-  if (k==1) {
-    u     <- par[start]
-    fd    <- par[start+1]
-    start <- start+2
-  }
+  u <- fd <- c()
+  # if (k==1) {
+  #   u     <- par[start]
+  #   fd    <- par[start+1]
+  #   start <- start+2
+  # }
+  if (k>0) for (k1 in 1:k) {
+      u <- c(u,par[start])
+      fd <- c(fd,par[start+1])
+      start<-start+2
+    }
+
   if (p>0) phi_vec <- (-par[start:(start+p-1)])       else phi_vec<-1
   if (q>0) theta_vec <- (-par[(p+start):length(par)]) else theta_vec<-1
 
@@ -29,7 +36,12 @@
   if (p>0) mod_phi   <- .a_fcn(phi_vec,freq)
   if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
-  if (k==1) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u)^2))^fd
+  # if (k==1) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u)^2))^fd
+  if (k>0) for (k1 in 1:k) {
+    u_k  <- u[k1]
+    fd_k <- fd[k1]
+    spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u_k)^2))^fd_k
+  }
 
   spec_den_inv[spec_den_inv==0] <- NA
   I_f <- spec*spec_den_inv
@@ -51,16 +63,11 @@
   start=1
   u <- c()
   fd <- c()
-  for (k1 in 1:k) {
+  if (k>0) for (k1 in 1:k) {
       u     <- c(u,par[start])
       fd    <- c(fd,par[start+1])
       start <- start+2
   }
-  # if (k==1) {
-  #   u     <- par[start]
-  #   fd    <- par[start+1]
-  #   start <- start+2
-  # }
   if (p>0) phi_vec <- (-par[start:(start+p-1)])       else phi_vec<-1
   if (q>0) theta_vec <- (-par[(p+start):length(par)]) else theta_vec<-1
 
@@ -69,8 +76,7 @@
   if (p>0) mod_phi   <- .a_fcn(phi_vec,freq)
   if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
-  #if (k==1) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u)^2))^fd
-  for (k1 in 1:k) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u[k1])^2))^fd[k1]
+  if (k>0) for (k1 in 1:k) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u[k1])^2))^fd[k1]
 
   spec_den_inv[spec_den_inv==0] <- NA
   I_f <- spec*spec_den_inv

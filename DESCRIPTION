@@ -20,6 +20,7 @@ Imports:
     signal,
     pracma,
     nloptr,
+    Rsolnp,
     ggplot2,
     Rdpack (>= 0.7)
 Suggests:

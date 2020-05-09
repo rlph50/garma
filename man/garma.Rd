@@ -13,7 +13,7 @@ garma(
   method = "Whittle",
   allow_neg_d = TRUE,
   maxeval = 10000,
-  opt_method = "optim",
+  opt_method = "solnp",
   m_trunc = 50
 )
 }
@@ -23,7 +23,7 @@ garma(
 \item{order}{(list) This should be a list (similar to the stats::arima order parameter) which will give the order of the process to fit.
 The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
 autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
-differencing to apply prior to any fitting. Note however that only d=1 or d=0 is currently supported.}
+differencing to apply prior to any fitting.}
 
 \item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.}
 
@@ -35,7 +35,7 @@ is zero and otherwise not.}
 The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
 distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
 'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
-'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016).
+'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
 'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.}
 
@@ -44,17 +44,20 @@ of the Gegenbauer term is allowed. This can be set to FALSE to force the routine
 
 \item{maxeval}{(int) the maximum function eveluations to be allowed during each optimisation.}
 
-\item{opt_method}{(character) This names the optimisation method used to find the parameter estimates. The default is to use the built-in
-R algorithm called 'optim'. For some data or some models, however, other methods may work well. Other allowed values are
-\itemize{
-\item cobyla algorithm in package nloptr
-\item directL algorithm in package nloptr
-\item BBoptim from package BB
-\item psoptim from package pso
-\item hjkb from dfoptim package
-\item nmkb from dfoptim package
-\item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run.
-}}
+\item{opt_method}{(character) This names the optimisation method used to find the parameter estimates. The default is to use 'solnp' from package Rsolnp,
+which has shown to have good performance in a wide range of circumstances. For some data or some models, however, other methods may work well. Supported algorithms include:
+    \itemize{
+    \item cobyla algorithm in package nloptr
+    \item directL algorithm in package nloptr
+    \item BBoptim from package BB
+    \item psoptim from package pso
+    \item hjkb from dfoptim package
+    \item nmkb from dfoptim package
+    \item solnp from Rsolnp package
+    \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
+    particularly for the 'CSS' method.
+    }
+Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.}
 
 \item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
 }
