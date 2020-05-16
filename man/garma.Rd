@@ -3,7 +3,7 @@
 \docType{package}
 \name{garma}
 \alias{garma}
-\title{garma}
+\title{garma: A package for estimating and foreasting Gegenbauer time series models.}
 \usage{
 garma(
   x,

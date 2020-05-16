@@ -4,7 +4,7 @@
 \alias{ggplot.garma_model}
 \title{The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.}
 \usage{
-ggplot.garma_model(mdl, h = 24)
+\method{ggplot}{garma_model}(mdl, h = 24)
 }
 \arguments{
 \item{mdl}{(garma_model) The garma_model from which to ggplot the values.}

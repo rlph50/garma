@@ -306,17 +306,17 @@ garma<-function(x,
                              hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25)),
         error=function(cond) {fit.optim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
-      tryCatch(fit.cobyla  <- cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
+      tryCatch(fit.cobyla  <- nloptr::cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
                error=function(cond) {fit.cobyla<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
-      tryCatch(fit.directL <- directL(fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
+      tryCatch(fit.directL <- nloptr::directL(fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
                error=function(cond) {fit.directL<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
       tryCatch(fit.bboptim <- BB::BBoptim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, control=list(trace=FALSE,maxit=maxeval,ftol=1e-15,gtol=1e-8),
                                           params=params,quiet=TRUE),
                error=function(cond) {fit.bboptim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
-      tryCatch(fit.psoptim <- psoptim(par=pars, fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxit=maxeval)),
+      tryCatch(fit.psoptim <- pso::psoptim(par=pars, fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxit=maxeval)),
                error=function(cond) {fit.psoptim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
       tryCatch(fit.hjkb    <- dfoptim::hjkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
@@ -585,7 +585,7 @@ predict.garma_model<-function(mdl,n.ahead=1) {
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
 #' forecast(mdl, h=12)
 #' @export
-forecast<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
+forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
 
 #' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
 #' @param mdl (garma_model) The garma_model from which to plot the values.
