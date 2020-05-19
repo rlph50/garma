@@ -24,10 +24,15 @@ Imports:
     ggplot2,
     Rdpack (>= 0.7)
 Suggests:
-    forecast,
+    longmemo,
+    rsoi,
+    tidyverse,
     BB,
     GA,
     pso,
     dfoptim,
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
 RoxygenNote: 7.0.1
+VignetteBuilder: knitr

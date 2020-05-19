@@ -1,0 +1,186 @@
+---
+title: "An introduction to GARMA models"
+output: rmarkdown::html_vignette
+bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/References.bib
+vignette: >
+  %\VignetteIndexEntry{introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction to long memory models and GARMA models.
+
+GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
+
+GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model proceses which have a high correlation between observations which are far apart in time.
+
+For instance, consider the data on the minimum level of the Nile [@Tousson1925], as measured from 622 to 1281 AD (from the **longmemo** package):
+```{r nile, fig.width=7, fig.height=7, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(forecast)
+
+data(NileMin,package='longmemo')
+# we'll just set the correct start year, for display purposes.
+NileMin<-ts(as.numeric(NileMin),start=622,frequency=1)
+
+ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.')
+```
+
+
+The first thing to note here is that the ACF (autocorrelation function) is showing highly significant correlations between Nile measurements, even at 350 years apart! 
+
+We won't attempt to address the question of how it is that a flood or minima level of a river flow today could be significantly related to what was happening 350 years ago, but scientists believe this is a real affect, not an artifact of measurement. This time series has been investigated many times by researchers.
+
+The phenomena of long memory has been identified in a number of different types of time series from sunspots [@Gray1989], the timing of xrays from Cygnus X1 [@Greenhough2002], inflation rates, exchange rates [@Caporale2014] and even in non-coding DNA [@Lopes2006].
+
+
+
+ARMA models which can model long memory like this are sometimes known generically as 'long memory models' or 'fractionally differenced' models, and the default version of these can be fit by a number of existing R packages, including **fracdiff**, **longmemo**, **rugarch** and even **forecast**, amoung many others.
+
+At time of writing however there are few packages which can fit GARMA models. These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
+
+```{r soi, fig.width=7, fig.height=5}
+library(rsoi)
+
+soi <- download_soi()
+
+soi_ts <- ts(soi$SOI,start=c(1951,2),frequency=12)
+
+ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index')
+```
+
+
+In this plot the ACF shows the cyclical nature which is so typical of the GARMA models.
+
+
+
+GARMA stands for Gegenbauer AR-MA, and the AR and MA letters have their usual meaning in time series of "auto-regressive" and "moving average". 'Gegenbauer' refers to a mathematician Leopold Gegenbauer who lived in the 19th century and developed a series of orthogonal polynomials now called Gegenbauer polynomials, and sometimes called 'ultraspherical' polynomials [@Szego1959]. These polynomials feature strongly in the mathematics of GARMA models [@Gray1989], [@Gray1994].
+
+
+All long memory models, including GARMA models, share one thing in common. When you examine them on the frequency domain, they will show evidence of an unbounded (read: very large) peak in the spectrum. The more traditional models - known as "short memory" models do not have such a peak - whilst the spectrum may vary up and down, it has absolute bounds beyond which it will not go.
+
+```{r spectrum, fig.width=7, fig.height=4}
+spectrum_nilemin <- spectrum(NileMin, plot=FALSE)
+spectrum_soi     <- spectrum(soi_ts,  plot=FALSE)
+
+# now munge these lists together into a single dataframe.
+spec_df <- rbind(data.frame(freq=spectrum_nilemin$freq,
+                            spec=spectrum_nilemin$spec, 
+                            process='NileMin'),
+                 data.frame(freq=spectrum_soi$freq,     
+                            spec=spectrum_soi$spec,     
+                            process='SOI'))
+
+# and plot
+ggplot(spec_df, aes(x=freq,y=spec)) +
+  geom_line() + 
+  facet_wrap(.~process,scales='free_y') +
+  ggtitle('Spectrum of NileMin and SOI') + 
+  ylab('Intensity') + 
+  xlab(bquote('Frequency (0 -' ~ pi ~')' )) + xlim(0,pi)
+```
+
+
+From the above you can see that the NileMin spectrum shows an (essentially) unbounded peak at 0 which is the marker of a traditional long memory process.
+
+However the SOI has 3 main peaks, all separated away from 0. Although these are not as large as the NileMin peaks, compared with the rest of the spectrum they are quite large, so it is not inappropriate to at least try to model the SOI by a 3-factor (or k=3) Gegenbauer model. This was first pointed out by [@Lustig2017].
+
+## Technical details of the model.
+
+The GARMA model as fit by the **garma** package is specified as
+$$ \displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}} $$
+where
+
+1. $\phi(B)$ represents the short-memory Autoregressive component of order p,
+2. $\theta(B)$ represents the short-memory Moving Average component of order q,
+3. $(1-2u_{i}B+B^{2})^{d_{i}}$ represents the long-memory Gegenbauer component (there may in general be k of these),
+4. $X_{t}$ represents the observed process,
+5. $\epsilon_{t}$ represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
+     Generally the routines in this package will work best if these have an approximate Gaussian distribution.
+6. $B$ represents the Backshift operator, defined by $B X_{t}=X_{t-1}$.
+
+When k=0, then this is just a short memory model as fit by the stats "arima" function.
+
+
+## Fitting a short memory model
+
+We have deliberately kept the fitting process close to that of the "arima" and "forecast::Arima" functions.
+
+To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. the "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that
+
+```{r arima}
+library(garma)
+data(AirPassengers)
+
+ap  <- as.numeric(diff(AirPassengers,12))
+
+# Arima model
+arima_mdl <- arima(ap,order=c(9,1,0))
+summary(arima_mdl)
+
+# GARMA model
+# Note in the below we specify k=0.
+# This tells the routine is not to fit a Gegenbauer/GARMA model.
+garma_mdl <- garma(ap,order=c(9,1,0),k=0)
+summary(garma_mdl)
+
+```
+
+As can be seen above, the coefficients produced are similar but not identical - the log-likelihood from the "garma" run is considerably lower than that produced by the "arima" run, indicating that the routine has in fact found a better solution (estimating parameters like these involves non-linear optimisation - "arima" uses R's built-in optimiser called "optim"; garma however by default uses "solnp" from the **Rsolnp** package).
+
+## Fitting a GARMA model.
+
+In this section we'll look at fitting a GARMA model to the Sunspots data, again as supplied with R. This data has been analysed many times in the literature; the first time was by [@Gray1989]. Generally, authors have used a standard subset of this data from 1749 to 1924.
+
+The Sunspot data consists of counts of sunspots as observed over a considerable period. Recently a large project by the Royal Observatory of Belgium has checked and extended this key dataset [@Clette2014], but we'll use the original here.
+
+```{r sunspot1}
+library(garma)
+
+data(sunspot.year)
+
+# Next we subset the data to ensure we are using the years used in the literature.
+sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
+
+# Now as in Gray et al 1989 we fit a GARMA(1,0) model:
+sunspots_garma_mdl <- garma(sunspots, order=c(1,0,0),k=1,method='CSS')
+
+summary(sunspots_garma_mdl)
+
+```
+
+
+Above, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "whittle" method by default, since this method not only produces very accurate results very quickly, but has a lot of theoretical results available to support its use - for example [@Giraitis2001].
+
+The following table compares the values found by Gray et al and by the "garma" function:
+
+Parameter  | Gray et al |  garma |
+-----------|-----------:|-------:|
+intercept  | 44.78      | `r sunspots_garma_mdl$coef[1,1]` |
+u          | 0.85       | `r sunspots_garma_mdl$coef[1,2]` |
+d          | 0.42       | `r sunspots_garma_mdl$coef[1,3]` |
+ar1        | 0.49       | `r sunspots_garma_mdl$coef[1,4]` |
+
+As you can see, the results are quite close (Gray et al only published their results to 2 decimal places).
+
+Notice also that the routine displays the Gegenbauer Period - in this case 11.2 years - which corresponds nicely with the "known" 11 year sunspot cycle.
+
+Also shown is the degree of fractional differencing and the Fractional Dimension of the original series.
+
+We can forecast this ahead in a manner similar to that used by "arima" and "forecast::Arima":
+
+```{r sunspot2, fig.width=7, fig.height=4}
+fc <- forecast(sunspots_garma_mdl,h=11)
+
+ggplot(sunspots_garma_mdl, h=11) +
+  ggtitle('Sunspot Forecast using GARMA(1,0)')
+```
+
+## References

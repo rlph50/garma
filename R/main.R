@@ -634,7 +634,7 @@ ggplot.garma_model<-function(mdl,h=24) {
   }
 
   df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
-  df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted_values),fc$pred))
+  df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$pred))
   df <- rbind(df1,df2)
   ggplot2::ggplot(df[!is.na(df$value),],aes(x=dt,y=value,color=grp)) + ggplot2::geom_line() + ggplot2::ylab('') + ggplot2::xlab('') +
     ggplot2::geom_vline(xintercept=cutoff,color='red',linetype=2) +
