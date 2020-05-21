@@ -26,8 +26,4 @@ After this you can install this package by typing:
 ```
 
 ## Documentation
-Unfortunately the only documentation currently available is in the help files - after installing the package, type:
-```s
-> library('garma')
-> help('garma')
-```
+An Introduction to the "garma" packages is available [(https://github.com/rlph50/garma/blob/master/An%20Introduction%20to%20GARMA.pdf)](here), and the reference documentation is available here [(https://github.com/rlph50/garma/blob/master/garma_0.2.0.pdf)](here).
