@@ -1,6 +1,6 @@
 Package: garma
 Type: Package
-Title: GARMA provides support for estimating, and fitting Gegenbauer Seasonal/Cyclical time series models.
+Title: GARMA provides support for estimating, and fitting Gegenbauer Seasonal/Cyclical time series models
 Version: 0.2.0
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))

@@ -4,12 +4,12 @@
 \alias{summary.garma_model}
 \title{The summary function provides a summary of a "garma_model" object.}
 \usage{
-\method{summary}{garma_model}(mdl, verbose = TRUE)
+\method{summary}{garma_model}(object, ...)
 }
 \arguments{
-\item{mdl}{(garma_model) The garma_model from which to print the values.}
+\item{object}{(garma_model) The garma_model from which to print the values.}
 
-\item{verbose}{(bool) whether to print out the verbose version of the model or not. Default: TRUE}
+\item{...}{Other arguments. Ignored.}
 }
 \description{
 The summary function provides a summary of a "garma_model" object.
@@ -17,6 +17,6 @@ The summary function provides a summary of a "garma_model" object.
 \examples{
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 summary(mdl)
 }

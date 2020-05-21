@@ -63,13 +63,6 @@ Note further that if you specify a k>1, then inequality constraints are required
 }
 \value{
 An S3 object of class "garma_model".
-
-\preformatted{
-References:
-C Chung. A generalized fractionally integrated autoregressive moving-average process. Journal of Time Series Analysis, 17(2):111–140, 1996.
-G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
-L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
-}
 }
 \description{
 The GARMA package provides the main function "garma" as well as print, summary,
@@ -98,9 +91,19 @@ when k=0, then this is just a short memory model as fit by the stats "arima" fun
 \examples{
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F))
+print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE))
 # Compare with the built-in arima function
-print(arima(ap,order=c(9,1,0),include.mean=F))
+print(arima(ap,order=c(9,1,0),include.mean=FALSE))
+}
+\references{
+C Chung. A generalized fractionally integrated autoregressive moving-average process.
+*Journal of Time Series Analysis*, **17**(2):111–140, 1996.
+
+G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory.
+*Computational Statistics and Data Analysis*, **100**:115–130, 2016.
+
+L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
+*The Annals of Statistics*, **29**(4):987–1023, 2001.
 }
 \author{
 Richard Hunt

@@ -4,12 +4,14 @@
 \alias{predict.garma_model}
 \title{The predict function predicts future values of a "garma_model" object.}
 \usage{
-\method{predict}{garma_model}(mdl, n.ahead = 1)
+\method{predict}{garma_model}(object, n.ahead = 1, ...)
 }
 \arguments{
-\item{mdl}{(garma_model) The garma_model from which to predict the values.}
+\item{object}{(garma_model) The garma_model from which to predict the values.}
 
 \item{n.ahead}{(int) The number of time periods to predict ahead. Default: 1}
+
+\item{...}{Other parameters. Ignored.}
 }
 \value{
 A "ts" object containing the requested forecasts.
@@ -20,6 +22,6 @@ The predict function predicts future values of a "garma_model" object.
 \examples{
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 predict(mdl, n.ahead=12)
 }

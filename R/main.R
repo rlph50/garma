@@ -55,18 +55,21 @@
 #' @param m_trunc Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.
 #' @return An S3 object of class "garma_model".
 #'
-#' \preformatted{
-#' References:
-#' C Chung. A generalized fractionally integrated autoregressive moving-average process. Journal of Time Series Analysis, 17(2):111–140, 1996.
-#' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory. Computational Statistics and Data Analysis, 100:115–130, 2016.
-#' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole. The Annals of Statistics, 29(4):987–1023, 2001.
-#' }
+#' @references
+#' C Chung. A generalized fractionally integrated autoregressive moving-average process.
+#' *Journal of Time Series Analysis*, **17**(2):111–140, 1996.
+#'
+#' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory.
+#' *Computational Statistics and Data Analysis*, **100**:115–130, 2016.
+#'
+#' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
+#' *The Annals of Statistics*, **29**(4):987–1023, 2001.
 #' @examples
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F))
+#' print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE))
 #' # Compare with the built-in arima function
-#' print(arima(ap,order=c(9,1,0),include.mean=F))
+#' print(arima(ap,order=c(9,1,0),include.mean=FALSE))
 #' @export
 garma<-function(x,
                 order=list(0,0,0),
@@ -106,9 +109,9 @@ garma<-function(x,
   }
 
   # now save the ts elements, if any - we re-apply them to the output values
-  x_start <- start(x)
-  x_end   <- end(x)
-  x_freq  <- frequency(x)
+  x_start <- stats::start(x)
+  x_end   <- stats::end(x)
+  x_freq  <- stats::frequency(x)
 
   x<-as.numeric(x)
   if (!is.numeric(x))
@@ -142,8 +145,8 @@ garma<-function(x,
 
   if (d>0) y<-diff(x,differences=d) else y<-x
   mean_y <- mean(y)
-  sd_y   <- sd(y)
-  ss<-spectrum((y-mean_y)/sd_y,plot=FALSE,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE)
+  sd_y   <- stats::sd(y)
+  ss<-stats::spectrum((y-mean_y)/sd_y,plot=FALSE,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE)
 
   # Now set up params and lb (lower bounds) and ub (upper bounds)
   n_pars   <- 0
@@ -200,7 +203,7 @@ garma<-function(x,
       ub<-c(ub,1)
       if (method%in%methods_to_estimate_var) ub<-c(ub,Inf)
       ub_finite <- c(ub_finite,1)
-      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*var(y))
+      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*stats::var(y))
     } else {
       lb<- c(lb,rep(-Inf,p+q))
       if (method%in%methods_to_estimate_var) lb <- c(lb,1e-10)
@@ -209,7 +212,7 @@ garma<-function(x,
       lb_finite <- c(lb_finite,rep(-10,p+q))
       if (method%in%methods_to_estimate_var) lb_finite <- c(lb_finite,1e-10)
       ub_finite <- c(ub_finite,rep(10,p+q))
-      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*var(y))
+      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*stats::var(y))
     }
   }
 
@@ -249,8 +252,8 @@ garma<-function(x,
     }
     hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
   } else { # k==0 or k==1
-    fit <- optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
-                 hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
+    fit <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
+                        hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
     if (fit$convergence==52) {   # Error in line search, then try again using nloptr
       fit2<-nloptr::lbfgs(x0=fit$par, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-8))
       if (fit2$value<fit$value&fit2$convergence>=0) fit<-fit2
@@ -300,10 +303,10 @@ garma<-function(x,
       hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
     } else if (opt_method=='best') {
       message <- c()
-      fit.optim<-fit.cobyla<-fit.directL<-fit.bboptim<-fit.psoptim<-fit.hjkb<-fit.nmkb<-list(value=Inf,message=c(message,cond),convergece=999,par=pars) #default to set environment
+      fit.optim<-fit.cobyla<-fit.directL<-fit.bboptim<-fit.psoptim<-fit.hjkb<-fit.nmkb<-list(value=Inf,convergece=999,par=pars) #default to set environment
       tryCatch(
-        fit.optim   <- optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
-                             hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25)),
+        fit.optim   <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
+                                    hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25)),
         error=function(cond) {fit.optim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
       )
       tryCatch(fit.cobyla  <- nloptr::cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
@@ -414,8 +417,8 @@ garma<-function(x,
             'y_end'=x_end,
             'y_freq'=x_freq,
             'include.mean'=include.mean,
-            'fitted'=ts(fitted$fitted,start=x_start,end=x_end,frequency=x_freq),
-            'residuals'=ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
+            'fitted'=stats::ts(fitted$fitted,start=x_start,end=x_end,frequency=x_freq),
+            'residuals'=stats::ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
             # 'par'=fit$par,
             # 'params'=params,
             'm_trunc'=m_trunc)
@@ -439,16 +442,10 @@ garma<-function(x,
   return(res)
 }
 
-#' The summary function provides a summary of a "garma_model" object.
-#' @param mdl (garma_model) The garma_model from which to print the values.
-#' @param verbose (bool) whether to print out the verbose version of the model or not. Default: TRUE
-#' @examples
-#' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
-#' summary(mdl)
-#' @export
-summary.garma_model<-function(mdl,verbose=TRUE) {
+
+
+
+.print_garma_model<-function(mdl,verbose=TRUE) {
   cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
   if (verbose) {
     with(mdl,
@@ -486,37 +483,54 @@ summary.garma_model<-function(mdl,verbose=TRUE) {
   }
 }
 
-#' The print function prints a summary of a "garma_model" object.
-#' @param mdl (garma_model) The garma_model from which to print the values.
-#' @param verbose (bool) whether to print out the verbose version of the model or not. Default: FALSE
+
+#' The summary function provides a summary of a "garma_model" object.
+#' @param object (garma_model) The garma_model from which to print the values.
+#' @param ... Other arguments. Ignored.
 #' @examples
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
+#' summary(mdl)
+#' @export
+summary.garma_model<-function(object,...) {
+  .print_garma_model(object,verbose=FALSE)
+}
+
+#' The print function prints a summary of a "garma_model" object.
+#' @param x (garma_model) The garma_model from which to print the values.
+#' @param ... Other arguments. Ignored.
+#' @examples
+#' data(AirPassengers)
+#' ap  <- as.numeric(diff(AirPassengers,12))
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' print(mdl)
 #' @export
-print.garma_model<-function(mdl,verbose=FALSE) {summary(mdl,verbose)}
+print.garma_model<-function(x,...) {
+  .print_garma_model(x,verbose=TRUE)
+}
 
 .is.installed <- function(mypkg){
-  is.element(mypkg, installed.packages()[,1])
+  is.element(mypkg, utils::installed.packages()[,1])
 }
 
 #' The predict function predicts future values of a "garma_model" object.
-#' @param mdl (garma_model) The garma_model from which to predict the values.
+#' @param object (garma_model) The garma_model from which to predict the values.
 #' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
+#' @param ... Other parameters. Ignored.
 #' @return A "ts" object containing the requested forecasts.
 #' @examples
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' predict(mdl, n.ahead=12)
 #' @export
-predict.garma_model<-function(mdl,n.ahead=1) {
-  coef <- unname(mdl$coef[1,])
-  p<-mdl$order[1]
-  q<-mdl$order[3]
+predict.garma_model<-function(object,n.ahead=1,...) {
+  coef <- unname(object$coef[1,])
+  p<-object$order[1]
+  q<-object$order[3]
 
-  if (mdl$include.mean) {
+  if (object$include.mean) {
     beta0  <- coef[1]
     start  <- 2
   }
@@ -524,7 +538,7 @@ predict.garma_model<-function(mdl,n.ahead=1) {
     beta0  <- 0
     start  <- 1
   }
-  if (mdl$k==1) {
+  if (object$k==1) {
     u      <- coef[start]
     d      <- coef[start+1]
     start  <- start+2
@@ -533,45 +547,42 @@ predict.garma_model<-function(mdl,n.ahead=1) {
   if (p>0) phi_vec   <- c(-(coef[start:(start+p-1)] ))           else phi_vec   <- 1
   if (q>0) theta_vec <- c(1,-(coef[(p+start):(length(coef)-1)])) else theta_vec <- 1
 
-  if (mdl$order[2]==0)
-    ydm <- mdl$y - beta0
-  else if (mdl$order[2]==1)
-    ydm <- diff(mdl$y) - beta0
+  if (object$order[2]==0)
+    ydm <- object$y - beta0
+  else if (object$order[2]==1)
+    ydm <- diff(object$y) - beta0
 
   n <- length(ydm)
 
   # set up filters
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (mdl$k>0) ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,d,u))
+  if (object$k>0) ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,d,u))
 
   # generate forecasts
   for (i in 1:n.ahead) {
     eps <- ydm
-    if (mdl$k>0) eps <- signal::filter(ggbr_filter, eps)
+    if (object$k>0) eps <- signal::filter(ggbr_filter, eps)
     eps <- signal::filter(arma_filter, eps)
     ydm[n+i] <- (-eps[length(eps)])
   }
 
   # if (integer) differenced then...
-  if (mdl$order[2]>0) {
-    ydm2 <- diffinv(ydm,differences=mdl$order[2])
-    #ydm2 <- mdl$y
-    #n    <- length(ydm2)
-    #for (i in 1:n.ahead)
-    #  ydm2[n+i] <- ydm2[n+i-1] + ydm[n+i-1]
+  if (object$order[2]>0) {
+    ydm2 <- stats::diffinv(ydm,differences=object$order[2])
   }
   else ydm2 <-ydm
 
   # Now we have the forecasts, we set these up as a "ts" object - as does "predict.arima"
-  y_end = mdl$y_end
+  y_end = object$y_end
   if(length(y_end)>1) {
-    if (mdl$y_freq >= y_end[2]) {
+    if (object$y_freq >= y_end[2]) {
       y_end[1] <- y_end[1]+1
-      y_end[2] <- y_end[2]-mdl$y_freq+1
+      y_end[2] <- y_end[2]-object$y_freq+1
     }
     else y_end[2] <- y_end[2] + 1
   } else y_end <- y_end +1
-  res <- ts(tail(ydm2,n.ahead)+beta0,start=y_end,frequency=mdl$y_freq)
+
+  res <- stats::ts(tail(ydm2,n.ahead)+beta0,start=y_end,frequency=object$y_freq)
   return(list(pred=res))
 }
 
@@ -580,49 +591,55 @@ predict.garma_model<-function(mdl,n.ahead=1) {
 #' @param h (int) The number of time periods to predict ahead. Default: 1
 #' @return - a "ts" object containing the requested forecasts.
 #' @examples
+#' library(forecast)
+#'
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' forecast(mdl, h=12)
 #' @export
-forecast.garma_model<-function(mdl,h=1) {return(predict(mdl,n.ahead=h))}
+forecast.garma_model<-function(mdl,h=1) {return(predict.garma_model(mdl,n.ahead=h))}
+
+.plot_garma_model<-function(mdl,h=24,...) {
+  # plot forecasts from model
+  actuals <- zoo(stats::ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
+  fitted <- zoo(mdl$fitted_values)
+  fc <- zoo(predict.garma_model(mdl,n.ahead=h)$pred)
+  graphics::plot(actuals,col='black',type='l',xlim=c(stats::start(actuals)[1],stats::end(fc)[1]),...)
+  graphics::lines(fitted,col='blue')
+  graphics::lines(fc,col='blue')
+  graphics::abline(v=mdl$y_end,col='red',lty=2)
+}
 
 #' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
-#' @param mdl (garma_model) The garma_model from which to plot the values.
-#' @param h (int) The number of time periods to predict ahead. Default: 24
-#' @param ... other arguments to be passed to the "plot" function.
+#' @param x (garma_model) The garma_model from which to plot the values.
+#' @param ... other arguments to be passed to the "plot" function, including h (int) - the number of periods ahgead to forecast.
 #' @return An R "plot" object.
 #' @examples
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' plot(mdl)
 #' @export
-plot.garma_model<-function(mdl,h=24,...) {
-  # plot forecasts from model
-  actuals <- zoo(ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
-  fitted <- zoo(mdl$fitted_values)
-  fc <- zoo(predict(mdl,n.ahead=h)$pred)
-  plot(actuals,col='black',type='l',xlim=c(start(actuals)[1],end(fc)[1]),...)
-  lines(fitted,col='blue')
-  lines(fc,col='blue')
-  abline(v=mdl$y_end,col='red',lty=2)
+plot.garma_model<-function(x,...) {
+  .plot_garma_model(x,...)
 }
 
 #' The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
 #' @param mdl (garma_model) The garma_model from which to ggplot the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 24
-#' @param ... other arguments to be passed to the "plot" function.
 #' @return A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be used to enhance the default output.
 #' @examples
+#' library(ggplot2)
+#'
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' ggplot(mdl)
 #' @export
 ggplot.garma_model<-function(mdl,h=24) {
   # plot forecasts from model
-  fc <- predict(mdl,n.ahead=h)
+  fc <- predict.garma_model(mdl,n.ahead=h)
 
   if (mdl$y_freq>1) { # then we have actual dates not just an index
     idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],15),by=mdl$y_freq,length.out=(length(mdl$y)+h))
@@ -636,7 +653,8 @@ ggplot.garma_model<-function(mdl,h=24) {
   df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
   df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$pred))
   df <- rbind(df1,df2)
-  ggplot2::ggplot(df[!is.na(df$value),],aes(x=dt,y=value,color=grp)) + ggplot2::geom_line() + ggplot2::ylab('') + ggplot2::xlab('') +
+  ggplot2::ggplot(df[!is.na(df$value),],ggplot2::aes(x='dt',y='value',color='grp')) +
+    ggplot2::geom_line() + ggplot2::ylab('') + ggplot2::xlab('') +
     ggplot2::geom_vline(xintercept=cutoff,color='red',linetype=2) +
     ggplot2::theme_bw() + ggplot2::theme(legend.title=ggplot2::element_blank()) +
     ggplot2::scale_color_brewer(palette="Set2")
@@ -690,7 +708,7 @@ ggplot.garma_model<-function(mdl,h=24) {
   eps_y <- eps
   fitted <- (params$y-eps)
   if (id>0) {
-    eps_y <- diffinv(fitted,differences = id)
+    eps_y <- stats::diffinv(fitted,differences = id)
     fitted <- (params$orig_y-eps_y)
   }
 
@@ -698,6 +716,10 @@ ggplot.garma_model<-function(mdl,h=24) {
 }
 
 #' @export
-fitted.garma_model<-function(mdl) {return(mdl$fitted)}
+fitted.garma_model<-function(object,...) {
+  return(object$fitted)
+}
 #' @export
-residuals.garma_model<-function(mdl) {return(mdl$residuals)}
+residuals.garma_model<-function(object,...) {
+  return(object$residuals)
+}

@@ -4,14 +4,12 @@
 \alias{plot.garma_model}
 \title{The plot function generates a plot of actuals and predicted values for a "garma_model" object.}
 \usage{
-\method{plot}{garma_model}(mdl, h = 24, ...)
+\method{plot}{garma_model}(x, ...)
 }
 \arguments{
-\item{mdl}{(garma_model) The garma_model from which to plot the values.}
+\item{x}{(garma_model) The garma_model from which to plot the values.}
 
-\item{h}{(int) The number of time periods to predict ahead. Default: 24}
-
-\item{...}{other arguments to be passed to the "plot" function.}
+\item{...}{other arguments to be passed to the "plot" function, including h (int) - the number of periods ahgead to forecast.}
 }
 \value{
 An R "plot" object.
@@ -22,6 +20,6 @@ The plot function generates a plot of actuals and predicted values for a "garma_
 \examples{
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 plot(mdl)
 }

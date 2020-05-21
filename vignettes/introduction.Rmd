@@ -1,9 +1,10 @@
 ---
 title: "An introduction to GARMA models"
-output: rmarkdown::html_vignette
-bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/References.bib
+output: 
+  rmarkdown::html_vignette
+bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/docs/Software_References.bib
 vignette: >
-  %\VignetteIndexEntry{introduction}
+  %\VignetteIndexEntry{Introduction to GARMA models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,6 +19,12 @@ knitr::opts_chunk$set(
 ## Introduction to long memory models and GARMA models.
 
 GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
+
+IF you are not very familiar with ARIMA models, it might be advisable to first have a look at the excellent online book by Rob Hyndman and George Athanasopoulos:- [Forecasting: Principals and Practice](https://otexts.com/fpp2/).
+
+
+---
+
 
 GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model proceses which have a high correlation between observations which are far apart in time.
 
@@ -40,11 +47,24 @@ We won't attempt to address the question of how it is that a flood or minima lev
 
 The phenomena of long memory has been identified in a number of different types of time series from sunspots [@Gray1989], the timing of xrays from Cygnus X1 [@Greenhough2002], inflation rates, exchange rates [@Caporale2014] and even in non-coding DNA [@Lopes2006].
 
-
+---
 
 ARMA models which can model long memory like this are sometimes known generically as 'long memory models' or 'fractionally differenced' models, and the default version of these can be fit by a number of existing R packages, including **fracdiff**, **longmemo**, **rugarch** and even **forecast**, amoung many others.
 
-At time of writing however there are few packages which can fit GARMA models. These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
+You might be wondering why these models might be useful - the answer is that they tend to produce long range forecasts which are more accurate than other short-memory models.
+
+
+At time of writing there are few packages on CRAN which can fit GARMA models.
+
+Package **tswge** provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
+
+Package **waveslim** has functions "spp.mle" and "spp2.mle" which can identify the parameters of a white noise process only, using a wavelet method.
+
+Package **VGAM** appears to have a function called "garma" but this actually fits very different models - it fits short-memory models which can include count data. Package **gsarima** also fits these short memory count models.
+
+---
+
+These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
 
 ```{r soi, fig.width=7, fig.height=5}
 library(rsoi)
@@ -60,7 +80,7 @@ ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index')
 In this plot the ACF shows the cyclical nature which is so typical of the GARMA models.
 
 
-
+---
 GARMA stands for Gegenbauer AR-MA, and the AR and MA letters have their usual meaning in time series of "auto-regressive" and "moving average". 'Gegenbauer' refers to a mathematician Leopold Gegenbauer who lived in the 19th century and developed a series of orthogonal polynomials now called Gegenbauer polynomials, and sometimes called 'ultraspherical' polynomials [@Szego1959]. These polynomials feature strongly in the mathematics of GARMA models [@Gray1989], [@Gray1994].
 
 
@@ -139,7 +159,7 @@ As can be seen above, the coefficients produced are similar but not identical - 
 
 In this section we'll look at fitting a GARMA model to the Sunspots data, again as supplied with R. This data has been analysed many times in the literature; the first time was by [@Gray1989]. Generally, authors have used a standard subset of this data from 1749 to 1924.
 
-The Sunspot data consists of counts of sunspots as observed over a considerable period. Recently a large project by the Royal Observatory of Belgium has checked and extended this key dataset [@Clette2014], but we'll use the original here.
+The Sunspot data consists of counts of sunspots as observed over a considerable period. In recent years a large project by the Royal Observatory of Belgium has checked and extended this key dataset [@Clette2014], but we'll use the original here.
 
 ```{r sunspot1}
 library(garma)
@@ -174,13 +194,19 @@ Notice also that the routine displays the Gegenbauer Period - in this case 11.2 
 
 Also shown is the degree of fractional differencing and the Fractional Dimension of the original series.
 
-We can forecast this ahead in a manner similar to that used by "arima" and "forecast::Arima":
+Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989] and which we fit then forecast below, for the 11 years of a sunspot cycle.
 
 ```{r sunspot2, fig.width=7, fig.height=4}
-fc <- forecast(sunspots_garma_mdl,h=11)
+# fit a GARMA(8,0,0) model
+sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1,method='CSS')
+summary(sunspots_garma_mdl)
+
+#prepare 'future' actuals data for plotting
+future_df <- data.frame(yr=1925:1935, sunspots=sunspot.year[225:235],grp='Future Actuals')
 
 ggplot(sunspots_garma_mdl, h=11) +
-  ggtitle('Sunspot Forecast using GARMA(1,0)')
+  geom_line(data=future_df,aes(x=yr,y=sunspots)) +
+  ggtitle('Sunspot Forecast using GARMA(8,0)')
 ```
 
 ## References

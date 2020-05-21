@@ -18,8 +18,10 @@
 The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.
 }
 \examples{
+library(forecast)
+
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 forecast(mdl, h=12)
 }

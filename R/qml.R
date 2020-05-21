@@ -1,18 +1,18 @@
 # Estimate a Ggbr model using a QML (Quasi-Maximum-Likelihood) method.
 # qml_matricies - geterate the statespace matrices needed for QML method.
-.qml_matricies<-function(par,p,q,k,include.mean,m_trunc) {
+.qml_matricies<-function(pars,p,q,k,include.mean,m_trunc) {
   # add in ARMA factors
   start1 <- 1
   if (include.mean) start1<-2
   if (k==1) {
-    u     <- par[start1]
-    d     <- par[start1+1]
+    u     <- pars[start1]
+    d     <- pars[start1+1]
     start1 <- start1+2
   } else u<-d<-0.0
   sigma2<-1
 
-  if (p>0) phi_vec   <- c(1,-(par[start1:(start1+p-1)] ))      else phi_vec   <- 1
-  if (q>0) theta_vec <- c(1,-(par[(p+start1):(p+q+start1-1)])) else theta_vec <- 1
+  if (p>0) phi_vec   <- c(1,-(pars[start1:(start1+p-1)] ))      else phi_vec   <- 1
+  if (q>0) theta_vec <- c(1,-(pars[(p+start1):(p+q+start1-1)])) else theta_vec <- 1
   # initial ggbr factor
   if (k==1) si<-as.vector(.ggbr.coef(m_trunc+1,d,u))
   else si<-as.vector(c(1,rep(0,m_trunc)))
@@ -66,7 +66,7 @@
   m_trunc <- params$m_trunc
 
   sp  <- .qml_matricies(pars,p,q,k,include.mean,m_trunc)
-  if (include.mean) beta0 <- par[1] else beta0<-0
+  if (include.mean) beta0 <- pars[1] else beta0<-0
 
   ans <- FKF::fkf(a0 = sp$a0, P0 = sp$P0, dt = sp$dt, ct = sp$ct, Tt = sp$Tt, Zt = sp$Zt, HHt = sp$HHt, GGt = sp$GGt, yt = (yt-beta0))
 

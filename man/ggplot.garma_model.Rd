@@ -10,8 +10,6 @@
 \item{mdl}{(garma_model) The garma_model from which to ggplot the values.}
 
 \item{h}{(int) The number of time periods to predict ahead. Default: 24}
-
-\item{...}{other arguments to be passed to the "plot" function.}
 }
 \value{
 A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be used to enhance the default output.
@@ -20,8 +18,10 @@ A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be us
 The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
 }
 \examples{
+library(ggplot2)
+
 data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=F)
+mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 ggplot(mdl)
 }
