@@ -2,7 +2,7 @@
 title: "An introduction to GARMA models"
 output: 
   rmarkdown::html_vignette
-bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/docs/Software_References.bib
+bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/vignettes/garma_bibliography.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to GARMA models}
   %\VignetteEngine{knitr::rmarkdown}
@@ -133,7 +133,7 @@ When k=0, then this is just a short memory model as fit by the stats "arima" fun
 
 We have deliberately kept the fitting process close to that of the "arima" and "forecast::Arima" functions.
 
-To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. the "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that
+To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. the "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that.
 
 ```{r arima}
 library(garma)
