@@ -8,15 +8,15 @@
 #' @author Richard Hunt
 #'
 #' @importFrom nloptr cobyla directL lbfgs
-#' @importFrom pracma hessian
+#' @importFrom pracma hessian Toeplitz
 #' @importFrom signal Arma filter
 #' @importFrom zoo zoo
 #' @importFrom lubridate make_date day days_in_month
-#' @importFrom forecast forecast
+#' @importFrom forecast forecast ggtsdisplay
 #' @importFrom Rsolnp solnp
-#' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_color_brewer scale_colour_manual
+#' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_colour_manual
 #' @importFrom graphics abline lines par plot
-#' @importFrom stats diffinv end sd start ts var
+#' @importFrom stats diffinv end sd start ts var spectrum
 #' @importFrom utils tail
 NULL
 
