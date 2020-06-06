@@ -25,7 +25,7 @@ The format should be list(p,d,q) where p, d, and q are all positive integers. p 
 autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
 differencing to apply prior to any fitting.}
 
-\item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.}
+\item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit.}
 
 \item{include.mean}{(bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
 it generally does not make sense to fit a mean term. Because of this, the default here is to fit a mean time when d (in the "order" parmaeter)

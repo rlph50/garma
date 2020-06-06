@@ -4,12 +4,14 @@
 \alias{ggplot.garma_model}
 \title{The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.}
 \usage{
-\method{ggplot}{garma_model}(mdl, h = 24)
+\method{ggplot}{garma_model}(mdl, h = 24, ...)
 }
 \arguments{
 \item{mdl}{(garma_model) The garma_model from which to ggplot the values.}
 
 \item{h}{(int) The number of time periods to predict ahead. Default: 24}
+
+\item{...}{other parameters passed to ggplot.}
 }
 \value{
 A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be used to enhance the default output.

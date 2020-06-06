@@ -24,7 +24,7 @@
 #'     The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
 #'     autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
 #'     differencing to apply prior to any fitting.
-#' @param k (int) This is the number of (multiplicative) Gegenbauer terms to fit. Only 0 or 1 are allowed in this version.
+#' @param k (int) This is the number of (multiplicative) Gegenbauer terms to fit.
 #' @param include.mean (bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
 #'     it generally does not make sense to fit a mean term. Because of this, the default here is to fit a mean time when d (in the "order" parmaeter)
 #'     is zero and otherwise not.
@@ -628,6 +628,7 @@ plot.garma_model<-function(x,...) {
 #' The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
 #' @param mdl (garma_model) The garma_model from which to ggplot the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 24
+#' @param ... other parameters passed to ggplot.
 #' @return A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be used to enhance the default output.
 #' @examples
 #' library(ggplot2)
@@ -637,7 +638,7 @@ plot.garma_model<-function(x,...) {
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' ggplot(mdl)
 #' @export
-ggplot.garma_model<-function(mdl,h=24) {
+ggplot.garma_model<-function(mdl,h=24,...) {
   # plot forecasts from model
   fc <- predict.garma_model(mdl,n.ahead=h)
 
@@ -653,12 +654,12 @@ ggplot.garma_model<-function(mdl,h=24) {
   df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
   df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$pred))
   df <- rbind(df1,df2)
-  ggplot2::ggplot(df[!is.na(df$value),],ggplot2::aes(x='dt',y='value',color='grp')) +
+  ggplot2::ggplot(df[!is.na(df$value),],ggplot2::aes(x=dt,y=value,color=grp),...) +
     ggplot2::geom_line() + ggplot2::ylab('') + ggplot2::xlab('') +
     ggplot2::geom_vline(xintercept=cutoff,color='red',linetype=2) +
     ggplot2::theme_bw() + ggplot2::theme(legend.title=ggplot2::element_blank()) +
-    ggplot2::scale_color_brewer(palette="Set2")
-    #scale_colour_manual(values=c('gray20','dodgerblue4',rep('gray',10)))
+    #ggplot2::scale_color_brewer(palette="Set1")
+    scale_colour_manual(values=c('gray20','dodgerblue4',rep('gray',10)))
 }
 
 
