@@ -14,7 +14,7 @@
 #' @importFrom lubridate make_date day days_in_month
 #' @importFrom forecast forecast ggtsdisplay
 #' @importFrom Rsolnp solnp
-#' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_colour_manual
+#' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_colour_manual annotate
 #' @importFrom graphics abline lines par plot
 #' @importFrom stats diffinv end sd start ts var spectrum
 #' @importFrom utils tail
