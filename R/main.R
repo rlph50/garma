@@ -405,6 +405,7 @@ garma<-function(x,
             'sigma2'=sigma2,
             'obj_value'=fit$value[length(fit$value)],
             'loglik'=loglik,
+            'aic'=-2*loglik + 2*(n_coef+1),
             'convergence'=fit$convergence,
             'conv_message'=c(fit$message,message),
             'method'=method,
@@ -478,7 +479,7 @@ garma<-function(x,
     cat(sprintf('\n\nsigma^2 estimated as %0.4f',mdl$sigma2))
     if (mdl$method=='CSS') cat(sprintf(':  part log likelihood = %f',mdl$loglik))
     if (mdl$method=='QML') cat(sprintf(':  log likelihood = %f',mdl$loglik))
-    if (mdl$method=='Whittle') cat(sprintf(':  log likelihood = %f',mdl$loglik))
+    if (mdl$method=='Whittle') cat(sprintf(':  log likelihood = %f, aic = %f',mdl$loglik, mdl$aic))
     cat('\n')
   }
 }
