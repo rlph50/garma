@@ -8,7 +8,7 @@
 #' @author Richard Hunt
 #'
 #' @importFrom nloptr cobyla directL lbfgs
-#' @importFrom pracma hessian Toeplitz
+#' @importFrom pracma hessian
 #' @importFrom signal Arma filter
 #' @importFrom zoo zoo
 #' @importFrom lubridate make_date day days_in_month

@@ -8,6 +8,7 @@
 #' garma_ggtsdisplay(ap)
 #' @export
 garma_ggtsdisplay<-function(x,...) {
-  xx <- semipara(x)
-  ggtsdisplay(xx$sm_x,...)
+  sp <- ggbr_semipara(x)
+  arma_process <- extract_arma(x, sp$fd, sp$u)
+  ggtsdisplay(arma_process,...)
 }
