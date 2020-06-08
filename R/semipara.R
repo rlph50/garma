@@ -50,6 +50,7 @@ print.garma_semipara<-function(x,...) {
 extract_arma<-function(x,fd,u) {
   ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(length(x),fd,u))
   sm          <- signal::filter(ggbr_filter, x)
+  sm          <- stats::ts(sm,start=stats::start(x),frequency=stats::frequency(x))
   return(sm)
 }
 
@@ -76,7 +77,7 @@ extract_arma<-function(x,fd,u) {
   yf <- .yajima_ggbr_freq(x)
   m  <- as.integer((length(x)/2)^alpha)
 
-  fd <- optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
+  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
   u  <- cos(2*pi*yf$ggbr_freq)
 
   return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m))
