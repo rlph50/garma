@@ -6,10 +6,12 @@
 The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differning frequencies.
 This routine will display the peaks on a raw scale.}
 \usage{
-gg_raw_pgram(x)
+gg_raw_pgram(x, k = 1)
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
+
+\item{k}{(int) The number of Gegenbauer factors}
 }
 \value{
 A ggplot object representing the raw periodogram

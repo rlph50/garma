@@ -1,5 +1,6 @@
 #' For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
 #' @param x (num) This should be a numeric vector representing the process to estimate.
+#' @param k (int) The number of Gegenabuer frequencies
 #' @param alpha (num)
 #' @param method (char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian semi-parametric technique. "gsp" is the default. Refer Arteche (1998).
 #' @return An object of class "garma_semipara".
@@ -9,15 +10,28 @@
 #' sp <- ggbr_semipara(ap)
 #' print(sp)
 #' @export
-ggbr_semipara <- function(x,alpha=0.8,method='gsp') {
+ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp') {
   if (!method%in%c('gsp','lpr')) stop('Invalid method. Should be one of "gsp" or "lpr".')
   if (alpha<=0|alpha>=1) stop('alpha should be between 0 and 1, but not0 and not 1.')
+  k <- as.integer(k)
+  if (k<=0) stop('k should be a small positive integer.')
 
-  if (method=='gsp') res <- .gsp(x,alpha)
-  if (method=='lpr') res <- .lpr(x,alpha)
+  peak_idx_list <- c()
+  peaks <- c()
+  if (method=='gsp')
+    for (k1 in 1:k) {
+      r <- .gsp(x,alpha,peak_idx_list)
+      peaks <- c(peaks,list(r))
+      peak_idx_list <- c(peak_idx_list,r$f_idx)
+    }
+  if (method=='lpr')
+    for (k1 in 1:k) {
+      r <- .lpr(x,alpha,peak_idx_list)
+      peaks <- c(peaks,list(r))
+      peak_idx_list <- c(peak_idx_list,r$f_idx)
+    }
 
-  res$method <- method
-  res$alpha  <- alpha
+  res <- list('ggbr_factors'=peaks, method=method, alpha=alpha, k=k)
   class(res) <- 'garma_semipara'
   return(res)
 }
@@ -27,16 +41,25 @@ ggbr_semipara <- function(x,alpha=0.8,method='gsp') {
 #' @param ... further parameters for print function
 #' @export
 print.garma_semipara<-function(x,...) {
-  cat(sprintf('%s estimation of Gegenbauer process (k=1)\nFrequencies to use: m=%d (alpha=%f)\n\nGegenbauer frequency: %0.4f\nGegenbauer Period:    %0.4f\nFractional Exponent:  %0.4f\n',
+  printf_9_4<-function(f) cat(sprintf('%9.4f',f))
+
+  cat(sprintf('%s estimation of Gegenbauer process (k=1)\nFrequencies to use: (alpha=%f)\n\n',
               ifelse(x$method=='gsp','Gaussian Semi-Parametric','Log Periodogram Regression'),
-              x$m,x$alpha,
-              x$f,1/x$f,x$fd))
+              x$alpha))
+  cat('                      ')
+  for (k1 in 1:length(x$ggbr_factors)) cat(sprintf('%9.9s',paste0('Factor',k1)))
+  cat('\nGegenbauer frequency: ')
+  for (factor in x$ggbr_factors) printf_9_4(factor$f)
+  cat('\nGegenbauer Period:    ')
+  for (factor in x$ggbr_factors) printf_9_4(1/factor$f)
+  cat('\nGegenbauer Exponent:  ')
+  for (factor in x$ggbr_factors) printf_9_4(factor$fd)
+  cat('\n')
 }
 
 #' For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
 #' @param x (num) This should be a numeric vector representing the process to estimate.
-#' @param fd (num) long memory parameter - for stationary process should be in (-1.0,0.5).
-#' @param u (num) Cosine of Gegenbauer frequency.
+#' @param ggbr_factors (list) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.
 #' @return An object of same class as x.
 #' @examples
 #' data(AirPassengers)
@@ -44,24 +67,36 @@ print.garma_semipara<-function(x,...) {
 #' # find semiparametric estimates of the Gegenbauer parameters.
 #' sp <- ggbr_semipara(ap)
 #' # extract the underlying short-memory ARMA process
-#' ap_arma <- extract_arma(ap,sp$fd,sp$u)
+#' ap_arma <- extract_arma(ap,sp$ggbr_factors)
 #' summary(arima(ap_arma,order=c(1,0,0)))
 #' @export
-extract_arma<-function(x,fd,u) {
-  ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(length(x),fd,u))
-  sm          <- signal::filter(ggbr_filter, x)
-  sm          <- stats::ts(sm,start=stats::start(x),frequency=stats::frequency(x))
+extract_arma<-function(x,ggbr_factors) {
+  for (factor in ggbr_factors) {
+    ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(length(x),factor$fd,factor$u))
+    sm          <- signal::filter(ggbr_filter, x)
+  }
+  sm            <- stats::ts(sm,start=stats::start(x),frequency=stats::frequency(x))
   return(sm)
 }
 
-.yajima_ggbr_freq<-function(x) {
-  ssx       <- spectrum(x,plot=F,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE)
-  f_idx     <- which.max(ssx$spec[1:as.integer(length(x)/2)])
+.garma_pgram<-function(x) {
+  return(spectrum(x,plot=F,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE))
+}
+
+.yajima_ggbr_freq<-function(x,remove_peaks) {
+  ssx       <- .garma_pgram(x)
+  ssx$spec2 <- ssx$spec
+  if (length(remove_peaks)>0)
+    for (peak in remove_peaks) {
+      ssx$spec2[peak]  <- ssx$spec2[peak+1] <- 1e-100
+      if (peak>1) ssx$spec2[peak-1] <-1e-100
+    }
+  f_idx     <- which.max(ssx$spec2[1:as.integer(length(x)/2)])
   ggbr_freq <- ssx$freq[f_idx]
   return(list(f_idx=f_idx, ggbr_freq=ggbr_freq, ssx=ssx))
 }
 
-.gsp<-function(x,alpha) {
+.gsp<-function(x,alpha,remove_peaks) {
   # as per Arteche 1998 "SEMIPARAMETRIC INFERENCE IN SEASONAL AND CYCLICAL LONG MEMORY PROCESSES"
   # determine "fd"
   c_fcn<-function(fd, omega, spec) {return(mean((omega^(2*fd)) * spec,rm.na=TRUE))}
@@ -70,36 +105,44 @@ extract_arma<-function(x,fd,u) {
     spec1 <- ssx$spec[(f_idx+2):(f_idx+m)]
     min_idx <- f_idx - m
     if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
-    else spec2 <- c(ssx$spec[(f_idx-2):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+    else {
+      spec2 <- c(ssx$spec[(f_idx-2):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+      spec2 <- spec2[1:(m-1)]
+    }
+
     return(log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),rm.na=TRUE))
   }
   # first identify the peak - the Gegenbauer frequency
-  yf <- .yajima_ggbr_freq(x)
+  yf <- .yajima_ggbr_freq(x,remove_peaks)
   m  <- as.integer((length(x)/2)^alpha)
 
   fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
   u  <- cos(2*pi*yf$ggbr_freq)
 
-  return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m))
+  return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m,f_idx=yf$f_idx))
 }
 
-.lpr<-function(x,alpha) {
+.lpr<-function(x,alpha,remove_peaks) {
   # first identify the peak - the Gegenbauer frequency
-  yf       <- .yajima_ggbr_freq(x)
+  yf       <- .yajima_ggbr_freq(x,remove_peaks)
   ssx      <- yf$ssx
   f_idx    <- yf$f_idx
   # next, estimate d
   m        <- as.integer((length(x)/2)^alpha)
-  v        <- log(1:m) - mean(log(1:m))
+  v        <- log(1:(m-1)) - mean(log(1:(m-1)))
   denom    <- 4*sum(v^2)
-  spec1    <- ssx$spec[(f_idx+1):(f_idx+m)]
+  spec1    <- ssx$spec[(f_idx+1):(f_idx+m-1)]
   min_idx  <- f_idx - m
-  if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-1)]
-  else spec2 <- c(ssx$spec[(f_idx-1):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+  if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
+  else {
+    spec2 <- c(ssx$spec[(f_idx-1):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+    spec2 <- spec2[1:(m-1)]
+  }
+
   numer    <- sum( v*(log(spec1)+log(spec2)))
 
   fd       <- (-0.5)*numer/denom
   u        <- cos(2*pi*yf$ggbr_freq)
 
-  return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m))
+  return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m,f_idx=yf$f_idx))
 }

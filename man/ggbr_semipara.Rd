@@ -4,10 +4,12 @@
 \alias{ggbr_semipara}
 \title{For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.}
 \usage{
-ggbr_semipara(x, alpha = 0.8, method = "gsp")
+ggbr_semipara(x, k = 1, alpha = 0.8, method = "gsp")
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
+
+\item{k}{(int) The number of Gegenabuer frequencies}
 
 \item{alpha}{(num)}
 

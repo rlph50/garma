@@ -4,14 +4,12 @@
 \alias{extract_arma}
 \title{For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.}
 \usage{
-extract_arma(x, fd, u)
+extract_arma(x, ggbr_factors)
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
 
-\item{fd}{(num) long memory parameter - for stationary process should be in (-1.0,0.5).}
-
-\item{u}{(num) Cosine of Gegenbauer frequency.}
+\item{ggbr_factors}{(list) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.}
 }
 \value{
 An object of same class as x.
@@ -25,6 +23,6 @@ ap <- as.numeric(diff(AirPassengers,12))
 # find semiparametric estimates of the Gegenbauer parameters.
 sp <- ggbr_semipara(ap)
 # extract the underlying short-memory ARMA process
-ap_arma <- extract_arma(ap,sp$fd,sp$u)
+ap_arma <- extract_arma(ap,sp$ggbr_factors)
 summary(arima(ap_arma,order=c(1,0,0)))
 }

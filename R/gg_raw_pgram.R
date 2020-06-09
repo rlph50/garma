@@ -2,6 +2,7 @@
 #' The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differning frequencies.
 #' This routine will display the peaks on a raw scale.
 #' @param x (num) This should be a numeric vector representing the process to estimate.
+#' @param k (int) The number of Gegenbauer factors
 #' @return A ggplot object representing the raw periodogram
 #' @examples
 #' data(AirPassengers)
@@ -9,11 +10,18 @@
 #' sp <- ggbr_semipara(ap)
 #' print(sp)
 #' @export
-gg_raw_pgram <- function(x) {
-  yf <- .yajima_ggbr_freq(x)
-  df <- data.frame(Frequency=yf$ssx$freq,Intensity=yf$ssx$spec)
+gg_raw_pgram <- function(x,k=1) {
+  ssx <- .garma_pgram(x)
+  df  <- data.frame(Frequency=ssx$freq,Intensity=ssx$spec)
+
+  sp  <- ggbr_semipara(sunspots,k=k)
+  annotate_df <- data.frame(x=numeric(0),y=numeric(0),label=character(0))
+  for (factor in sp$ggbr_factors) {
+    annotate_df <- rbind(annotate_df,
+                         data.frame(x=factor$f,y=ssx$spec[factor$f_idx],label=sprintf(' Period: %.2f',1.0/factor$f)))
+  }
   ggplot2::ggplot(data=df,ggplot2::aes(x=Frequency,y=Intensity)) +
     ggplot2::geom_line() +
-    ggplot2::annotate('text',x=yf$ggbr_freq,y=yf$ssx$spec[yf$f_idx],label=sprintf(' Period: %.2f',1.0/yf$ggbr_freq),size=2.5,hjust=0) +
+    ggplot2::geom_text(data=annotate_df,aes(x=x,y=y,label=label),size=2.5,hjust=0) +
     ggplot2::theme_bw()
 }

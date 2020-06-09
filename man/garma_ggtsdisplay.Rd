@@ -4,10 +4,12 @@
 \alias{garma_ggtsdisplay}
 \title{For a k=1 Gegenbauer process, use semi-parametric methods to obtain short memory version of the process, then run a ggtsdisplay().}
 \usage{
-garma_ggtsdisplay(x, ...)
+garma_ggtsdisplay(x, k = 1, ...)
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
+
+\item{k}{(int) The number of Gegenbauer factors}
 
 \item{...}{additional parameters to pass to ggtsdisplay}
 }
