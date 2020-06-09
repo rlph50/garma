@@ -30,10 +30,29 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp') {
       peaks <- c(peaks,list(r))
       peak_idx_list <- c(peak_idx_list,r$f_idx)
     }
+  class(peaks) <- 'ggbr_factors'
 
   res <- list('ggbr_factors'=peaks, method=method, alpha=alpha, k=k)
   class(res) <- 'garma_semipara'
   return(res)
+}
+
+#' Print a 'ggbr_factors' object.
+#' @param x An object of class ggbr_factors
+#' @param ... further parameters for print function
+#' @export
+print.ggbr_factors<-function(x,...) {
+  printf_9_4<-function(f) cat(sprintf('%9.4f',f))
+
+  cat('                      ')
+  for (k1 in 1:length(x)) cat(sprintf('%9.9s',paste0('Factor',k1)))
+  cat('\nGegenbauer frequency: ')
+  for (factor in x) printf_9_4(factor$f)
+  cat('\nGegenbauer Period:    ')
+  for (factor in x) printf_9_4(1/factor$f)
+  cat('\nGegenbauer Exponent:  ')
+  for (factor in x) printf_9_4(factor$fd)
+  cat('\n')
 }
 
 #' Print a semiparameteric Gegenbauer estimation object.
@@ -41,20 +60,10 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp') {
 #' @param ... further parameters for print function
 #' @export
 print.garma_semipara<-function(x,...) {
-  printf_9_4<-function(f) cat(sprintf('%9.4f',f))
-
   cat(sprintf('%s estimation of Gegenbauer process (k=1)\nFrequencies to use: (alpha=%f)\n\n',
               ifelse(x$method=='gsp','Gaussian Semi-Parametric','Log Periodogram Regression'),
               x$alpha))
-  cat('                      ')
-  for (k1 in 1:length(x$ggbr_factors)) cat(sprintf('%9.9s',paste0('Factor',k1)))
-  cat('\nGegenbauer frequency: ')
-  for (factor in x$ggbr_factors) printf_9_4(factor$f)
-  cat('\nGegenbauer Period:    ')
-  for (factor in x$ggbr_factors) printf_9_4(1/factor$f)
-  cat('\nGegenbauer Exponent:  ')
-  for (factor in x$ggbr_factors) printf_9_4(factor$fd)
-  cat('\n')
+  print(x$ggbr_factors)
 }
 
 #' For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.

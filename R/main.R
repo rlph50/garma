@@ -400,6 +400,20 @@ garma<-function(x,
   # get fitted values and residuals
   fitted <- .fitted_values(fit$par,params)
 
+  # build a ggbr_factors object
+  gf <- list()
+  if (k>0) {
+    if (include.mean) start_idx <- 2
+    else start_idx <- 1
+    for (k1 in 1:k) {
+      u <- coef[1,start_idx]
+      gf1 <- list(u=u, f=acos(u)/(2*pi), fd=coef[1,start_idx+1], m=NA, f_idx=NA)
+      gf <- c(gf,list(gf1))
+      start_idx <- start_idx+2
+    }
+  }
+  class(gf) <- 'ggbr_factors'
+
   res<-list('call' = match.call(),
             'coef'=coef,
             'sigma2'=sigma2,
@@ -420,23 +434,9 @@ garma<-function(x,
             'include.mean'=include.mean,
             'fitted'=stats::ts(fitted$fitted,start=x_start,end=x_end,frequency=x_freq),
             'residuals'=stats::ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
-            # 'par'=fit$par,
-            # 'params'=params,
             'm_trunc'=m_trunc)
   if (opt_method=='best') res<-c(res,'opt_method.selected'=best_method)
-  if (k>0) {
-    fd <- u <- c()
-    start <- 1
-    if (colnames(coef)[1]=='intercept') start <- 2
-    for (k1 in 1:k) {
-      u  <- c(u,  coef[1,start+k1*2-2])
-      fd <- c(fd, coef[1,start+k1*2-1])
-    }
-    res<-c(res,
-           'ggbr_freq'=list(acos(u)/2/pi),
-           'ggbr_period'=list(2*pi/acos(u)),
-           'ggbr_d'=list(fd))
-  }
+  if (k>0) res<-c(res, 'ggbr_factors' = list(gf))
 
   class(res)<-'garma_model'
 
@@ -463,19 +463,10 @@ garma<-function(x,
                   ifelse(mdl$opt_method=='best',mdl$opt_method.selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
     cat('Coefficients:\n')
     print.default(mdl$coef, print.gap = 2)
+    cat('\n')
 
-    if (mdl$k>0) {
-      cat('\nGegenbauer parameters:\n                      ')
-      for (k1 in 1:(mdl$k)) cat(sprintf('  Factor%d',k1))
-      cat('\nGegenbauer Frequency: ')
-      for (k1 in 1:(mdl$k)) cat(sprintf('  %7.4f',mdl$ggbr_freq[k1]))
-      cat('\nGegenbauer Period:    ')
-      for (k1 in 1:(mdl$k)) cat(sprintf('  %7.4f',mdl$ggbr_period[k1]))
-      cat('\nFractional Exponent:  ')
-      for (k1 in 1:(mdl$k)) cat(sprintf('  %7.4f',mdl$ggbr_d[k1]))
-      cat('\nFractional Dimension: ')
-      for (k1 in 1:(mdl$k)) cat(sprintf('  %7.4f',1.5-mdl$ggbr_d[k1]))
-    }
+    if (mdl$k>0) print(mdl$ggbr_factors)
+
     cat(sprintf('\n\nsigma^2 estimated as %0.4f',mdl$sigma2))
     if (mdl$method=='CSS') cat(sprintf(':  part log likelihood = %f',mdl$loglik))
     if (mdl$method=='QML') cat(sprintf(':  log likelihood = %f',mdl$loglik))
@@ -655,6 +646,10 @@ ggplot.garma_model<-function(mdl,h=24,...) {
   df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
   df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$pred))
   df <- rbind(df1,df2)
+
+  # assign some dummy vars to prevent RStudio check from throwing warning msgs
+  dt <- value <- grp <- NA
+
   ggplot2::ggplot(df[!is.na(df$value),],ggplot2::aes(x=dt,y=value,color=grp),...) +
     ggplot2::geom_line() + ggplot2::ylab('') + ggplot2::xlab('') +
     ggplot2::geom_vline(xintercept=cutoff,color='red',linetype=2) +
