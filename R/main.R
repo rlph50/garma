@@ -101,6 +101,8 @@ garma<-function(x,
   ## Start of "garma" function logic.
   ## 1. Check parameters
   if (length(x)<96)
+    # This is a bit arbitary but I would be concerned about a process of length even 96.
+    # But no real evidence for this apart from simulations showing large std errs.
     stop('y should have at least 96 observations.')
   if (is.data.frame(x)) {
     if (ncol(x)>1)
@@ -236,6 +238,7 @@ garma<-function(x,
                                      control=list(maxeval=maxeval,xtol_rel=1e-10)),
                error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
       )
+      hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
     } else {
       tryCatch(fit <- Rsolnp::solnp(pars,
                                     fcns[[method]],
@@ -249,8 +252,9 @@ garma<-function(x,
                error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars,pars=pars)}
       )
       fit$par <- fit$pars  # copy across for consistency with other optimisation methods
+      hh <- fit$hessian
     }
-    hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
+
   } else { # k==0 or k==1
     fit <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
                         hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
@@ -454,7 +458,7 @@ garma<-function(x,
                      method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),mdl$opt_method,mdl$maxeval))
     )
     if (mdl$opt_method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method.selected))
-    cat(sprintf('Optimal Value found: %0.8f\n\n',mdl$obj_value))
+    cat(sprintf('Convergence Code: %d\nOptimal Value found: %0.8f\n\n',mdl$convergence,mdl$obj_value))
   }
   if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
   else {
