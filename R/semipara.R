@@ -95,11 +95,14 @@ extract_arma<-function(x,ggbr_factors) {
 .yajima_ggbr_freq<-function(x,remove_peaks) {
   ssx       <- .garma_pgram(x)
   ssx$spec2 <- ssx$spec
-  if (length(remove_peaks)>0)
+  if (length(remove_peaks)>0) {
+    width <- as.integer(length(ssx$spec)/40)
     for (peak in remove_peaks) {
-      ssx$spec2[peak]  <- ssx$spec2[peak+1] <- 1e-100
-      if (peak>1) ssx$spec2[peak-1] <-1e-100
+      start_idx <- max(peak-width,1)
+      end_idx   <- min(peak+width,length(ssx$spec))
+      for (i in start_idx:end_idx) ssx$spec2[i] <- 1e-100
     }
+  }
   f_idx     <- which.max(ssx$spec2[1:as.integer(length(x)/2)])
   ggbr_freq <- ssx$freq[f_idx]
   return(list(f_idx=f_idx, ggbr_freq=ggbr_freq, ssx=ssx))

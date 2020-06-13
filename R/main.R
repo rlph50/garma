@@ -128,8 +128,9 @@ garma<-function(x,
   if (method=='QML'&k>1)
     stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.')
 
-  allowed_optimisations <- c('optim','cobyla','directL','BBoptim','psoptim','hjkb','nmkb','solnp', 'best')
-  optimisation_packages <- c('optim'='stats','cobyla'='nloptr','directL'='nloptr','BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','solnp'='Rsolnp','best'='stats')
+  allowed_optimisations <- c('optim','cobyla','directL','auglag','mma','BBoptim','psoptim','hjkb','nmkb','solnp', 'best')
+  optimisation_packages <- c('optim'='stats','cobyla'='nloptr','directL'='nloptr','auglag'='nloptr','mma'='nloptr',
+                             'BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','solnp'='Rsolnp','best'='stats')
   if (!opt_method%in%allowed_optimisations)
     stop('\nSorry - supported packages are:\n', paste0(allowed_optimisations,'\n'))
 
@@ -170,20 +171,24 @@ garma<-function(x,
   }
 
   # temp_spec and temp_freq used to determine starting values for Gegenbauer params
-  temp_spec <- ss$spec
-  temp_freq <- ss$freq
+  #temp_spec <- ss$spec
+  #temp_freq <- ss$freq
   if (k>0) {
+    gf <- ggbr_semipara(y,k=k)
     for (k1 in 1:k) {
       n_pars    <- n_pars+2
-      max_spec_idx <- which.max(temp_spec)
-      start_u   <- cos(2*pi*temp_freq[max_spec_idx])
-      min_resolution_idx <- as.integer(length(temp_spec)/40)
-      start_idx <- max(max_spec_idx-min_resolution_idx,1)
-      end_idx   <- min(max_spec_idx+min_resolution_idx,length(temp_spec))
-      for (i in start_idx:end_idx) temp_spec[i] <- 0 # make sure next time through we find the next highest spec, with min separation
+      gf1 <- gf$ggbr_factors[[k1]]
+      start_u <- gf1$u
+      start_d <- gf1$fd
 
-      if (start_u< (-1)) start_u<-0
-      pars      <- c(pars,start_u,0.25)
+      if (start_u< (-1)) start_u <- 0
+      if (start_d>=0.5)  start_d <- 0.49
+      if (allow_neg_d) {
+        if (start_d<= -0.5) start_d<- -0.49
+      } else {
+        if (start_d<=0.0) start_d<-0.01
+      }
+      pars      <- c(pars,start_u,start_d)
       lb        <- c(lb,0.0,ifelse(allow_neg_d,-1,0))
       ub        <- c(ub,1.0,1.0)
       lb_finite <- c(lb_finite,0.0,ifelse(allow_neg_d,-1,0))
@@ -194,7 +199,11 @@ garma<-function(x,
   n_pars    <- n_pars + p + q
   methods_to_estimate_var <- c('WLL')     # WLL method estimates VAR along with other params; For other methods this falls out of the objective value
   if (p+q>0) {
-    a    <- stats::arima(y,order=c(p,0,q),include.mean=FALSE)
+    # if any ARMA params to be estimated, we use the semipara estimates to get ggbf factors then get the underlying ARMA process,
+    # and then ask "arima" for estimates. Semi para estimates should make good starting points for optimisation.
+    if (k>0) arma_y <- extract_arma(y,gf$ggbr_factors)
+    else arma_y <- y
+    a <- stats::arima(arma_y,order=c(p,0,q),include.mean=FALSE)
     pars <- c(pars,a$coef)
     if (method%in%methods_to_estimate_var) pars <- c(pars,a$sigma2)
     if (p==1&q==0) { # special limits for AR(1)
@@ -229,17 +238,7 @@ garma<-function(x,
 
   if (k>1) { # separate logic since for k>1 we need inequality constraints and not all non-linear optimisers support this.
     fit<-list(value=Inf,par=pars,pars=pars,convergence= -999,value=Inf,message="Error")
-    if (opt_method=='cobyla') {
-      tryCatch(fit <- nloptr::cobyla(pars,fcns[[method]],
-                                     lower=lb,
-                                     upper=ub,
-                                     hin=inequality_constraints,
-                                     params=params,
-                                     control=list(maxeval=maxeval,xtol_rel=1e-10)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
-      )
-      hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else {
+    if (opt_method=='solnp') {
       tryCatch(fit <- Rsolnp::solnp(pars,
                                     fcns[[method]],
                                     LB=lb,
@@ -247,14 +246,30 @@ garma<-function(x,
                                     ineqfun=inequality_constraints,
                                     ineqLB=rep(0,n_constraints),
                                     ineqUB=rep(1,n_constraints), # this should always be true but supplied as solnp requires it.
-                                    control=list(tol=1e-12,trace=0),
+                                    control=list(trace=0,tol=1e-12),
                                     params=params),
                error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars,pars=pars)}
       )
-      fit$par <- fit$pars  # copy across for consistency with other optimisation methods
-      hh <- fit$hessian
+      if (fit$convergence!=0) opt_method<-'cobyla' # didn't work, so try cobyla.
+      else {
+        fit$par <- fit$pars  # copy across for consistency with other optimisation methods
+        hh <- fit$hessian
+      }
     }
-
+    # if (opt_method=='cobyla') opts <- list(algorithm='NLOPT_LN_COBYLA',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
+    # if (opt_method=='auglag') opts <- list(algorithm='NLOPT_LN_AUGLAG',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
+    # if (opt_method=='mma')    opts <- list(algorithm='NLOPT_LD_MMA',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
+    if (opt_method=='cobyla') {
+      tryCatch(fit <- nloptr::cobyla(pars,fcns[[method]],
+                                     lower=lb,
+                                     upper=ub,
+                                     hin=inequality_constraints,
+                                     params=params,
+                                     control=list(maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=1e-10)),   #xtol_rel=1e-10
+               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
+      )
+      hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
+    }
   } else { # k==0 or k==1
     fit <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
                         hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
@@ -365,10 +380,10 @@ garma<-function(x,
     start<-1
     se<-c()   # default to set this up in the right environment
     if (include.mean) start<-2
-    if (method=='Whittle') se <- sqrt(diag(solve(hh)))
-    if (method=='CSS')     se <- sqrt(diag(solve(hh*length(y))))
+    if (method=='Whittle') se <- sqrt(diag(pracma::pinv(hh)))
+    if (method=='CSS')     se <- sqrt(diag(pracma::pinv(hh*length(y))))
     if (method=='QML')     {
-      se <- sqrt(diag(solve(hh))*length(y))
+      se <- sqrt(diag(pracma::pinv(hh))*length(y))
       if (k==1) {
         if (include.mean) se <- se[1:3]
         else se <- se[1:2]

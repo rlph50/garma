@@ -7,8 +7,8 @@
 #' @docType package
 #' @author Richard Hunt
 #'
-#' @importFrom nloptr cobyla directL lbfgs
-#' @importFrom pracma hessian
+#' @importFrom nloptr nloptr cobyla directL lbfgs mma auglag
+#' @importFrom pracma hessian pinv
 #' @importFrom signal Arma filter
 #' @importFrom zoo zoo
 #' @importFrom lubridate make_date day days_in_month
