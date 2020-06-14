@@ -102,7 +102,7 @@
 
 .generic_optim_list <- function(opt_method_list, initial_pars, fcn,
                                 lb, ub, lb_finite, ub_finite,
-                                ineq_fcn=null, ineq_lb=null, ineq_ub=null,
+                                ineq_fcn=NULL, ineq_lb=NULL, ineq_ub=NULL,
                                 params, max_eval=10000, tol=1e-15) {
   # chain through the opt methods using the optimal value from the last one as the initial value for the next one.
   for (opt_method in opt_method_list) {
