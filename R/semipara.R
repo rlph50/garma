@@ -96,7 +96,7 @@ extract_arma<-function(x,ggbr_factors) {
   ssx       <- .garma_pgram(x)
   ssx$spec2 <- ssx$spec
   if (length(remove_peaks)>0) {
-    width <- as.integer(length(ssx$spec)/60)
+    width <- as.integer(length(ssx$spec)/40)
     for (peak in remove_peaks) {
       start_idx <- max(peak-width,1)
       end_idx   <- min(peak+width,length(ssx$spec))

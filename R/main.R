@@ -97,6 +97,26 @@ garma<-function(x,
       }
     return(res)
   }
+  nloptr_ineq_constr<-function(par) {
+    # used when k>1 - to ensure a minimum separation between Gegenbauer frequencies
+    # this is essentially the same as the above, but passes the "params" from
+    # a global var instead of as a parameter - some nloptr routines appear to have a
+    # bug where they don't pass the  params over to the ineq. constr function...
+    k <- nloptr_params$k
+    res <- c()
+    if (nloptr_params$include.mean) start<-2 else start<-1
+    if (k>1) for (k1 in 1:(k-1))
+      if (k1<k) for (k2 in (k1+1):k) {
+        u1<-par[start+k1*2-2]
+        u2<-par[start+k2*2-2]
+        if(abs(u1)>1) u1=1
+        if(abs(u2)>1) u2=1
+        sep <- (acos(u1)-acos(u2))/(2*pi)
+        res <- c(res, abs(sep)-0.01)
+      }
+    return(res)
+  }
+
 
   ## Start of "garma" function logic.
   ## 1. Check parameters
@@ -128,15 +148,20 @@ garma<-function(x,
   if (method=='QML'&k>1)
     stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.')
 
-  allowed_optimisations <- c('optim','cobyla','directL','auglag','mma','BBoptim','psoptim','hjkb','nmkb','solnp', 'best')
-  optimisation_packages <- c('optim'='stats','cobyla'='nloptr','directL'='nloptr','auglag'='nloptr','mma'='nloptr',
-                             'BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','solnp'='Rsolnp','best'='stats')
-  if (!opt_method%in%allowed_optimisations)
-    stop('\nSorry - supported packages are:\n', paste0(allowed_optimisations,'\n'))
+  for (om in opt_method) {
+    if (!om%in%.supported_optim())
+      stop(sprintf('\nError: function %s not available.\n\nSupported functions are:\n%s\n', om, .supported_optim()))
 
-  if (!.is.installed(optimisation_packages[[opt_method]]))
-    stop(sprintf('package %s needs to be installed to use method ',optimisation_packages[[opt_method]],opt_method))
+    optimisation_packages <- .optim_packages()
+    if (!.is.installed(optimisation_packages[[om]]))
+      stop(sprintf('Package %s needs to be installed to use method %s\n',optimisation_packages[[om]],om))
 
+    if (k>1) {
+      if (!om%in%.supported_contr_optim())
+        stop(sprintf('For k>1 we need to use contrained optimisation, but algorithm %s does not support that.\nPlease try one of %s\n',
+                     pm,paste(.supported_contr_optim(),collapse=', ')))
+    }
+  }
   ##
   ## 2. Next calc parameter  estimates
   p=as.integer(order[1])
@@ -229,6 +254,7 @@ garma<-function(x,
 
   # create a list of all possible params any 'method' might need. The various objective functions can extract the parameters which are relevant to that method.
   params <- list(y=y, orig_y=x, ss=ss, p=p,q=q,d=d,k=k,include.mean=include.mean,est_mean=ifelse(method%in%mean_methods,TRUE,FALSE),scale=sd_y,m_trunc=m_trunc)
+  nloptr_params <- params
   message <- c()
 
   # First we make a first pass at optimisation using "optim".
@@ -237,124 +263,18 @@ garma<-function(x,
   n_constraints <- k*(k+1)/2-k
 
   if (k>1) { # separate logic since for k>1 we need inequality constraints and not all non-linear optimisers support this.
-    fit<-list(value=Inf,par=pars,pars=pars,convergence= -999,value=Inf,message="Error")
-    if (opt_method=='solnp') {
-      tryCatch(fit <- Rsolnp::solnp(pars,
-                                    fcns[[method]],
-                                    LB=lb,
-                                    UB=ub,
-                                    ineqfun=inequality_constraints,
-                                    ineqLB=rep(0,n_constraints),
-                                    ineqUB=rep(1,n_constraints), # this should always be true but supplied as solnp requires it.
-                                    control=list(trace=0,tol=1e-12),
-                                    params=params),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars,pars=pars)}
-      )
-      if (fit$convergence!=0) opt_method<-'cobyla' # didn't work, so try cobyla.
-      else {
-        fit$par <- fit$pars  # copy across for consistency with other optimisation methods
-        hh <- fit$hessian
-      }
-    }
-    # if (opt_method=='cobyla') opts <- list(algorithm='NLOPT_LN_COBYLA',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
-    # if (opt_method=='auglag') opts <- list(algorithm='NLOPT_LN_AUGLAG',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
-    # if (opt_method=='mma')    opts <- list(algorithm='NLOPT_LD_MMA',maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=0)
-    if (opt_method=='cobyla') {
-      tryCatch(fit <- nloptr::cobyla(pars,fcns[[method]],
-                                     lower=lb,
-                                     upper=ub,
-                                     hin=inequality_constraints,
-                                     params=params,
-                                     control=list(maxeval=maxeval,ftol_abs=1e-12,ftol_rel=0,xtol_rel=1e-10)),   #xtol_rel=1e-10
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
-      )
-      hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    }
+    fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],lb=lb,ub=ub, ineq_fcn=inequality_constraints,
+                               ineq_lb=rep(0,n_constraints), ineq_ub=rep(1,n_constraints), params=params, max_eval=maxeval)
+  } else if (opt_method=='best') {
+    fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, max_eval=maxeval)
   } else { # k==0 or k==1
-    fit <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
-                        hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25))
-    if (fit$convergence==52) {   # Error in line search, then try again using nloptr
-      fit2<-nloptr::lbfgs(x0=fit$par, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-8))
-      if (fit2$value<fit$value&fit2$convergence>=0) fit<-fit2
-    }
-    if (fit$convergence>=0) {
-      pars <- fit$par
-      hh   <- fit$hessian
-    }
-
-    if (opt_method=='cobyla') {
-      tryCatch(fit <- nloptr::cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxeval=maxeval,xtol_rel=1e-10)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='solnp') {
-      tryCatch(fit <- Rsolnp::solnp(pars,fcns[[method]], LB=lb, UB=ub, control=list(tol=1e-12,trace=0), params=params),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
-      )
-      fit$par <- fit$pars  # remap as solnp has slightly different naming convention.
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='directL') {
-      tryCatch(fit <- nloptr::directL(fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxeval=maxeval,xtol_rel=1e-10)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece= -999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='BBoptim') {
-      pars[1] <- pars[1]-0.1
-      tryCatch(fit <- BB::BBoptim(par=pars, fcns[[method]], lower=lb, upper=ub, control=list(trace=FALSE,maxit=maxeval,ftol=1e-15,gtol=1e-8),
-                                  params=params,quiet=TRUE),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='psoptim') {
-      tryCatch(fit <-pso::psoptim(par=pars, fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxit=maxeval)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='hjkb') {
-      tryCatch(fit <- dfoptim::hjkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='nmkb') {
-      tryCatch(fit <- dfoptim::nmkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
-               error=function(cond) {fit<-list(value=Inf,message=cond,convergece=999,par=pars)}
-      )
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    } else if (opt_method=='best') {
-      message <- c()
-      fit.optim<-fit.cobyla<-fit.directL<-fit.bboptim<-fit.psoptim<-fit.hjkb<-fit.nmkb<-list(value=Inf,convergece=999,par=pars) #default to set environment
-      tryCatch(
-        fit.optim   <- stats::optim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params,
-                                    hessian=TRUE,method="L-BFGS-B",control=list(maxit=maxeval,factr=1e-25)),
-        error=function(cond) {fit.optim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.cobyla  <- nloptr::cobyla(pars,fcns[[method]], lower=lb, upper=ub, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
-               error=function(cond) {fit.cobyla<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.directL <- nloptr::directL(fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params,control=list(maxeval=maxeval,xtol_rel=1e-10)),
-               error=function(cond) {fit.directL<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.bboptim <- BB::BBoptim(par=pars, fn=fcns[[method]], lower=lb, upper=ub, control=list(trace=FALSE,maxit=maxeval,ftol=1e-15,gtol=1e-8),
-                                          params=params,quiet=TRUE),
-               error=function(cond) {fit.bboptim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.psoptim <- pso::psoptim(par=pars, fn=fcns[[method]], lower=lb_finite, upper=ub_finite, params=params, control=list(maxit=maxeval)),
-               error=function(cond) {fit.psoptim<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.hjkb    <- dfoptim::hjkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
-               error=function(cond) {fit.hjkb<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-      tryCatch(fit.nmkb    <- dfoptim::nmkb(par=pars, fn=fcns[[method]], lower=lb, upper=ub, params=params, control=list(maxfeval=maxeval)),
-               error=function(cond) {fit.nmkb<-list(value=Inf,message=c(message,cond),convergece=999,par=pars)}
-      )
-
-      fit_values  <- list('optim'=fit.optim$value,'cobyla'=fit.cobyla$value,'directL'=fit.directL$value,'bboptim'=fit.bboptim$value,'psoptim'=fit.psoptim$value,'hjkb'=fit.hjkb$value,'nmkb'=fit.nmkb$value)
-      best_method <- names(fit_values)[which.min(fit_values)]
-      fits        <- list('optim'=fit.optim,'cobyla'=fit.cobyla,'directL'=fit.directL,'bboptim'=fit.bboptim,'psoptim'=fit.psoptim,'hjkb'=fit.hjkb,'nmkb'=fit.nmkb)
-      fit         <- fits[[best_method]]
-      hh  <- pracma::hessian(fcns[[method]], fit$par, params=params)
-    }
+      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
+                                 lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, max_eval=maxeval)
   }
+  if (fit$convergence== -999) stop('Failed to converge.')
+
+  hh <- fit$hessian
+  for (col in 1:ncol(hh)) hh[any(is.na(hh[,col]))|any(is.infinite(hh[,col])),col] <- 0
 
   # log lik
   loglik <- numeric(0)
@@ -376,7 +296,7 @@ garma<-function(x,
 
   se <- numeric(length(fit$par))
   if (fit$convergence>=0&method!='WLL'&!is.null(hh)) {
-    # Next, find the c <- alc se's for coefficients
+    # Next, find the se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment
     if (include.mean) start<-2
@@ -397,7 +317,7 @@ garma<-function(x,
   }
   nm<-list()
   if (include.mean) nm <- c(nm,'intercept')
-  if (k>0) nm<-c(nm,rep(c('u','fd'),k))
+  if (k>0) nm<-c(nm,unlist(lapply(1:k,function(x) paste0(c('u','fd'),x))))
   if (p>0) nm<-c(nm,paste0('ar',1:p))
   if (q>0) nm<-c(nm,paste0('ma',1:q))
 
@@ -436,7 +356,7 @@ garma<-function(x,
   res<-list('call' = match.call(),
             'coef'=coef,
             'sigma2'=sigma2,
-            'obj_value'=fit$value[length(fit$value)],
+            'obj_value'=fit$value,
             'loglik'=loglik,
             'aic'=-2*loglik + 2*(n_coef+1),
             'convergence'=fit$convergence,
@@ -454,7 +374,7 @@ garma<-function(x,
             'fitted'=stats::ts(fitted$fitted,start=x_start,end=x_end,frequency=x_freq),
             'residuals'=stats::ts(fitted$residuals,start=x_start,end=x_end,frequency=x_freq),
             'm_trunc'=m_trunc)
-  if (opt_method=='best') res<-c(res,'opt_method.selected'=best_method)
+  if (opt_method[1]=='best') res<-c(res,'opt_method_selected'=fit$best_method)
   if (k>0) res<-c(res, 'ggbr_factors' = list(gf))
 
   class(res)<-'garma_model'
@@ -472,14 +392,15 @@ garma<-function(x,
          cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
                      method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),mdl$opt_method,mdl$maxeval))
     )
-    if (mdl$opt_method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method.selected))
+    if (mdl$opt_method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method_selected))
     cat(sprintf('Convergence Code: %d\nOptimal Value found: %0.8f\n\n',mdl$convergence,mdl$obj_value))
   }
+  if (mdl$opt_method=='solnp'&mdl$convergence!=0) cat('ERROR: Convergence not acheived. Please try another method.\n')
   if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
   else {
     if (mdl$convergence>0)
       cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (%d)\n\n',
-                  ifelse(mdl$opt_method=='best',mdl$opt_method.selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
+                  ifelse(mdl$opt_method=='best',mdl$opt_method_selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
     cat('Coefficients:\n')
     print.default(mdl$coef, print.gap = 2)
     cat('\n')
