@@ -486,14 +486,27 @@ predict.garma_model<-function(object,n.ahead=1,...) {
 
   n <- length(ydm)
 
-  # set up filters
+  # set up filterspredict(mdl,n.ahead=11
   arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  if (object$k>0) ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,d,u))
+  ggbr_filter_list <- c()
+  if (object$k>0) {
+    # for each ggbr factor, we set up a filter and add it to the list
+    for (k1 in 1:object$k) {
+      gf <- object$ggbr_factors[[k1]]
+      ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,gf$fd,gf$u))
+      ggbr_filter_list <- c(ggbr_filter_list, list(ggbr_filter))
+    }
+  }
 
   # generate forecasts
   for (i in 1:n.ahead) {
     eps <- ydm
-    if (object$k>0) eps <- signal::filter(ggbr_filter, eps)
+    if (object$k>0) {
+      for (k1 in 1:object$k) {
+        ggbr_filter <- ggbr_filter_list[[k1]]
+        eps <- signal::filter(ggbr_filter, eps)
+      }
+    }
     eps <- signal::filter(arma_filter, eps)
     ydm[n+i] <- (-eps[length(eps)])
   }
