@@ -574,9 +574,9 @@ forecast.garma_model<-function(mdl,h=1) {return(predict.garma_model(mdl,n.ahead=
 .plot_garma_model<-function(mdl,h=24,...) {
   # plot forecasts from model
   actuals <- zoo(stats::ts(mdl$y,start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
-  fitted <- zoo(mdl$fitted_values)
-  fc <- zoo(predict.garma_model(mdl,n.ahead=h)$pred)
-  graphics::plot(actuals,col='black',type='l',xlim=c(stats::start(actuals)[1],stats::end(fc)[1]),...)
+  fitted <- zoo(mdl$fitted)
+  fc <- zoo(predict.garma_model(mdl,n.ahead=h)$mean)
+  graphics::plot(actuals,col='black',type='l',...)
   graphics::lines(fitted,col='blue')
   graphics::lines(fc,col='blue')
   graphics::abline(v=mdl$y_end,col='red',lty=2)
