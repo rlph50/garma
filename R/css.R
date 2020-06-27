@@ -35,8 +35,8 @@
   }
 
   y_dash <- y-beta0
-  if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))        else phi_vec   <- 1
-  if (q>0) theta_vec <- c(1,-(par[(p+start):(length(par)-1)])) else theta_vec <- 1
+  if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))     else phi_vec   <- 1
+  if (q>0) theta_vec <- c(1,(par[(p+start):(length(par))])) else theta_vec <- 1
 
   #print(par)
 

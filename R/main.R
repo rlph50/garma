@@ -36,10 +36,14 @@
 #'     'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 #'     However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.
 #' @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
-#'     of the Gegenbauer term is allowed. This can be set to FALSE to force the routine to find a positive value.
+#'     of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.
 #' @param maxeval (int) the maximum function eveluations to be allowed during each optimisation.
-#' @param opt_method (character) This names the optimisation method used to find the parameter estimates. The default is to use 'solnp' from package Rsolnp,
-#' which has shown to have good performance in a wide range of circumstances. For some data or some models, however, other methods may work well. Supported algorithms include:
+#' @param opt_method (character) This names the optimisation method used to find the parameter estimates.
+#' This may be a list of methods, in which case the methods are applied in turn,
+#' each using the results of the previous one as the starting point for the next. The default is to use c('directL', 'solnp') when k<2 and 'solnp' when k>=2. The
+#' directL algorithm is used to perform a global search for the minima, and solnp to refine the values.
+#' For some data or some models, however, other methods may work well.
+#' Supported algorithms include:
 #'     \itemize{
 #'     \item cobyla algorithm in package nloptr
 #'     \item directL algorithm in package nloptr
@@ -53,6 +57,9 @@
 #'     }
 #' Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.
 #' @param m_trunc Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.
+#' @param min_freq (num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
+#' AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.
+#' @param max_freq (num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.
 #' @return An S3 object of class "garma_model".
 #'
 #' @references
@@ -76,10 +83,12 @@ garma<-function(x,
                 k=1,
                 include.mean=(order[2]==0),
                 method='Whittle',
-                allow_neg_d=TRUE,
+                allow_neg_d=FALSE,
                 maxeval=10000,
-                opt_method='solnp',
-                m_trunc=50) {
+                opt_method=NULL,
+                m_trunc=50,
+                min_freq=0,
+                max_freq=0.5) {
 
   inequality_constraints<-function(par,params) {
     # used when k>1 - to ensure a minimum separation between Gegenbauer frequencies
@@ -117,7 +126,6 @@ garma<-function(x,
     return(res)
   }
 
-
   ## Start of "garma" function logic.
   ## 1. Check parameters
   if (length(x)<96)
@@ -137,16 +145,20 @@ garma<-function(x,
 
   x<-as.numeric(x)
   if (!is.numeric(x))
-    stop('x should be numeric.')
+    stop('x should be numeric.\n')
   if (length(order)!=3)
-    stop('order parameter must be a 3 integers only.')
-  # if ((k!=0)&(k!=1))
-  #   stop('Sorry. Only k=0 or k=1 is supported for now.')
+    stop('order parameter must be a 3 integers only.\n')
   allowed_methods <- c('CSS','Whittle','WLL','QML')
   if (!method%in%allowed_methods)
-    stop('Method must be one of CSS, Whittle, QML or WLL.')
+    stop('Method must be one of CSS, Whittle, QML or WLL.\n')
   if (method=='QML'&k>1)
-    stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.')
+    stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.\n')
+
+  if (is.null(opt_method)) {
+    if (k>=2) opt_method <- 'solnp'
+    else if (order[3]>0) opt_method<-'cobyla'
+    else opt_method <- c('directL','solnp')
+  }
 
   for (om in opt_method) {
     if (!om%in%.supported_optim())
@@ -159,9 +171,12 @@ garma<-function(x,
     if (k>1) {
       if (!om%in%.supported_contr_optim())
         stop(sprintf('For k>1 we need to use contrained optimisation, but algorithm %s does not support that.\nPlease try one of %s\n',
-                     pm,paste(.supported_contr_optim(),collapse=', ')))
+                     om,paste(.supported_contr_optim(),collapse=', ')))
     }
   }
+  # check min_freq and max_frerq
+  if (!is.numeric(min_freq)|!is.numeric(max_freq)|min_freq<0|min_freq>=0.5|max_freq<=0|max_freq>0.5|min_freq>=max_freq)
+    stop('min_freq and max_freq must be numeric and between 0 and 0.5 and min_freq<max_freq.\n')
   ##
   ## 2. Next calc parameter  estimates
   p=as.integer(order[1])
@@ -199,14 +214,16 @@ garma<-function(x,
   #temp_spec <- ss$spec
   #temp_freq <- ss$freq
   if (k>0) {
-    gf <- ggbr_semipara(y,k=k)
+    gf <- ggbr_semipara(y,k=k,min_freq=min_freq,max_freq=max_freq)
     for (k1 in 1:k) {
       n_pars    <- n_pars+2
       gf1 <- gf$ggbr_factors[[k1]]
       start_u <- gf1$u
       start_d <- gf1$fd
 
-      if (start_u< (-1)) start_u <- 0
+      max_u <- cos(2*pi*min_freq)
+      min_u <- cos(2*pi*max_freq)
+      if (start_u< min_u|start_u > max_u) start_u <- (min_u+max_u)/2
       if (start_d>=0.5)  start_d <- 0.49
       if (allow_neg_d) {
         if (start_d<= -0.5) start_d<- -0.49
@@ -214,10 +231,10 @@ garma<-function(x,
         if (start_d<=0.0) start_d<-0.01
       }
       pars      <- c(pars,start_u,start_d)
-      lb        <- c(lb,0.0,ifelse(allow_neg_d,-1,0))
-      ub        <- c(ub,1.0,1.0)
-      lb_finite <- c(lb_finite,0.0,ifelse(allow_neg_d,-1,0))
-      ub_finite <- c(ub_finite,1.0,1.0)
+      lb        <- c(lb,min_u,ifelse(allow_neg_d,-1,0))
+      ub        <- c(ub,max_u,0.5)
+      lb_finite <- c(lb_finite,min_u,ifelse(allow_neg_d,-1,0))
+      ub_finite <- c(ub_finite,max_u,0.5)
     }
   }
 
@@ -265,7 +282,7 @@ garma<-function(x,
   if (k>1) { # separate logic since for k>1 we need inequality constraints and not all non-linear optimisers support this.
     fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],lb=lb,ub=ub, ineq_fcn=inequality_constraints,
                                ineq_lb=rep(0,n_constraints), ineq_ub=rep(1,n_constraints), params=params, max_eval=maxeval)
-  } else if (opt_method=='best') {
+  } else if (opt_method[[1]]=='best') {
     fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, max_eval=maxeval)
   } else { # k==0 or k==1
       fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
@@ -276,15 +293,6 @@ garma<-function(x,
   hh <- fit$hessian
   for (col in 1:ncol(hh)) hh[any(is.na(hh[,col]))|any(is.infinite(hh[,col])),col] <- 0
 
-  # log lik
-  loglik <- numeric(0)
-  if (method=='CSS')
-    loglik <- -0.5 *(length(y)*fit$value[length(fit$value)] + length(y) + length(y) * log(2 * pi))
-  if (method=='QML')
-    loglik <- -fit$value[length(fit$value)]
-  if (method=='Whittle')
-    loglik <- .whittle.ggbr.likelihood(fit$par,params)
-
   # sigma2
   if (method=='WLL') {
     # adjust sigma2 for theoretical bias...
@@ -293,6 +301,15 @@ garma<-function(x,
   else if (method=='QML')     sigma2 <- sqrt(.qml.ggbr.se2(fit$par, params=params))
   else if (method=='CSS')     sigma2 <- exp(2*fit$value[length(fit$value)])/length(y)
   else if (method=='Whittle') sigma2 <- 2/length(y) * var(y) * fit$value[length(fit$value)]  # 1997 Ferrara & Geugen eqn 3.7
+
+  # log lik
+  loglik <- numeric(0)
+  if (method=='CSS')
+    loglik <- -0.5* ((fit$value/sigma2) + length(y)*(log(2*pi) + log(sigma2)))
+  if (method=='QML')
+    loglik <- -fit$value[length(fit$value)]
+  if (method=='Whittle')
+    loglik <- .whittle.ggbr.likelihood(fit$par,params)
 
   se <- numeric(length(fit$par))
   if (fit$convergence>=0&method!='WLL'&!is.null(hh)) {
@@ -390,12 +407,13 @@ garma<-function(x,
   if (verbose) {
     with(mdl,
          cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
-                     method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),mdl$opt_method,mdl$maxeval))
+                     method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),
+                     paste(mdl$opt_method,collapse=', '),mdl$maxeval))
     )
-    if (mdl$opt_method=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method_selected))
+    if (mdl$opt_method[[1]]=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method_selected))
     cat(sprintf('Convergence Code: %d\nOptimal Value found: %0.8f\n\n',mdl$convergence,mdl$obj_value))
   }
-  if (mdl$opt_method=='solnp'&mdl$convergence!=0) cat('ERROR: Convergence not acheived. Please try another method.\n')
+  if (mdl$opt_method[[1]]=='solnp'&mdl$convergence!=0) cat('ERROR: Convergence not acheived. Please try another method.\n')
   if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
   else {
     if (mdl$convergence>0)
@@ -458,6 +476,8 @@ print.garma_model<-function(x,...) {
 #' predict(mdl, n.ahead=12)
 #' @export
 predict.garma_model<-function(object,n.ahead=1,...) {
+  if (n.ahead<=0) stop('n.ahead must be g.t. 0.')
+
   coef <- unname(object$coef[1,])
   p<-object$order[1]
   q<-object$order[3]
@@ -470,52 +490,58 @@ predict.garma_model<-function(object,n.ahead=1,...) {
     beta0  <- 0
     start  <- 1
   }
-  if (object$k==1) {
-    u      <- coef[start]
-    d      <- coef[start+1]
-    start  <- start+2
-  } else u<-d<-0.0
+  # jump over the ggbr params
+  start <- start + ((object$k)*2)
 
-  if (p>0) phi_vec   <- c(-(coef[start:(start+p-1)] ))           else phi_vec   <- 1
-  if (q>0) theta_vec <- c(1,-(coef[(p+start):(length(coef)-1)])) else theta_vec <- 1
+  # if (p>0) phi_vec   <- c((coef[start:(start+p-1)] ))       else phi_vec   <- c()
+  # if (q>0) theta_vec <- c((coef[(p+start):(length(coef))])) else theta_vec <- c()
 
   if (object$order[2]==0)
     ydm <- object$y - beta0
-  else if (object$order[2]==1)
-    ydm <- diff(object$y) - beta0
+  else if (object$order[2]>0)
+    ydm <- diff(object$y,object$order[2]) - beta0
+
+  # Next section uses eqn 5.3.9 from Brockwell & Davis (1991)
+  # to calculate forecasts for the short memory component.
+  # n <- length(ydm)
+  # resid <- object$residuals
+  # ydm <- c(ydm,rep(0,n.ahead))
+  # if (p>0) {
+  #   for (h in 1:n.ahead)
+  #     ydm[n+h] <- ydm[n+h] + ydm[(n+h-1):(n+h-p)] %*% phi_vec
+  #   print(tail(ydm,n.ahead))
+  # }
+  # if(q>0) {
+  #   for (h in 1:min(q,n.ahead)) {
+  #     ydm[n+h] <- ydm[n+h] + resid[n:(n-q+h)] %*% theta_vec[h:q]
+  #     print(tail(ydm,n.ahead))
+  #   }
+  # }
+
+  if (p>0) phi_vec   <- c(1,-(coef[start:(start+p-1)] ))      else phi_vec   <- 1
+  if (q>0) theta_vec <- c(1,(coef[(p+start):(length(coef))])) else theta_vec <- 1
 
   n <- length(ydm)
+  ydm <- c(object$residuals, rep(0,n.ahead))
 
-  # set up filterspredict(mdl,n.ahead=11
-  arma_filter <- signal::Arma(a = theta_vec, b = phi_vec)
-  ggbr_filter_list <- c()
+  # set up filters
+  arma_filter <- signal::Arma(b=theta_vec, a=phi_vec)
+  ydm <- signal::filter(arma_filter, ydm)
   if (object$k>0) {
     # for each ggbr factor, we set up a filter and add it to the list
     for (k1 in 1:object$k) {
       gf <- object$ggbr_factors[[k1]]
-      ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(n,gf$fd,gf$u))
-      ggbr_filter_list <- c(ggbr_filter_list, list(ggbr_filter))
+      gc <- .ggbr.coef(n+n.ahead,gf$fd,gf$u)
+      ggbr_filter <- signal::Arma(a=1,b=gc)
+      ydm <- signal::filter(ggbr_filter, ydm)
     }
-  }
-
-  # generate forecasts
-  for (i in 1:n.ahead) {
-    eps <- ydm
-    if (object$k>0) {
-      for (k1 in 1:object$k) {
-        ggbr_filter <- ggbr_filter_list[[k1]]
-        eps <- signal::filter(ggbr_filter, eps)
-      }
-    }
-    eps <- signal::filter(arma_filter, eps)
-    ydm[n+i] <- (-eps[length(eps)])
   }
 
   # if (integer) differenced then...
   if (object$order[2]>0) {
-    ydm2 <- stats::diffinv(ydm,differences=object$order[2])
+    ydm2 <- stats::diffinv(ydm,differences=object$order[2]) + beta0
   }
-  else ydm2 <-ydm
+  else ydm2 <- ydm + beta0
 
   # Now we have the forecasts, we set these up as a "ts" object - as does "predict.arima"
   y_end = object$y_end
@@ -527,8 +553,8 @@ predict.garma_model<-function(object,n.ahead=1,...) {
     else y_end[2] <- y_end[2] + 1
   } else y_end <- y_end +1
 
-  res <- stats::ts(tail(ydm2,n.ahead)+beta0,start=y_end,frequency=object$y_freq)
-  return(list(pred=res))
+  res <- stats::ts(tail(ydm2,n.ahead),start=y_end,frequency=object$y_freq)
+  return(list(mean=res))
 }
 
 #' The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.
@@ -597,7 +623,7 @@ ggplot.garma_model<-function(mdl,h=24,...) {
   }
 
   df1 <- data.frame(dt=idx,grp='Actuals',value=c(mdl$y,rep(NA,h)))
-  df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$pred))
+  df2 <- data.frame(dt=idx,grp='Forecasts',value=c(as.numeric(mdl$fitted),fc$mean))
   df <- rbind(df1,df2)
 
   # assign some dummy vars to prevent RStudio check from throwing warning msgs
@@ -644,8 +670,8 @@ ggplot.garma_model<-function(mdl,h=24,...) {
 
 
   y_dash <- y-beta0
-  if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))        else phi_vec   <- 1
-  if (q>0) theta_vec <- c(1,-(par[(p+start):(length(par)-1)])) else theta_vec <- 1
+  if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))     else phi_vec   <- 1
+  if (q>0) theta_vec <- c(1,(par[(p+start):(length(par))])) else theta_vec <- 1
 
   arma_filter   <- signal::Arma(a = theta_vec, b = phi_vec)
   eps           <- signal::filter(arma_filter, y_dash)

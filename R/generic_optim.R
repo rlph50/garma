@@ -21,6 +21,7 @@
              error=function(cond) {fit<-save_fit}
     )
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
+
   }
 
   if (opt_method=='slsqp'&!is.null(ineq_fcn)) {
@@ -72,7 +73,7 @@
     )
   }
 
-  if (is.null(fit$hessian))
+  if (is.null(fit$hessian)|diag(fit$hessian)[2]==1)
     fit$hessian <- pracma::hessian(fcn, fit$par, params=params)
   if (length(fit$value)>1)
     fit$value <- fit$value[length(fit$value)]

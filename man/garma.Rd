@@ -11,10 +11,12 @@ garma(
   k = 1,
   include.mean = (order[2] == 0),
   method = "Whittle",
-  allow_neg_d = TRUE,
+  allow_neg_d = FALSE,
   maxeval = 10000,
-  opt_method = "solnp",
-  m_trunc = 50
+  opt_method = NULL,
+  m_trunc = 50,
+  min_freq = 0,
+  max_freq = 0.5
 )
 }
 \arguments{
@@ -40,12 +42,16 @@ distribution is even approximately correct, and is probably the method of choice
 However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.}
 
 \item{allow_neg_d}{(bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
-of the Gegenbauer term is allowed. This can be set to FALSE to force the routine to find a positive value.}
+of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.}
 
 \item{maxeval}{(int) the maximum function eveluations to be allowed during each optimisation.}
 
-\item{opt_method}{(character) This names the optimisation method used to find the parameter estimates. The default is to use 'solnp' from package Rsolnp,
-which has shown to have good performance in a wide range of circumstances. For some data or some models, however, other methods may work well. Supported algorithms include:
+\item{opt_method}{(character) This names the optimisation method used to find the parameter estimates.
+This may be a list of methods, in which case the methods are applied in turn,
+each using the results of the previous one as the starting point for the next. The default is to use c('directL', 'solnp') when k<2 and 'solnp' when k>=2. The
+directL algorithm is used to perform a global search for the minima, and solnp to refine the values.
+For some data or some models, however, other methods may work well.
+Supported algorithms include:
     \itemize{
     \item cobyla algorithm in package nloptr
     \item directL algorithm in package nloptr
@@ -60,6 +66,11 @@ which has shown to have good performance in a wide range of circumstances. For s
 Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.}
 
 \item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
+
+\item{min_freq}{(num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
+AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.}
+
+\item{max_freq}{(num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.}
 }
 \value{
 An S3 object of class "garma_model".

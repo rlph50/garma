@@ -4,7 +4,14 @@
 \alias{ggbr_semipara}
 \title{For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.}
 \usage{
-ggbr_semipara(x, k = 1, alpha = 0.8, method = "gsp")
+ggbr_semipara(
+  x,
+  k = 1,
+  alpha = 0.8,
+  method = "gsp",
+  min_freq = 0,
+  max_freq = 0.5
+)
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
@@ -13,7 +20,12 @@ ggbr_semipara(x, k = 1, alpha = 0.8, method = "gsp")
 
 \item{alpha}{(num)}
 
-\item{method}{(char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian semi-parametric technique. "gsp" is the default. Refer Arteche (1998).}
+\item{method}{(char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
+semi-parametric technique. "gsp" is the default. Refer Arteche (1998).}
+
+\item{min_freq}{(num) The minimum frequency to search through for peaks - default 0.0.}
+
+\item{max_freq}{(num) The maximum frequency to search through for peaks - default 0.5.}
 }
 \value{
 An object of class "garma_semipara".
