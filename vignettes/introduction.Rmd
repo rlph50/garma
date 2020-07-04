@@ -56,11 +56,11 @@ You might be wondering why these models might be useful - the answer is that the
 
 At time of writing there are few packages on CRAN which can fit GARMA models.
 
-Package **tswge** provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
+Package **tswge** \pkg{tswge} provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
 
 Package **waveslim** has functions "spp.mle" and "spp2.mle" which can identify the parameters of a white noise process only, using a wavelet method.
 
-Package **VGAM** appears to have a function called "garma" but this actually fits very different models - it fits short-memory models which can include count data. Package **gsarima** also fits these short memory count models.
+Package **VGAM** to have a function called "garma" but this actually fits very different models - it fits short-memory models which can include count data. Package **gsarima** also fits these short memory count models.
 
 ---
 
