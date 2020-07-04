@@ -37,7 +37,7 @@ data(NileMin,package='longmemo')
 # we'll just set the correct start year, for display purposes.
 NileMin<-ts(as.numeric(NileMin),start=622,frequency=1)
 
-ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.')
+ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.', theme=theme_bw())
 ```
 
 
@@ -73,7 +73,7 @@ soi <- download_soi()
 
 soi_ts <- ts(soi$SOI,start=c(1951,2),frequency=12)
 
-ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index')
+ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index', theme=theme_bw())
 ```
 
 
@@ -104,7 +104,8 @@ ggplot(spec_df, aes(x=freq,y=spec)) +
   facet_wrap(.~process,scales='free_y') +
   ggtitle('Spectrum of NileMin and SOI') + 
   ylab('Intensity') + 
-  xlab(bquote('Frequency (0 -' ~ pi ~')' )) + xlim(0,pi)
+  xlab(bquote('Frequency (0 -' ~ pi ~')' )) + xlim(0,pi) +
+  theme_bw()
 ```
 
 
