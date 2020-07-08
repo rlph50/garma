@@ -67,11 +67,15 @@ Package **VGAM** to have a function called "garma" but this actually fits very d
 These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
 
 ```{r soi, fig.width=7, fig.height=5}
-library(rsoi)
+setwd("~/UniWork/Ggbr Research/Software/garma/vignettes")
+soi <-
+  read_fwf('soi.long.data',fwf_widths(c(5, rep(7,12)), c("year", 1:12)),col_types='nnnnnnnnnnnnn') %>%
+  gather(mth_no,soi,-year) %>%
+  mutate(mth = lubridate::make_date(year,as.numeric(mth_no),1)) %>%
+  select(mth,soi) %>%
+  arrange(mth)
 
-soi <- download_soi()
-
-soi_ts <- ts(soi$SOI,start=c(1951,2),frequency=12)
+soi_ts <- ts(soi$soi,start=c(1951,2),frequency=12)
 
 ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index', theme=theme_bw())
 ```
