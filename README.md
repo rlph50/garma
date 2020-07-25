@@ -26,4 +26,4 @@ After this you can install this package by typing:
 ```
 
 ## Documentation
-An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/An%20Introduction%20to%20GARMA.pdf), and the reference documentation is available here [here](https://github.com/rlph50/garma/blob/master/garma_0.2.0.pdf).
+An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/inst/vignette_introduction.pdf), and the reference documentation is available here [here](https://github.com/rlph50/garma/blob/master/inst/garma_0.9.0.pdf).
