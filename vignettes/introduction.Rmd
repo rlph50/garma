@@ -16,6 +16,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+setwd("~/UniWork/Ggbr Research/Software/garma/vignettes")
+```
 ## Introduction to long memory models and GARMA models.
 
 GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
@@ -29,7 +32,7 @@ IF you are not very familiar with ARIMA models, it might be advisable to first h
 GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model proceses which have a high correlation between observations which are far apart in time.
 
 For instance, consider the data on the minimum level of the Nile [@Tousson1925], as measured from 622 to 1281 AD (from the **longmemo** package):
-```{r nile, fig.width=7, fig.height=7, message=FALSE, warning=FALSE}
+```{r nile, fig.width=6, fig.height=6, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(forecast)
 
@@ -56,7 +59,7 @@ You might be wondering why these models might be useful - the answer is that the
 
 At time of writing there are few packages on CRAN which can fit GARMA models.
 
-Package **tswge** \pkg{tswge} provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
+Package **tswge** provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
 
 Package **waveslim** has functions "spp.mle" and "spp2.mle" which can identify the parameters of a white noise process only, using a wavelet method.
 
@@ -66,8 +69,7 @@ Package **VGAM** to have a function called "garma" but this actually fits very d
 
 These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
 
-```{r soi, fig.width=7, fig.height=5}
-setwd("~/UniWork/Ggbr Research/Software/garma/vignettes")
+```{r soi, fig.width=6, fig.height=4}
 soi <-
   read_fwf('soi.long.data',fwf_widths(c(5, rep(7,12)), c("year", 1:12)),col_types='nnnnnnnnnnnnn') %>%
   gather(mth_no,soi,-year) %>%
@@ -201,7 +203,7 @@ Also shown is the degree of fractional differencing and the Fractional Dimension
 
 Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989] and which we fit then forecast below, for the 11 years of a sunspot cycle.
 
-```{r sunspot2, fig.width=7, fig.height=4}
+```{r sunspot2, fig.width=7, fig.height=5}
 # fit a GARMA(8,0,0) model
 sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1,method='CSS')
 summary(sunspots_garma_mdl)
