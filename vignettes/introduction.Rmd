@@ -16,9 +16,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-setwd("~/UniWork/Ggbr Research/Software/garma/vignettes")
-```
 ## Introduction to long memory models and GARMA models.
 
 GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
