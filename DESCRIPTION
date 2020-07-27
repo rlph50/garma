@@ -6,7 +6,7 @@ Date: 2020-07-26
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
 Maintainer: Richard Hunt <maint@huntemail.id.au>
-Description: This package provides methods for estimating long memory-seasonal/cyclical Gegenbauer univariate time series processes.
+Description: Methods for estimating long memory-seasonal/cyclical Gegenbauer univariate time series processes.
     Refer to the vignette for details of fitting these processes.
 License: GPL-3
 Encoding: UTF-8
