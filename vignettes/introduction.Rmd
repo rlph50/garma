@@ -2,7 +2,7 @@
 title: "An introduction to GARMA models"
 output: 
   rmarkdown::html_vignette
-bibliography: /home/richard/UniWork/Ggbr Research/Software/garma/vignettes/garma_bibliography.bib
+bibliography: garma_bibliography.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to GARMA models}
   %\VignetteEngine{knitr::rmarkdown}
