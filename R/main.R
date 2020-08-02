@@ -165,8 +165,8 @@ garma<-function(x,
       stop(sprintf('\nError: function %s not available.\n\nSupported functions are:\n%s\n', om, .supported_optim()))
 
     optimisation_packages <- .optim_packages()
-    if (!.is.installed(optimisation_packages[[om]]))
-      stop(sprintf('Package %s needs to be installed to use method %s\n',optimisation_packages[[om]],om))
+    if (!isNamespaceLoaded(optimisation_packages[[om]]))
+      stop(sprintf('Package %s is required to use method %s\n',optimisation_packages[[om]],om))
 
     if (k>1) {
       if (!om%in%.supported_contr_optim())
@@ -460,9 +460,6 @@ print.garma_model<-function(x,...) {
   .print_garma_model(x,verbose=TRUE)
 }
 
-.is.installed <- function(mypkg){
-  is.element(mypkg, utils::installed.packages()[,1])
-}
 
 #' The predict function predicts future values of a "garma_model" object.
 #' @param object (garma_model) The garma_model from which to predict the values.
