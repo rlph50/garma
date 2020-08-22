@@ -40,7 +40,7 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5
     for (j in length(peaks):(i+1)) {
       if (j>length(peaks)) break;
       r2 <- peaks[[j]]
-      if (r1$f_idx==r2$f_idx) {peaks[[j]]<-NULL;cat(length(peaks));note<-'NOTE: Duplicate Peaks were removed.'}
+      if (r1$f_idx==r2$f_idx) {peaks[[j]]<-NULL;note<-'NOTE: Duplicate Peaks were removed.'}
     }
   }
 
