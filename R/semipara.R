@@ -32,9 +32,21 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5
       peaks <- c(peaks,list(r))
       peak_idx_list <- c(peak_idx_list,r$f_idx)
     }
+  # look for repeated peaks. Shouldn't happen but sometimes does
+  note<-''
+  for (i in 1:(length(peaks)-1)) {
+    if (i>=length(peaks)) break;
+    r1 <- peaks[[i]]
+    for (j in length(peaks):(i+1)) {
+      if (j>length(peaks)) break;
+      r2 <- peaks[[j]]
+      if (r1$f_idx==r2$f_idx) {peaks[[j]]<-NULL;cat(length(peaks));note<-'NOTE: Duplicate Peaks were removed.'}
+    }
+  }
+
   class(peaks) <- 'ggbr_factors'
 
-  res <- list('ggbr_factors'=peaks, method=method, alpha=alpha, k=k)
+  res <- list('ggbr_factors'=peaks, method=method, alpha=alpha, k=k,note=note)
   class(res) <- 'garma_semipara'
   return(res)
 }
@@ -66,6 +78,7 @@ print.garma_semipara<-function(x,...) {
               ifelse(x$method=='gsp','Gaussian Semi-Parametric','Log Periodogram Regression'),
               x$alpha))
   print(x$ggbr_factors)
+  if(length(x$note)>0) if (nchar(x$note)>1) cat(paste0('\n',x$note))
 }
 
 #' For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
@@ -118,10 +131,10 @@ extract_arma<-function(x,ggbr_factors) {
     for (peak in remove_peaks) {
       start_idx <- max(peak-width,1)
       end_idx   <- min(peak+width,length(ssx$spec))
-      for (i in start_idx:end_idx) ssx$spec2[i] <- 1e-100
+      for (i in start_idx:end_idx) ssx$spec2[i] <- (-1) # 1e-100
     }
   }
-  f_idx     <- which.max(ssx$spec2[1:as.integer(length(x)/2)]) + from_idx - 1
+  f_idx     <- which.max(ssx$spec2[1:min(as.integer(length(x)/2),length(ssx$spec2))]) + from_idx - 1
   ggbr_freq <- ssx$freq[f_idx]
   return(list(f_idx=f_idx, ggbr_freq=ggbr_freq, ssx=ssx))
 }
