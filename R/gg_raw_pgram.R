@@ -11,7 +11,9 @@
 #' print(sp)
 #' @export
 gg_raw_pgram <- function(x,k=1) {
-  ssx <- .garma_pgram(x)
+  x <- as.numeric(x) # "spectrum" function does weird things if x is a "ts" object
+
+  ssx <- .garma_pgram(as.numeric(x))
   df  <- data.frame(Frequency=ssx$freq,Intensity=ssx$spec)
 
   sp  <- ggbr_semipara(x,k=k)
@@ -23,6 +25,7 @@ gg_raw_pgram <- function(x,k=1) {
 
   # set up some dummy vars to prevent the RStudio checks from throwing warnings...
   Frequency <- Intensity <- y <- label <- NA
+  # now plot it
   ggplot2::ggplot(data=df,ggplot2::aes(x=Frequency,y=Intensity)) +
     ggplot2::geom_line() +
     ggplot2::geom_text(data=annotate_df,aes(x=x,y=y,label=label),size=2.5,hjust=0) +
