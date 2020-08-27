@@ -186,7 +186,7 @@ garma<-function(x,
   #  stop('Sorry. Only d=0 or d=1 is supported for now (for the integer portion of d).\nWe suggest you manually difference the series using diff() if you need more than this.')
   storage.mode(x) <- 'double'
 
-  if (d>0) y<-diff(x,differences=d) else y<-x
+  if (d>0) y<-diff(x,lag=d) else y<-x
   mean_y <- mean(y)
   sd_y   <- stats::sd(y)
   ss<-stats::spectrum((y-mean_y)/sd_y,plot=FALSE,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE)
@@ -496,7 +496,7 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   if (object$order[2]==0)
     ydm <- object$y - beta0
   else if (object$order[2]>0)
-    ydm <- diff(object$y,object$order[2]) - beta0
+    ydm <- diff(object$y,lag=object$order[2]) - beta0
 
   # Next section uses eqn 5.3.9 from Brockwell & Davis (1991)
   # to calculate forecasts for the short memory component.
@@ -536,7 +536,7 @@ predict.garma_model<-function(object,n.ahead=1,...) {
 
   # if (integer) differenced then...
   if (object$order[2]>0) {
-    ydm2 <- stats::diffinv(ydm,differences=object$order[2]) + beta0
+    ydm2 <- stats::diffinv(ydm,lag=object$order[2]) + beta0
   }
   else ydm2 <- ydm + beta0
 
@@ -615,7 +615,7 @@ forecast.garma_model<-function(mdl,h=1) {return(predict.garma_model(mdl,n.ahead=
   eps_y <- eps
   fitted <- (params$y-eps)
   if (id>0) {
-    eps_y <- stats::diffinv(fitted,differences = id)
+    eps_y <- stats::diffinv(fitted,lag = id)
     fitted <- (params$orig_y-eps_y)
   }
 
