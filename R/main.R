@@ -497,11 +497,13 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   if (q>0) theta_vec <- c(1,(coef[(p+start):(length(coef))])) else theta_vec <- 1
 
   n <- length(object$y)
+  ydm <- c(object$residuals, rep(0,n.ahead))
   # We need the mean of the integer-differenced (if any) series
-  mean_y <-  mean(object$y)
-  if(object$order[2]>0) mean_y <- mean(diff(object$y,object$order[2]))
-  # starting point - the 'white noise' residuals
-  ydm <- c(object$residuals, rep(0,n.ahead)) + mean_y #beta0
+  if(object$order[2]>0) {
+    mean_y <- mean(diff(object$y,object$order[2]))
+    # starting point - the 'white noise' residuals
+    ydm <- ydm + mean_y
+  }
 
   # set up filters
   arma_filter <- signal::Arma(b=theta_vec, a=phi_vec)
