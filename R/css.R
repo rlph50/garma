@@ -21,11 +21,7 @@
     beta0  <- 0
     start  <- 1
   }
-  # if (k==1) {
-  #   u      <- par[start]
-  #   d      <- par[start+1]
-  #   start  <- start+2
-  # } else u<-d<-0.0
+
   u <- c()
   fd <- c()
   if (k>0) for (k1 in 1:k) {
@@ -38,8 +34,6 @@
   if (p>0) phi_vec   <- c(1,-(par[start:(start+p-1)] ))     else phi_vec   <- 1
   if (q>0) theta_vec <- c(1,(par[(p+start):(length(par))])) else theta_vec <- 1
 
-  #print(par)
-
   arma_filter   <- signal::Arma(a = theta_vec, b = phi_vec)
   eps           <- signal::filter(arma_filter, y_dash)
   if (k>0) for (k1 in 1:k) {
@@ -49,6 +43,6 @@
 
   ret <- sum(eps^2,na.rm=TRUE)
   if (!is.finite(ret)|is.na(ret)) ret<-(1e500)
-  #cat(sprintf('ret=%.8f\n',ret))
+
   return(0.5*log(ret))
 }
