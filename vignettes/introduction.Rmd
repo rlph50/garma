@@ -64,7 +64,7 @@ Package **VGAM** to have a function called "garma" but this actually fits very d
 
 ---
 
-These are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
+The models fit by the **garma** package are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
 
 ```{r soi, fig.width=6, fig.height=4}
 soi <-
