@@ -499,8 +499,9 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   n <- length(object$y)
   ydm <- c(object$residuals, rep(0,n.ahead))
   # We need the mean of the integer-differenced (if any) series
-  if(object$order[2]>0) {
-    mean_y <- mean(diff(object$y,object$order[2]))
+  id <- object$order[2]
+  if(id>0) {
+      mean_y <- mean(diff(object$y,lag=id))
     # starting point - the 'white noise' residuals
     ydm <- ydm + mean_y
   }
@@ -518,13 +519,17 @@ predict.garma_model<-function(object,n.ahead=1,...) {
     }
   }
 
+  #print(tail(ydm,n.ahead))
+  #print(beta0)
+
   # if (integer) differenced then...
-  id <- object$order[2]
   if (id>0) {
     n1<-length(ydm)
-    fc <- tail(stats::diffinv(tail(ydm,n.ahead),lag=id,xi=tail(object$y,id)),n.ahead)  + beta0
+
+    fc <- tail(stats::diffinv(tail(ydm,n.ahead)+mean_y,lag=id,xi=tail(object$y,id)),n.ahead)
+    #for (i in 1:length(fc)) fc[i] <- fc[i] + mean_y*i
   }
-  else fc <- tail(ydm,n.ahead) + beta0
+  else fc <- tail(ydm,n.ahead) #+ beta0
 
   # Now we have the forecasts, we set these up as a "ts" object
   y_end = object$y_end
