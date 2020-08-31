@@ -1,7 +1,7 @@
 Package: garma
 Type: Package
 Title: Fitting and Forecasting Gegenbauer ARMA Time Series Models
-Version: 0.9.3
+Version: 0.9.5
 Date: 2020-07-26
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
@@ -12,18 +12,17 @@ License: GPL-3
 URL: https://github.com/rlph50/garma
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>=3.0.2)
 Imports:
-    assertthat,
     zoo,
     forecast,
     lubridate,
-    FKF,
-    signal,
-    pracma,
-    nloptr,
     Rsolnp,
+    dplyr,
     ggplot2,
-    Rdpack (>= 0.7)
+    FKF,
+    nloptr
 Suggests:
     longmemo,
     tidyverse,
