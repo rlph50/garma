@@ -617,3 +617,11 @@ fitted.garma_model<-function(object,...) {
 residuals.garma_model<-function(object,...) {
   return(object$residuals)
 }
+
+#' The version function returns the garma package version.
+#' @examples
+#' library(garma)
+#' garma::version()
+#' @export
+version<-function() {message(.getPackageVersion('garma'))}
+

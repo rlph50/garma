@@ -16,3 +16,10 @@
   return( (1+cos_sum)^2+sin_sum^2)
 }
 
+.getPackageVersion<-function(pkgname) {
+  return(paste0(crayon::black("\n\nPackage "),crayon::blue(pkgname),crayon::black(": 0.9.5\n")))
+}
+
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage(.getPackageVersion(pkgname))
+}
