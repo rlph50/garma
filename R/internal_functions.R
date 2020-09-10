@@ -17,7 +17,7 @@
 }
 
 .getPackageVersion<-function(pkgname) {
-  return(paste0(crayon::black("\n\nPackage "),crayon::blue(pkgname),crayon::black(": 0.9.5\n")))
+  return(paste0(crayon::black("\n\nPackage "),crayon::blue(pkgname),': ',crayon::black(utils::packageVersion('garma')),'\n'))
 }
 
 .onAttach <- function(libname, pkgname) {

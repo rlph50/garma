@@ -544,8 +544,9 @@ predict.garma_model<-function(object,n.ahead=1,...) {
 }
 
 #' The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.
-#' @param mdl (garma_model) The garma_model from which to forecast the values.
+#' @param object (garma_model) The garma_model from which to forecast the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 1
+#' @param ... Other parameters passed to the forecast function. For "garma_model" objects, these are ignored.
 #' @return - a "ts" object containing the requested forecasts.
 #' @examples
 #' library(forecast)
@@ -555,7 +556,7 @@ predict.garma_model<-function(object,n.ahead=1,...) {
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' forecast(mdl, h=12)
 #' @export
-forecast.garma_model<-function(mdl,h=1) {return(predict.garma_model(mdl,n.ahead=h))}
+forecast.garma_model<-function(object,...,h=1) {return(predict.garma_model(object,n.ahead=h))}
 
 
 .fitted_values<-function(par,params) { # Generate fitted values and residuals for GARMA process
