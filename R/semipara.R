@@ -15,7 +15,8 @@
 #' @export
 ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5) {
   if (!method%in%c('gsp','lpr')) stop('Invalid method. Should be one of "gsp" or "lpr".')
-  if (alpha<=0|alpha>=1) stop('alpha should be between 0 and 1, but not0 and not 1.')
+  if (alpha<=0|alpha>=1) stop('alpha should be between 0 and 1, but not 0 and not 1.')
+  x <- as.numeric(x)
   k <- as.integer(k)
   if (k<=0) stop('k should be a small positive integer.')
   peak_idx_list <- c()
