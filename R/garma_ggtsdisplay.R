@@ -11,5 +11,5 @@
 garma_ggtsdisplay<-function(x,k=1,...) {
   sp <- ggbr_semipara(x,k=k)
   arma_process <- extract_arma(x, sp$ggbr_factors)
-  ggtsdisplay(arma_process,theme=theme_bw(),...)
+  ggtsdisplay(arma_process,...)
 }
