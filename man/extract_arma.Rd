@@ -2,20 +2,20 @@
 % Please edit documentation in R/semipara.R
 \name{extract_arma}
 \alias{extract_arma}
-\title{For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.}
+\title{For a Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.}
 \usage{
 extract_arma(x, ggbr_factors)
 }
 \arguments{
-\item{x}{(num) This should be a numeric vector representing the process to estimate.}
+\item{x}{(num) This should be a numeric vector representing the Gegenbauer process.}
 
-\item{ggbr_factors}{(list) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.}
+\item{ggbr_factors}{(class) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.}
 }
 \value{
 An object of same class as x.
 }
 \description{
-For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
+For a Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
 }
 \examples{
 data(AirPassengers)

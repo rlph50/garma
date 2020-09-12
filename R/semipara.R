@@ -82,9 +82,9 @@ print.garma_semipara<-function(x,...) {
   if(length(x$note)>0) if (nchar(x$note)>1) cat(paste0('\n',x$note))
 }
 
-#' For a k=1 Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
-#' @param x (num) This should be a numeric vector representing the process to estimate.
-#' @param ggbr_factors (list) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.
+#' For a Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
+#' @param x (num) This should be a numeric vector representing the Gegenbauer process.
+#' @param ggbr_factors (class) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.
 #' @return An object of same class as x.
 #' @examples
 #' data(AirPassengers)
