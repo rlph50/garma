@@ -25,7 +25,7 @@ semi-parametric technique. "gsp" is the default. Refer Arteche (1998).}
 
 \item{min_freq}{(num) The minimum frequency to search through for peaks - default 0.0.}
 
-\item{max_freq}{(num) The maximum frequency to search through for peaks - default 0.5.}
+\item{max_freq}{(num) The maximum frequency to search through for peaks - default 2*pi.}
 }
 \value{
 An object of class "garma_semipara".

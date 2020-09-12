@@ -5,7 +5,7 @@
 #' @param method (char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
 #' semi-parametric technique. "gsp" is the default. Refer Arteche (1998).
 #' @param min_freq (num) The minimum frequency to search through for peaks - default 0.0.
-#' @param max_freq (num) The maximum frequency to search through for peaks - default 0.5.
+#' @param max_freq (num) The maximum frequency to search through for peaks - default 2*pi.
 #' @return An object of class "garma_semipara".
 #' @examples
 #' data(AirPassengers)
@@ -111,7 +111,7 @@ extract_arma<-function(x,ggbr_factors) {
   return(spectrum(x,plot=F,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE))
 }
 
-.yajima_ggbr_freq<-function(x,remove_peaks,min_freq=0.0,max_freq=0.5) {
+.yajima_ggbr_freq<-function(x,remove_peaks,min_freq=0.0,max_freq=2*pi) {
   ssx       <- .garma_pgram(x)
 
   if (!is.null(min_freq)&!is.null(max_freq)) {
@@ -140,22 +140,41 @@ extract_arma<-function(x,ggbr_factors) {
   return(list(f_idx=f_idx, ggbr_freq=ggbr_freq, ssx=ssx))
 }
 
-.gsp<-function(x,alpha,remove_peaks,min_freq=0.0,max_freq=1.0) {
+.gsp<-function(x,alpha,remove_peaks,min_freq=0.0,max_freq=2*pi) {
   # as per Arteche 1998 "SEMIPARAMETRIC INFERENCE IN SEASONAL AND CYCLICAL LONG MEMORY PROCESSES"
   # determine "fd"
-  c_fcn<-function(fd, omega, spec) {return(mean((omega^(2*fd)) * spec,rm.na=TRUE))}
+  c_fcn<-function(fd, omega, spec) {return(mean((omega^(2*fd)) * spec,na.rm=TRUE))}
   r_fcn<-function(fd, f_idx, ssx) {
-    omega <- 2*pi*ssx$freq[1:(m-1)]
-    spec1 <- ssx$spec[(f_idx+2):(f_idx+m)]
-    min_idx <- f_idx - m
-    if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
-    else {
-      if (f_idx>2) spec2 <- c(ssx$spec[(f_idx-2):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
-      else spec2 <- c(ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
-      spec2 <- spec2[1:(m-1)]
-    }
+    # omega <- 2*pi*ssx$freq[1:(m-1)]
+    # spec1 <- ssx$spec[(f_idx+2):(f_idx+m)]
+    # min_idx <- f_idx - m
+    # if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
+    # else {
+    #   if (f_idx>2) spec2 <- c(ssx$spec[(f_idx-2):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+    #   else spec2 <- c(ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+    #   spec2 <- spec2[1:(m-1)]
+    # }
+    #
+    # res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),na.rm=TRUE)
+    omega <- 2*pi*ssx$freq[1:m]  # Frequencies
 
-    res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),rm.na=TRUE)
+    # Spec to use, as offset from ggbr_freq. These are specs above ggbr_freq.
+    if (f_idx+m>length(ssx$spec)) { # in this case we wrap around to beginning of spectrum
+      spec1 <- c(ssx$spec[f_idx:length(ssx$spec)],
+                 ssx$spec[1:(f_idx+m-length(ssx$spec))])
+    } else spec1 <- ssx$spec[f_idx:(f_idx+m)] # just copy
+    spec1 <- spec1[1:m]
+
+    # next spec below ggbr_freq
+    if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):f_idx] # just copy it if we can
+    else {
+      if (f_idx>2) spec2 <- c(ssx$spec[f_idx:1],
+                              ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
+      else spec2 <- ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))]
+    }
+    spec2 <- spec2[1:m]
+
+    res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),na.rm=TRUE)
     if (is.infinite(res)|is.na(res)|is.null(res)) res<-1e200
     return(res)
   }
@@ -163,13 +182,13 @@ extract_arma<-function(x,ggbr_factors) {
   yf <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   m  <- as.integer((length(x)/2)^alpha)
 
-  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
+  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum
   u  <- cos(2*pi*yf$ggbr_freq)
 
   return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m,f_idx=yf$f_idx))
 }
 
-.lpr<-function(x,alpha,remove_peaks,min_freq=0.0,max_freq=1.0) {
+.lpr<-function(x,alpha,remove_peaks,min_freq=0.0,max_freq=2*pi) {
   # first identify the peak - the Gegenbauer frequency
   yf       <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   ssx      <- yf$ssx
