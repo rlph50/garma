@@ -182,7 +182,7 @@ extract_arma<-function(x,ggbr_factors) {
   yf <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   m  <- as.integer((length(x)/2)^alpha)
 
-  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum
+  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
   u  <- cos(2*pi*yf$ggbr_freq)
 
   return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m,f_idx=yf$f_idx))
