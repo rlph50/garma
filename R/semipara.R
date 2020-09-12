@@ -147,17 +147,6 @@ extract_arma<-function(x,ggbr_factors) {
   # determine "fd"
   c_fcn<-function(fd, omega, spec) {return(mean((omega^(2*fd)) * spec,na.rm=TRUE))}
   r_fcn<-function(fd, f_idx, ssx) {
-    # omega <- 2*pi*ssx$freq[1:(m-1)]
-    # spec1 <- ssx$spec[(f_idx+2):(f_idx+m)]
-    # min_idx <- f_idx - m
-    # if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
-    # else {
-    #   if (f_idx>2) spec2 <- c(ssx$spec[(f_idx-2):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
-    #   else spec2 <- c(ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
-    #   spec2 <- spec2[1:(m-1)]
-    # }
-    #
-    # res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),na.rm=TRUE)
     omega <- 2*pi*ssx$freq[1:m]  # Frequencies
 
     # Spec to use, as offset from ggbr_freq. These are specs above ggbr_freq.
@@ -176,7 +165,7 @@ extract_arma<-function(x,ggbr_factors) {
     }
     spec2 <- spec2[1:m]
 
-    res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 4*fd*mean(log(omega),na.rm=TRUE)
+    res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 2*fd*mean(log(omega),na.rm=TRUE)
     if (is.infinite(res)|is.na(res)|is.null(res)) res<-1e200
     return(res)
   }
