@@ -108,10 +108,12 @@ extract_arma<-function(x,ggbr_factors) {
 }
 
 .garma_pgram<-function(x) {
+  x <- as.numeric(x) # If we don't do this, the spectrum function returns 'different' frequencies.
   return(spectrum(x,plot=F,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE))
 }
 
 .yajima_ggbr_freq<-function(x,remove_peaks,min_freq=0.0,max_freq=2*pi) {
+  x <- as.numeric(x) # If we don't do this, the spectrum function returns 'different' frequencies.
   ssx       <- .garma_pgram(x)
 
   if (!is.null(min_freq)&!is.null(max_freq)) {
@@ -178,6 +180,8 @@ extract_arma<-function(x,ggbr_factors) {
     if (is.infinite(res)|is.na(res)|is.null(res)) res<-1e200
     return(res)
   }
+
+  x <- as.numeric(x) # If we don't do this, the spectrum function returns 'different' frequencies.
   # first identify the peak - the Gegenbauer frequency
   yf <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   m  <- as.integer((length(x)/2)^alpha)
@@ -190,6 +194,7 @@ extract_arma<-function(x,ggbr_factors) {
 
 .lpr<-function(x,alpha,remove_peaks,min_freq=0.0,max_freq=2*pi) {
   # first identify the peak - the Gegenbauer frequency
+  x <- as.numeric(x) # If we don't do this, the spectrum function returns 'different' frequencies.
   yf       <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   ssx      <- yf$ssx
   f_idx    <- yf$f_idx
