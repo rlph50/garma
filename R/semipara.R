@@ -146,26 +146,15 @@ extract_arma<-function(x,ggbr_factors) {
   # as per Arteche 1998 "SEMIPARAMETRIC INFERENCE IN SEASONAL AND CYCLICAL LONG MEMORY PROCESSES"
   # determine "fd"
   c_fcn<-function(fd, omega, spec) {return(mean((omega^(2*fd)) * spec,na.rm=TRUE))}
-  r_fcn<-function(fd, f_idx, ssx) {
+  r1_fcn<-function(fd, f_idx, ssx) {
     omega <- 2*pi*ssx$freq[1:m]  # Frequencies
 
     # Spec to use, as offset from ggbr_freq. These are specs above ggbr_freq.
-    if (f_idx+m>length(ssx$spec)) { # in this case we wrap around to beginning of spectrum
-      spec1 <- c(ssx$spec[f_idx:length(ssx$spec)],
-                 ssx$spec[1:(f_idx+m-length(ssx$spec))])
-    } else spec1 <- ssx$spec[f_idx:(f_idx+m)] # just copy
+    spec_2pi <- c(ssx$spec,rev(ssx$spec))
+    spec1 <- spec_2pi[f_idx:(f_idx+m)]
     spec1 <- spec1[1:m]
 
-    # next spec below ggbr_freq
-    if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):f_idx] # just copy it if we can
-    else {
-      if (f_idx>2) spec2 <- c(ssx$spec[f_idx:1],
-                              ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
-      else spec2 <- ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))]
-    }
-    spec2 <- spec2[1:m]
-
-    res <- log(c_fcn(fd, omega, spec1)) + log(c_fcn(fd, omega, spec2)) - 2*fd*mean(log(omega),na.rm=TRUE)
+    res <- log(c_fcn(fd, omega, spec1)) - 2*fd*mean(log(omega),na.rm=TRUE)
     if (is.infinite(res)|is.na(res)|is.null(res)) res<-1e200
     return(res)
   }
@@ -175,7 +164,7 @@ extract_arma<-function(x,ggbr_factors) {
   yf <- .yajima_ggbr_freq(x,remove_peaks,min_freq,max_freq)
   m  <- as.integer((length(x)/2)^alpha)
 
-  fd <- stats::optimise(r_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum / 2
+  fd <- stats::optimise(r1_fcn, f_idx=yf$f_idx, ssx=yf$ssx, lower=-10, upper=10)$minimum
   u  <- cos(2*pi*yf$ggbr_freq)
 
   return(list(fd=fd,f=yf$ggbr_freq,u=u,m=m,f_idx=yf$f_idx))
