@@ -308,7 +308,6 @@ garma<-function(x,
   if (fit$convergence== -999) stop('Failed to converge.')
 
   hh <- fit$hessian
-  # for (col in 1:ncol(hh)) hh[any(is.na(hh[,col]))|any(is.infinite(hh[,col])),col] <- 0
 
   # sigma2
   if (method=='WLL') {
@@ -331,10 +330,11 @@ garma<-function(x,
   se <- numeric(length(fit$par))
 
   # check convergence. Unfortunately "solnp" routine uses positive values to indicate an error.
+  conv_ok <- TRUE
   if (opt_method[[1]]=='solnp') conv_ok <- (fit$convergence==0)
   else conv_of <- (fit$convergence>=0)
 
-  if (conv_ok!='WLL'&!is.null(hh)) {
+  if (conv_ok&method!='WLL'&!is.null(hh)) {
     # Next, find the se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment
