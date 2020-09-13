@@ -194,6 +194,7 @@ garma<-function(x,
   # Now set up params and lb (lower bounds) and ub (upper bounds)
   n_pars   <- 0
   pars     <- numeric(0)
+  pars_alt <- numeric(0)
   lb       <- numeric(0)
   ub       <- numeric(0)
   lb_finite<- numeric(0)
@@ -204,6 +205,7 @@ garma<-function(x,
     n_pars    <- n_pars+1
     mean_y    <- mean(y)
     pars      <- c(pars,mean_y)
+    pars_alt  <- c(pars_alt,mean_y)
     lb_finite <- c(lb_finite,ifelse(mean_y<0, 2*mean_y, -2*mean_y))
     ub_finite <- c(ub_finite,ifelse(mean_y<0,-2*mean_y,  2*mean_y))
     lb        <- c(lb,-Inf)
@@ -218,11 +220,12 @@ garma<-function(x,
     for (k1 in 1:k) {
       n_pars    <- n_pars+2
       gf1 <- gf$ggbr_factors[[k1]]
-      start_u <- gf1$u
-      start_d <- gf1$fd
+      start_u <- alt_u <- gf1$u
+      start_d <- alt_d <- gf1$fd
 
       max_u <- cos(2*pi*min_freq)
       min_u <- cos(2*pi*max_freq)
+      #params
       if (start_u< min_u|start_u > max_u) start_u <- (min_u+max_u)/2
       if (start_d>=0.5)  start_d <- 0.49
       if (allow_neg_d) {
@@ -230,7 +233,17 @@ garma<-function(x,
       } else {
         if (start_d<=0.0) start_d<-0.01
       }
+      # alt initial params
+      if (alt_u< min_u|alt_u > max_u) alt_u <- (min_u+max_u)/2 +0.1
+      if (alt_d>=0.5)  alt_d <- 0.45
+      if (allow_neg_d) {
+        if (alt_d< -0.45) alt_d<- -0.45
+      } else {
+        if (alt_d<0.05) alt_d<-0.05
+      }
+
       pars      <- c(pars,start_u,start_d)
+      pars_alt  <- c(pars_alt,alt_u,alt_d)
       lb        <- c(lb,min_u,ifelse(allow_neg_d,-1,0))
       ub        <- c(ub,max_u,0.5)
       lb_finite <- c(lb_finite,min_u,ifelse(allow_neg_d,-1,0))
@@ -247,7 +260,11 @@ garma<-function(x,
     else arma_y <- y
     a <- stats::arima(arma_y,order=c(p,0,q),include.mean=FALSE)
     pars <- c(pars,a$coef)
-    if (method%in%methods_to_estimate_var) pars <- c(pars,a$sigma2)
+    pars_alt <- c(pars_alt,a$coef+runif(length(a$coef))/15)
+    if (method%in%methods_to_estimate_var) {
+      pars <- c(pars,a$sigma2)
+      pars_alt <- c(pars_alt,a$sigma2)
+    }
     if (p==1&q==0) { # special limits for AR(1)
       lb<-c(lb,-1)
       if (method%in%methods_to_estimate_var) lb <- c(lb, 1e-10)
@@ -280,18 +297,18 @@ garma<-function(x,
   n_constraints <- k*(k+1)/2-k
 
   if (k>1) { # separate logic since for k>1 we need inequality constraints and not all non-linear optimisers support this.
-    fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],lb=lb,ub=ub, ineq_fcn=inequality_constraints,
+    fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, alt_pars=pars_alt, fcn=fcns[[method]], lb=lb,ub=ub, ineq_fcn=inequality_constraints,
                                ineq_lb=rep(0,n_constraints), ineq_ub=rep(1,n_constraints), params=params, max_eval=maxeval)
   } else if (opt_method[[1]]=='best') {
     fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, max_eval=maxeval)
   } else { # k==0 or k==1
-      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
+      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, alt_pars=pars_alt, fcn=fcns[[method]],
                                  lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, max_eval=maxeval)
   }
   if (fit$convergence== -999) stop('Failed to converge.')
 
   hh <- fit$hessian
-  for (col in 1:ncol(hh)) hh[any(is.na(hh[,col]))|any(is.infinite(hh[,col])),col] <- 0
+  # for (col in 1:ncol(hh)) hh[any(is.na(hh[,col]))|any(is.infinite(hh[,col])),col] <- 0
 
   # sigma2
   if (method=='WLL') {
@@ -312,7 +329,12 @@ garma<-function(x,
     loglik <- .whittle.ggbr.likelihood(fit$par,params)
 
   se <- numeric(length(fit$par))
-  if (fit$convergence>=0&method!='WLL'&!is.null(hh)) {
+
+  # check convergence. Unfortunately "solnp" routine uses positive values to indicate an error.
+  if (opt_method[[1]]=='solnp') conv_ok <- (fit$convergence==0)
+  else conv_of <- (fit$convergence>=0)
+
+  if (conv_ok!='WLL'&!is.null(hh)) {
     # Next, find the se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment

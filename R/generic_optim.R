@@ -1,5 +1,5 @@
 #
-.generic_optim<-function(opt_method, initial_pars, fcn, lb, ub, params, ineq_fcn=NULL, ineq_lb=NULL, ineq_ub=NULL, max_eval=10000, tol=1e-15) {
+.generic_optim<-function(opt_method, initial_pars, alt_pars, fcn, lb, ub, params, ineq_fcn=NULL, ineq_lb=NULL, ineq_ub=NULL, max_eval=10000, tol=1e-15) {
   nlopt_control <- list(maxeval=max_eval,ftol_rel=tol)
   fit <- save_fit <- list(value=Inf,convergence= -999,par=initial_pars,pars=initial_pars) # default value
   if (opt_method=='solnp'&!is.null(ineq_fcn)) {
@@ -10,18 +10,17 @@
                                   ineqfun=ineq_fcn,
                                   ineqLB=ineq_lb,
                                   ineqUB=ineq_ub,
-                                  control=list(trace=0,tol=tol),
+                                  control=list(trace=0,tol=tol,delta=1e-10),
                                   params=params),
-             error=function(cond) {fit<-save_fit}
+             error=function(cond) {fit<-save_fit;fit$message<-cond}
     )
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
   }
   if (opt_method=='solnp'&is.null(ineq_fcn)) {
     tryCatch(fit <- Rsolnp::solnp(pars=initial_pars, fun=fcn, LB=lb, UB=ub, control=list(trace=0,tol=tol), params=params),
-             error=function(cond) {fit<-save_fit}
+             error=function(cond) {print('ERROR:');print(cond);fit<-save_fit}
     )
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
-
   }
 
   if (opt_method=='slsqp'&!is.null(ineq_fcn)) {
@@ -87,9 +86,9 @@
   best_fit    <- list()
   for (opt_method in .supported_optim()) {
     if (.is_finite_bounds(opt_method)) {
-      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, fcn=fcn, lb=lb_finite, ub=ub_finite, params=params, max_eval=max_eval, tol=tol)
+      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, alt_pars=initial_pars, fcn=fcn, lb=lb_finite, ub=ub_finite, params=params, max_eval=max_eval, tol=tol)
     } else {
-      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, fcn=fcn, lb=lb, ub=ub, params=params, max_eval=max_eval, tol=tol)
+      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, alt_pars=initial_pars, fcn=fcn, lb=lb, ub=ub, params=params, max_eval=max_eval, tol=tol)
     }
     if (fit$value<best_val) {
       best_val    <- fit$value
@@ -101,19 +100,19 @@
   return(best_fit)
 }
 
-.generic_optim_list <- function(opt_method_list, initial_pars, fcn,
+.generic_optim_list <- function(opt_method_list, initial_pars, alt_pars, fcn,
                                 lb, ub, lb_finite, ub_finite,
                                 ineq_fcn=NULL, ineq_lb=NULL, ineq_ub=NULL,
                                 params, max_eval=10000, tol=1e-15) {
   # chain through the opt methods using the optimal value from the last one as the initial value for the next one.
   for (opt_method in opt_method_list) {
     if (.is_finite_bounds(opt_method)) {
-      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, fcn=fcn,
+      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, alt_pars, fcn=fcn,
                             lb=lb_finite, ub=ub_finite,
                             ineq_fcn=ineq_fcn, ineq_lb=ineq_lb, ineq_ub=ineq_ub,
                             params=params, max_eval=max_eval, tol=tol)
     } else {
-      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, fcn=fcn,
+      fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, alt_pars, fcn=fcn,
                             lb=lb, ub=ub,
                             ineq_fcn=ineq_fcn, ineq_lb=ineq_lb, ineq_ub=ineq_ub,
                             params=params, max_eval=max_eval, tol=tol)
