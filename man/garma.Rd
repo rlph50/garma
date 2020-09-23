@@ -12,11 +12,11 @@ garma(
   include.mean = (order[2] == 0),
   method = "Whittle",
   allow_neg_d = FALSE,
-  maxeval = 10000,
   opt_method = NULL,
   m_trunc = 50,
   min_freq = 0,
-  max_freq = 0.5
+  max_freq = 0.5,
+  control = NULL
 )
 }
 \arguments{
@@ -44,8 +44,6 @@ However the asymptotic theory for the WLL method is not complete and so standard
 \item{allow_neg_d}{(bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
 of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.}
 
-\item{maxeval}{(int) the maximum function eveluations to be allowed during each optimisation.}
-
 \item{opt_method}{(character) This names the optimisation method used to find the parameter estimates.
 This may be a list of methods, in which case the methods are applied in turn,
 each using the results of the previous one as the starting point for the next. The default is to use c('directL', 'solnp') when k<2 and 'solnp' when k>=2. The
@@ -71,6 +69,8 @@ Note further that if you specify a k>1, then inequality constraints are required
 AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.}
 
 \item{max_freq}{(num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.}
+
+\item{control}{(list) list of optimisation routine specific values.}
 }
 \value{
 An S3 object of class "garma_model".

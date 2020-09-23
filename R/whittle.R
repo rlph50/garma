@@ -11,7 +11,7 @@
   q  <- params$q
   k  <- params$k
 
-  n_freq<-length(ss$freq)-1
+  n_freq<-length(ss$freq)#-1
   freq<-ss$freq[1:n_freq]
   spec<-ss$spec[1:n_freq]
 
@@ -31,6 +31,7 @@
   if (p>0) mod_phi   <- .a_fcn(phi_vec,freq)
   if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
+
   if (k>0) for (k1 in 1:k) {
     u_k  <- u[k1]
     fd_k <- fd[k1]
@@ -39,8 +40,10 @@
 
   spec_den_inv[spec_den_inv==0] <- NA
   I_f <- spec*spec_den_inv
-  res <- sum(I_f,na.rm=TRUE)
+  res <- sum(I_f,na.rm=TRUE) - sum(log(spec_den_inv),na.rm=TRUE)
+
   if (is.infinite(res)) res<-1e200
+
   return(res)
 }
 

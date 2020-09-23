@@ -30,9 +30,12 @@ ggplot.garma_model<-function(mdl,h=24,...) {
   fc <- predict.garma_model(mdl,n.ahead=h)
 
   if (mdl$y_freq>1) { # then we have actual dates not just an index
-    idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],15),by=mdl$y_freq,length.out=(length(mdl$y)+h))
+    by_str <- 'day'
+    if (mdl$y_freq==4) by_str <- qtr
+    if (mdl$y_freq==12) by_str<-'month'
+    idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],1),by=by_str,length.out=(length(mdl$y)+h))
     lubridate::day(idx) <- lubridate::days_in_month(idx)
-    cutoff <- lubridate::make_date(mdl$y_end[1],mdl$y_end[2],15)
+    cutoff <- lubridate::make_date(mdl$y_end[1],mdl$y_end[2],1)
   } else {
     idx <- (mdl$y_start[1]):(mdl$y_end[1]+h)
     cutoff <- mdl$y_end[1]+1
