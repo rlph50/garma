@@ -31,7 +31,7 @@ ggplot.garma_model<-function(mdl,h=24,...) {
 
   if (mdl$y_freq>1) { # then we have actual dates not just an index
     by_str <- 'day'
-    if (mdl$y_freq==4) by_str <- qtr
+    if (mdl$y_freq==4) by_str <- 'qtr'
     if (mdl$y_freq==12) by_str<-'month'
     idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],1),by=by_str,length.out=(length(mdl$y)+h))
     lubridate::day(idx) <- lubridate::days_in_month(idx)

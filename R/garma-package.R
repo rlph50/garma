@@ -17,6 +17,6 @@
 #' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_colour_manual annotate geom_text
 #' @importFrom graphics abline lines par plot
 #' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise
-#' @importFrom utils tail packageVersion
+#' @importFrom utils tail packageVersion head
 NULL
 
