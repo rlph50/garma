@@ -58,6 +58,7 @@ Supported algorithms include:
     \item hjkb from dfoptim package
     \item nmkb from dfoptim package
     \item solnp from Rsolnp package
+    \item gosolnp from Rsolnp package
     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
     particularly for the 'CSS' method.
     }

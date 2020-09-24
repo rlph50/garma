@@ -15,12 +15,19 @@
              warning=function(cond) {fit$message<-cond},
              error=function(cond) {fit<-save_fit;fit$message<-cond}
     )
-    # fit <- Rsolnp::gosolnp(fun=fcn, LB=lb, UB=ub, ineqfun=ineq_fcn, ineqLB=ineq_lb, ineqUB=ineq_ub, n.restarts = 100,
-    #                        n.sim = 10000, control=list(outer.iter = 100, trace = 1), params=params)
+    fit$par <- fit$pars  # copy across for consistency with other optimisation methods
+  }
+  if (opt_method=='gosolnp'&!is.null(ineq_fcn)) {
+    fit <- Rsolnp::gosolnp(fun=fcn, LB=lb, UB=ub, ineqfun=ineq_fcn, ineqLB=ineq_lb, ineqUB=ineq_ub, n.restarts = 100,
+                           n.sim = 10000, control=list(outer.iter = 100, trace = 0), params=params)
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
   }
   if (opt_method=='solnp'&is.null(ineq_fcn)) {
     fit <- Rsolnp::solnp(pars=initial_pars, fun=fcn, LB=lb, UB=ub, control=control, params=params)
+    fit$par <- fit$pars  # copy across for consistency with other optimisation methods
+  }
+  if (opt_method=='gosolnp'&is.null(ineq_fcn)) {
+    fit <- Rsolnp::gosolnp(fun=fcn, LB=lb, UB=ub, n.restarts = 100, n.sim = 10000, control=list(outer.iter = 100, trace = 0), params=params)
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
   }
 
@@ -136,19 +143,19 @@
 .optim_packages<-function() {
   # return a list giving the package required for each method
   return(c('optim'='stats','cobyla'='nloptr','directL'='nloptr', 'slsqp'='nloptr',
-           'BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','solnp'='Rsolnp','best'='stats'))
+           'BBoptim'='BB','psoptim'='pso','hjkb'='dfoptim','nmkb'='dfoptim','solnp'='Rsolnp','gosolnp'='Rsolnp','best'='stats'))
 }
 .supported_optim<-function() {
   # which methods are supported?
-  return(c('best', 'cobyla','directL','slsqp', 'BBoptim','psoptim','hjkb','nmkb','solnp'))
+  return(c('best', 'cobyla','directL','slsqp', 'BBoptim','psoptim','hjkb','nmkb','solnp','gosolnp'))
 }
 .supported_contr_optim<-function() {
   # which methods are supported for inequality contraints?
-  return(c('solnp','cobyla','slsqp'))
+  return(c('gosolnp','solnp','cobyla','slsqp'))
 }
 .finite_bounds_methods<-function() {
   # return a lit showing which methods require finite box-bounds
-  return(c('directL','psoptim'))
+  return(c('directL','psoptim','gosolnp'))
 }
 .is_finite_bounds<-function(opt_method) {
   # return TRUE or FALSE as to whether the method requires finite box-bounds

@@ -52,6 +52,7 @@
 #'     \item hjkb from dfoptim package
 #'     \item nmkb from dfoptim package
 #'     \item solnp from Rsolnp package
+#'     \item gosolnp from Rsolnp package
 #'     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
 #'     particularly for the 'CSS' method.
 #'     }
@@ -289,14 +290,14 @@ garma<-function(x,
 
   if (k>1) { # separate logic since for k>1 we need inequality constraints and not all non-linear optimisers support this.
              # temp: not using constraints.
-    fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]], lb=lb_finite, ub=ub_finite,
+    fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite,
                                #ineq_fcn=inequality_constraints, ineq_lb=rep(0,n_constraints), ineq_ub=rep(1,n_constraints),
                                params=params, control=control)
   } else if (opt_method[[1]]=='best') {
     fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, control=control)
   } else { # k==0 or k==1
       fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
-                                   lb=lb, ub=ub, params=params, control=control)
+                                   lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, control=control)
   }
   if (fit$convergence== -999) stop('Failed to converge.')
 
@@ -535,12 +536,12 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   # now we generate polynomial coefficients for MA part to include ggbr factors
   # basic tool is pracma::conv which does polynomial multiplication (same as polymul())
   if (k>0) {
-    if (length(theta_vec)<1) theta_vec <- 1 else theta_vec <- rev(theta_vec)
+    if (length(theta_vec)<1) theta_vec <- 1 else theta_vec <- rev(c(1,theta_vec))
     for (gf in object$ggbr_factors) {
-      gc <- .ggbr.coef(n,gf$fd,gf$u)
+      gc <- .ggbr.coef(n+1,gf$fd,gf$u)
       theta_vec <- pracma::conv(theta_vec,gc)
     }
-    #if(theta_vec[1]==1) theta_vec <- theta_vec[2:length(theta_vec)] # remove first "1"
+    # if(theta_vec[1]==1) theta_vec <- theta_vec[2:length(theta_vec)] # remove first "1"
     if (length(theta_vec)>n) theta_vec<-head(theta_vec,n)
     theta_vec <- rev(theta_vec)
   }
@@ -552,8 +553,15 @@ predict.garma_model<-function(object,n.ahead=1,...) {
     for (i in (length(y)+1):n) {
       ar_vec <- tail(c(rep(0,p),y_dash,pred),p)
       if (i>(length(y)+qk)) ma_vec <- rep(0,qk)
-      else ma_vec <- tail(c(rep(0,qk),resid,rep(0,i-1)),qk)
-      pred_i <- 0
+      else if (i>length(y)+1) ma_vec <- tail(c(rep(0,qk),resid,rep(0,i-length(y)-1)),qk)
+      else ma_vec <- tail(c(rep(0,qk),resid),qk)
+      # if (i==length(y)+1) {
+      #   cat(sprintf('qk %d i %d ma_vec len %d\n',qk,i,length(ma_vec)))
+      #   print(ma_vec)
+      #   print(resid)
+      # }
+      # cat(sprintf('beta0 %f\n',beta0))
+      pred_i <- beta0 # mean
       if (p>0) pred_i <- pred_i + sum(phi_vec*ar_vec)
       if (qk>0) pred_i <- pred_i + sum(theta_vec*ma_vec)
       pred <- c(pred, pred_i)

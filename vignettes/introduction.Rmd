@@ -139,6 +139,8 @@ We have deliberately kept the fitting process close to that of the "arima" and "
 
 To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. the "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that.
 
+To ensure the results are as comparable as possible we will specify the estimation method as 'CSS' for both.
+
 ```{r arima}
 library(garma)
 data(AirPassengers)
@@ -146,18 +148,18 @@ data(AirPassengers)
 ap  <- as.numeric(diff(AirPassengers,12))
 
 # Arima model
-arima_mdl <- arima(ap,order=c(9,1,0))
+arima_mdl <- arima(ap,order=c(9,1,0),method='CSS')
 summary(arima_mdl)
 
 # GARMA model
 # Note in the below we specify k=0.
 # This tells the routine is not to fit a Gegenbauer/GARMA model.
-garma_mdl <- garma(ap,order=c(9,1,0),k=0)
+garma_mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS')
 summary(garma_mdl)
 
 ```
 
-As can be seen above, the coefficients produced are similar but not identical - the log-likelihood from the "garma" run is considerably lower than that produced by the "arima" run, indicating that the routine has in fact found a better solution (estimating parameters like these involves non-linear optimisation - "arima" uses R's built-in optimiser called "optim"; garma however by default uses "solnp" from the **Rsolnp** package).
+As can be seen above, the coefficients produced are similar but not identical - the log-likelihood from the "garma" run is a larger value than that produced by the "arima" run, indicating that the routine has in fact found a (slightly) better solution (estimating parameters like these involves non-linear optimisation - "arima" uses R's built-in optimiser called "optim"; garma however by default uses "solnp" from the **Rsolnp** package).
 
 ## Fitting a GARMA model.
 
@@ -202,13 +204,13 @@ Whilst this model does fit the data quite well, is quite simple and does not pro
 
 ```{r sunspot2, fig.width=7, fig.height=5}
 # fit a GARMA(8,0,0) model
-sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1,method='CSS')
+sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1)
 summary(sunspots_garma_mdl)
 
 #prepare 'future' actuals data for plotting
 future_df <- data.frame(yr=1925:1935, sunspots=sunspot.year[225:235],grp='Future Actuals')
 
-ggplot(sunspots_garma_mdl, h=11) +
+ggplot(sunspots_garma_mdl, h=22) +
   geom_line(data=future_df,aes(x=yr,y=sunspots)) +
   ggtitle('Sunspot Forecast using GARMA(8,0)')
 ```
