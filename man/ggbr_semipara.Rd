@@ -2,7 +2,7 @@
 % Please edit documentation in R/semipara.R
 \name{ggbr_semipara}
 \alias{ggbr_semipara}
-\title{For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.}
+\title{Extract semiparametric estimates of the Gegenbauer factors.}
 \usage{
 ggbr_semipara(
   x,
@@ -25,13 +25,13 @@ semi-parametric technique. "gsp" is the default. Refer Arteche (1998).}
 
 \item{min_freq}{(num) The minimum frequency to search through for peaks - default 0.0.}
 
-\item{max_freq}{(num) The maximum frequency to search through for peaks - default 2*pi.}
+\item{max_freq}{(num) The maximum frequency to search through for peaks - default 0.5.}
 }
 \value{
 An object of class "garma_semipara".
 }
 \description{
-For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
+For a Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
 }
 \examples{
 data(AirPassengers)

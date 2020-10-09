@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{version}
 \alias{version}
-\title{The version function returns the garma package version.}
+\title{garma package version}
 \usage{
 version()
 }

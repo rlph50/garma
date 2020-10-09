@@ -65,13 +65,13 @@
 #'
 #' @references
 #' C Chung. A generalized fractionally integrated autoregressive moving-average process.
-#' *Journal of Time Series Analysis*, **17**(2):111–140, 1996.
+#' Journal of Time Series Analysis, 17(2):111–140, 1996.
 #'
 #' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory.
-#' *Computational Statistics and Data Analysis*, **100**:115–130, 2016.
+#' Computational Statistics and Data Analysis, 100:115–130, 2016.
 #'
 #' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
-#' *The Annals of Statistics*, **29**(4):987–1023, 2001.
+#' The Annals of Statistics, 29(4):987–1023, 2001.
 #' @examples
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
@@ -398,69 +398,7 @@ garma<-function(x,
 
 
 
-.print_garma_model<-function(mdl,verbose=TRUE) {
-  cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
-  if (verbose) {
-    with(mdl,
-         cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
-                     method,order[1],order[2],order[3],k,ifelse(mdl$method=='QML',sprintf('QML Truncation at %d',mdl$m_trunc),''),
-                     paste(mdl$opt_method,collapse=', '),mdl$maxeval))
-    )
-    if (mdl$opt_method[[1]]=='best') cat(sprintf('Best optimisation method selected: %s\n',mdl$opt_method_selected))
-    cat(sprintf('Convergence Code: %d\nOptimal Value found: %0.8f\n\n',mdl$convergence,mdl$obj_value))
-  }
-  if (mdl$opt_method[[1]]=='solnp'&mdl$convergence!=0) cat('ERROR: Convergence not achieved. Please try another method.\n')
-  if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
-  else {
-    if (mdl$convergence>0)
-      cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (%d)\n\n',
-                  ifelse(mdl$opt_method=='best',mdl$opt_method_selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
-    cat('Coefficients:\n')
-    print.default(mdl$coef, print.gap=2, digits=4)
-    cat('\n')
-
-    if (mdl$k>0) print(mdl$ggbr_factors)
-
-    if (mdl$sigma2>0) {
-      cat(sprintf('\n\nsigma^2 estimated as %0.4f',mdl$sigma2))
-      if (mdl$method %in% c('CSS','QML','Whittle')) cat (': ')
-    }
-    if (mdl$method=='CSS') cat(sprintf('part log likelihood = %f',mdl$loglik))
-    if (mdl$method=='QML') cat(sprintf('log likelihood = %f',mdl$loglik))
-    if (mdl$method=='Whittle') cat(sprintf('log likelihood = %f, aic = %f',mdl$loglik, mdl$aic))
-    cat('\n')
-  }
-}
-
-
-#' The summary function provides a summary of a "garma_model" object.
-#' @param object (garma_model) The garma_model from which to print the values.
-#' @param ... Other arguments. Ignored.
-#' @examples
-#' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
-#' summary(mdl)
-#' @export
-summary.garma_model<-function(object,...) {
-  .print_garma_model(object,verbose=FALSE)
-}
-
-#' The print function prints a summary of a "garma_model" object.
-#' @param x (garma_model) The garma_model from which to print the values.
-#' @param ... Other arguments. Ignored.
-#' @examples
-#' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
-#' print(mdl)
-#' @export
-print.garma_model<-function(x,...) {
-  .print_garma_model(x,verbose=TRUE)
-}
-
-
-#' The predict function predicts future values of a "garma_model" object.
+#' The predict future values.
 #'
 #' Predict ahead using algorithm of Ferrara, Laurent & Guegan, Dominique, 2001.
 #' "Forecasting with k-Factor Gegenbauer Processes: Theory and Applications,"
@@ -600,6 +538,8 @@ predict.garma_model<-function(object,n.ahead=1,...) {
 }
 
 
+#' Forecast future values.
+#'
 #' The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.
 #' @param object (garma_model) The garma_model from which to forecast the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 1
@@ -659,9 +599,11 @@ forecast.garma_model<-function(object,h=1,...) {
   if (p>0) resid <- rep(0,p) else resid <- numeric(0)
   qk <- ifelse(k>0,n,q)
   theta_vec_rev <- rev(theta_vec)[1:qk]
+  flt <- signal::Arma(a=1, b=phi_vec)
   for (i in (p+1):n) {
     fitted_i <- as.numeric(y_dash[1:(i-1)])
-    if (p>0) fitted_i <- stats::filter(fitted_i, filter=phi_vec, method='convolution', sides=1)
+    # if (p>0) fitted_i <- stats::filter(fitted_i, filter=phi_vec, method='convolution', sides=1)
+    if (p>0) fitted_i <- signal::filter(flt,fitted_i)
     if (qk>0) {
       ma_vec <- tail(c(rep(0,qk),resid),qk)
       ma_resid <- sum(theta_vec_rev*ma_vec)
@@ -684,10 +626,24 @@ forecast.garma_model<-function(object,h=1,...) {
 }
 
 
+#' Fitted values
+#'
+#' Fitted values are 1-step ahead predictions.
+#' @param object The garma_model object
+#' @param ... Other parameters. Ignored.
 #' @export
 fitted.garma_model<-function(object,...) {
   return(object$fitted)
 }
+
+
+#' Residuals
+#'
+#' Response Residuals from the model.
+#' @param object The garma_model object
+#' @param type (chr) The type of residuals. Must be 'response'.
+#' @param h (int) The number of periods ahead for the residuals. Must be 1.
+#' @param ... Other parameters. Ignored.
 #' @export
 residuals.garma_model<-function(object,type='response',h=1,...) {
   if (!missing(type)) {
@@ -697,18 +653,42 @@ residuals.garma_model<-function(object,type='response',h=1,...) {
     if (h!=1) stop('Only h=1 response residuals are available.')
   return(object$residuals)
 }
+
+#' Model Coefficients
+#'
+#' Model Coefficients/parameters.
+#' @param object The garma_model object
+#' @param ... Other parameters. Ignored.
 #' @export
 coef.garma_model<-function(object,...) {
   return(object$coef[1,])
 }
+
+#' AIC for model
+#'
+#' AIC for model if available.
+#' @param object The garma_model object
+#' @param ... Other parameters. Ignored.
 #' @export
 AIC.garma_model<-function(object,...) {
   return(object$aic)
 }
+
+#' Covariance matrix
+#'
+#' Covariance matrix of parameters if available
+#' @param object The garma_model object
+#' @param ... Other parameters. Ignored.
 #' @export
 vcov.garma_model<-function(object,...) {
   return(object$var.coef)
 }
+
+#' Log Likelihood
+#'
+#' Log Likelihood, or approximate likelihood or part likelihood, depending on the method.
+#' @param object The garma_model object
+#' @param ... Other parameters. Ignored.
 #' @export
 logLik.garma_model<-function(object,...) {
   # Need to figure out how to indicate these are REML estimates not true LL.
@@ -716,6 +696,8 @@ logLik.garma_model<-function(object,...) {
   return(res)
 }
 
+#' garma package version
+#'
 #' The version function returns the garma package version.
 #' @examples
 #' library(garma)

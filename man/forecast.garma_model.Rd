@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{forecast.garma_model}
 \alias{forecast.garma_model}
-\title{The forecast function predicts future values of a "garma_model" object, and is exactly the same as the "predict" function with slightly different parameter values.}
+\title{Forecast future values.}
 \usage{
 \method{forecast}{garma_model}(object, h = 1, ...)
 }

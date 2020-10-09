@@ -108,13 +108,13 @@ print(arima(ap,order=c(9,1,0),include.mean=FALSE))
 }
 \references{
 C Chung. A generalized fractionally integrated autoregressive moving-average process.
-*Journal of Time Series Analysis*, **17**(2):111–140, 1996.
+Journal of Time Series Analysis, 17(2):111–140, 1996.
 
 G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory.
-*Computational Statistics and Data Analysis*, **100**:115–130, 2016.
+Computational Statistics and Data Analysis, 100:115–130, 2016.
 
 L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
-*The Annals of Statistics*, **29**(4):987–1023, 2001.
+The Annals of Statistics, 29(4):987–1023, 2001.
 }
 \author{
 Richard Hunt

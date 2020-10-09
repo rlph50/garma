@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{ggplot.garma_model}
 \alias{ggplot.garma_model}
-\title{The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.}
+\title{ggplot of the Forecasts of the model.}
 \usage{
 \method{ggplot}{garma_model}(mdl, h = 24, include_fitted = FALSE, ...)
 }
@@ -20,6 +20,7 @@ A ggplot2 "ggplot" object. Note that the standard ggplot2 "+" notation can be us
 }
 \description{
 The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
+This adds in sensible titles etc as best it can determine.
 }
 \examples{
 library(ggplot2)

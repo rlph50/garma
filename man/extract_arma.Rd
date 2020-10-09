@@ -2,7 +2,7 @@
 % Please edit documentation in R/semipara.R
 \name{extract_arma}
 \alias{extract_arma}
-\title{For a Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.}
+\title{Extract underlying ARMA process.}
 \usage{
 extract_arma(x, ggbr_factors)
 }

@@ -1,3 +1,5 @@
+#' Plot Forecasts from model.
+#'
 #' The plot function generates a plot of actuals and predicted values for a "garma_model" object.
 #' @param x (garma_model) The garma_model from which to plot the values.
 #' @param ... other arguments to be passed to the "plot" function, including h (int) - the number of periods ahead to forecast.
@@ -25,7 +27,11 @@ utils::globalVariables(c('.dt','.value','.grp'))
   return(list(main=main,sub=sub))
 }
 
+#' ggplot of the Forecasts of the model.
+#'
 #' The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
+#' This adds in sensible titles etc as best it can determine.
+#'
 #' @param mdl (garma_model) The garma_model from which to ggplot the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 24
 #' @param include_fitted (bool) whether to include the 1-step ahead 'fitted' values in the plot. Default: FALSE

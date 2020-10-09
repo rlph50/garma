@@ -2,7 +2,7 @@
 % Please edit documentation in R/garma_ggtsdisplay.R
 \name{garma_ggtsdisplay}
 \alias{garma_ggtsdisplay}
-\title{For a k=1 Gegenbauer process, use semi-parametric methods to obtain short memory version of the process, then run a ggtsdisplay().}
+\title{ggtsdisplay of underlying ARMA process.}
 \usage{
 garma_ggtsdisplay(x, k = 1, ...)
 }
@@ -17,7 +17,10 @@ garma_ggtsdisplay(x, k = 1, ...)
 A ggplot object.
 }
 \description{
-For a k=1 Gegenbauer process, use semi-parametric methods to obtain short memory version of the process, then run a ggtsdisplay().
+For a Gegenbauer process, use semi-parametric methods to obtain short memory version of the process, then run a ggtsdisplay().
+}
+\details{
+The purpose of this function is to ease the process of identifying the underlying short memory process.
 }
 \examples{
 data(AirPassengers)

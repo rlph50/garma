@@ -2,9 +2,7 @@
 % Please edit documentation in R/gg_raw_pgram.R
 \name{gg_raw_pgram}
 \alias{gg_raw_pgram}
-\title{Display the raw periodogram for a time series, not on a log scale.
-The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differning frequencies.
-This routine will display the peaks on a raw scale.}
+\title{Display raw periodogram}
 \usage{
 gg_raw_pgram(x, k = 1)
 }
@@ -17,8 +15,10 @@ gg_raw_pgram(x, k = 1)
 A ggplot object representing the raw periodogram
 }
 \description{
-Display the raw periodogram for a time series, not on a log scale.
-The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differning frequencies.
+Display the raw periodogram for a time series, and not on a log scale.
+}
+\details{
+The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differring frequencies.
 This routine will display the peaks on a raw scale.
 }
 \examples{

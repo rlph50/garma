@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{plot.garma_model}
 \alias{plot.garma_model}
-\title{The plot function generates a plot of actuals and predicted values for a "garma_model" object.}
+\title{Plot Forecasts from model.}
 \usage{
 \method{plot}{garma_model}(x, ...)
 }

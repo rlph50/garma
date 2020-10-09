@@ -1,11 +1,13 @@
-#' For a k=1 Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
+#' Extract semiparametric estimates of the Gegenbauer factors.
+#'
+#' For a Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
 #' @param x (num) This should be a numeric vector representing the process to estimate.
 #' @param k (int) The number of Gegenabuer frequencies
 #' @param alpha (num)
 #' @param method (char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
 #' semi-parametric technique. "gsp" is the default. Refer Arteche (1998).
 #' @param min_freq (num) The minimum frequency to search through for peaks - default 0.0.
-#' @param max_freq (num) The maximum frequency to search through for peaks - default 2*pi.
+#' @param max_freq (num) The maximum frequency to search through for peaks - default 0.5.
 #' @return An object of class "garma_semipara".
 #' @examples
 #' data(AirPassengers)
@@ -72,6 +74,8 @@ print.ggbr_factors<-function(x,...) {
   } else cat('No Gegenbauer factors.\n')
 }
 
+#' Print Semiparametric Estimates
+#'
 #' Print a semiparameteric Gegenbauer estimation object.
 #' @param x An object of class garma_semipara.
 #' @param ... further parameters for print function
@@ -84,6 +88,8 @@ print.garma_semipara<-function(x,...) {
   if(length(x$note)>0) if (nchar(x$note)>1) cat(paste0('\n',x$note))
 }
 
+#' Extract underlying ARMA process.
+#'
 #' For a Gegenbauer process, transform to remove Gegenbauer long memory component to get a short memory (ARMA) process.
 #' @param x (num) This should be a numeric vector representing the Gegenbauer process.
 #' @param ggbr_factors (class) Each element of the list represents a Gegenbauer factor and includes f, u and fd elements.

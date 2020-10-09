@@ -2,7 +2,7 @@
 % Please edit documentation in R/semipara.R
 \name{print.garma_semipara}
 \alias{print.garma_semipara}
-\title{Print a semiparameteric Gegenbauer estimation object.}
+\title{Print Semiparametric Estimates}
 \usage{
 \method{print}{garma_semipara}(x, ...)
 }
