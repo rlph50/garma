@@ -19,4 +19,4 @@ The package can be installed from CRAN in the usual manner:
 ```
 
 ## Documentation
-An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/inst/docs/introduction.pdf), and the reference documentation is available [here](https://github.com/rlph50/garma/blob/master/inst/docs/garma_0.9.6.pdf).
+An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/inst/introduction.pdf), and the reference documentation is available [here](https://github.com/rlph50/garma/blob/master/inst/garma.pdf).
