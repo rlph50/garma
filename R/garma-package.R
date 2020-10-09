@@ -9,14 +9,14 @@
 #'
 #' @importFrom nloptr nloptr cobyla directL lbfgs mma auglag
 #' @importFrom pracma pinv hessian conv
-#' @importFrom signal Arma filter
-#' @importFrom zoo zoo
+## @importFrom signal Arma filter
+#' @importFrom zoo zoo index
 #' @importFrom lubridate make_date day days_in_month
 #' @importFrom forecast forecast ggtsdisplay
 #' @importFrom Rsolnp solnp gosolnp
-#' @importFrom ggplot2 ggplot geom_line xlab ylab aes geom_vline theme theme_bw scale_colour_manual annotate geom_text
+#' @importFrom ggplot2 ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
 #' @importFrom graphics abline lines par plot
-#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise
-#' @importFrom utils tail packageVersion head
+#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise filter
+#' @importFrom utils tail packageVersion head globalVariables
 NULL
 

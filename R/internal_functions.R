@@ -1,6 +1,9 @@
 .ggbr.coef<-function(n,d,u) {
-  cf<-c(1,2*d*u,2*d*(d+1)*(u^2)-d)
-  for (j in 4:n) cf[j]<-(2*u*(j+d-2)*cf[j-1]-(j-1+2*d-2)*cf[j-2])/(j-1)
+  if (n>0) {
+    cf<-c(1,2*d*u,2*d*(d+1)*(u^2)-d)
+    if (n>4) for (j in 4:n) cf[j]<-(2*u*(j+d-2)*cf[j-1]-(j-1+2*d-2)*cf[j-2])/(j-1)
+    cf <- cf[1:n]
+  } else cf <- NA
   return(cf)
 }
 

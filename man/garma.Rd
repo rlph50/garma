@@ -25,13 +25,12 @@ garma(
 \item{order}{(list) This should be a list (similar to the stats::arima order parameter) which will give the order of the process to fit.
 The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
 autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
-differencing to apply prior to any fitting.}
+differencing to apply prior to any fitting. WARNING: Currently only d==0 or d==1 are allowed.}
 
-\item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit.}
+\item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit. Note the 'QML' method only allows k=1.}
 
-\item{include.mean}{(bool) A boolean value indicating whether a mean should be fit. Note if you have any differencing, then
-it generally does not make sense to fit a mean term. Because of this, the default here is to fit a mean time when d (in the "order" parmaeter)
-is zero and otherwise not.}
+\item{include.mean}{(bool) A boolean value indicating whether a mean should be fit.
+Note that no mean term is fit if the series is integer differenced.}
 
 \item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
 The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian

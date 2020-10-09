@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{(garma_model) The garma_model from which to plot the values.}
 
-\item{...}{other arguments to be passed to the "plot" function, including h (int) - the number of periods ahgead to forecast.}
+\item{...}{other arguments to be passed to the "plot" function, including h (int) - the number of periods ahead to forecast.}
 }
 \value{
 An R "plot" object.

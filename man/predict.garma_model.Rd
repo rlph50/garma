@@ -17,7 +17,9 @@
 A "ts" object containing the requested forecasts.
 }
 \description{
-The predict function predicts future values of a "garma_model" object.
+Predict ahead using algorithm of Ferrara, Laurent & Guegan, Dominique, 2001.
+"Forecasting with k-Factor Gegenbauer Processes: Theory and Applications,"
+Journal of Forecasting, John Wiley & Sons, Ltd., vol. 20(8), pages 581-601, December.
 }
 \examples{
 data(AirPassengers)

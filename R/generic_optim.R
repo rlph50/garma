@@ -81,15 +81,12 @@
   }
 
   if (!is.null(fit$hessian)) det_hessian <- det(fit$hessian) else det_hessian <- NA
-  if(is.na(det_hessian)|det_hessian==1) fit$hessian <- pracma::hessian(fcn, fit$par, params=params)
-  det_hessian <- det(fit$hessian)
-  #cat(sprintf('det hessian = %f\n',det_hessian))
-  #diag_inv_hessian <- diag(pracma::pinv(fit$hessian))
-  #print(diag_inv_hessian)
-  if (is.null(fit$hessian)|is.na(det_hessian)) {
-    # print(fit$par)
-    # cat('Estimating Hessian.\n')
-    if (!any(is.na(fit$par))) fit$hessian <- pracma::hessian(fcn, fit$par, params=params)
+  if (length(fit$par>0)) {
+    if(is.na(det_hessian)|det_hessian==1) fit$hessian <- pracma::hessian(fcn, fit$par, params=params)
+    det_hessian <- det(fit$hessian)
+    if (is.null(fit$hessian)|is.na(det_hessian)) {
+      if (!any(is.na(fit$par))) fit$hessian <- pracma::hessian(fcn, fit$par, params=params)
+    }
   }
   if (length(fit$value)>1)
     fit$value <- fit$value[length(fit$value)]
@@ -122,6 +119,7 @@
                                 ineq_fcn=NULL, ineq_lb=NULL, ineq_ub=NULL,
                                 params, control) {
   # chain through the opt methods using the optimal value from the last one as the initial value for the next one.
+
   for (opt_method in opt_method_list) {
     if (.is_finite_bounds(opt_method)) {
       fit <- .generic_optim(opt_method=opt_method, initial_pars=initial_pars, fcn=fcn,

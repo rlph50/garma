@@ -1,5 +1,5 @@
 # Estimate a Ggbr model using a QML (Quasi-Maximum-Likelihood) method.
-# qml_matricies - geterate the statespace matrices needed for QML method.
+# qml_matricies - generate the statespace matrices needed for QML method.
 .qml_matricies<-function(pars,p,q,k,include.mean,m_trunc) {
   # add in ARMA factors
   start1 <- 1
@@ -46,7 +46,6 @@
   k  <- params$k
   include.mean <- params$include.mean
   m_trunc <- params$m_trunc
-  #print(par)
 
   sp  <- .qml_matricies(par,p,q,k,include.mean,m_trunc)
   if (include.mean) beta0 <- par[1] else beta0<-0

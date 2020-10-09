@@ -4,12 +4,14 @@
 \alias{ggplot.garma_model}
 \title{The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.}
 \usage{
-\method{ggplot}{garma_model}(mdl, h = 24, ...)
+\method{ggplot}{garma_model}(mdl, h = 24, include_fitted = FALSE, ...)
 }
 \arguments{
 \item{mdl}{(garma_model) The garma_model from which to ggplot the values.}
 
 \item{h}{(int) The number of time periods to predict ahead. Default: 24}
+
+\item{include_fitted}{(bool) whether to include the 1-step ahead 'fitted' values in the plot. Default: FALSE}
 
 \item{...}{other parameters passed to ggplot.}
 }

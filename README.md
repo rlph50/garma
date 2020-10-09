@@ -12,16 +12,11 @@ This package will estimate that frequency (which is known for technical reasons 
 At time of writing several estimation methods are supports as well as a number of (non-linear) optimisation routines.
 
   ## Installation.
-Ensure you have the "devtools" package installed:
+The package can be installed from CRAN in the usual manner:
 
 ```s
-> install.packages('devtools')
-```
-
-After this you can install this package by typing:
-```s
-> remotes::install_github('rlph50/garma')
+> install.packages('garma')
 ```
 
 ## Documentation
-An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/inst/vignette_introduction.pdf), and the reference documentation is available [here](https://github.com/rlph50/garma/blob/master/inst/garma_0.9.0.pdf).
+An Introduction to the "garma" packages is available [here](https://github.com/rlph50/garma/blob/master/inst/docs/introduction.pdf), and the reference documentation is available [here](https://github.com/rlph50/garma/blob/master/inst/docs/garma_0.9.6.pdf).

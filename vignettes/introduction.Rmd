@@ -1,12 +1,13 @@
 ---
 title: "An introduction to GARMA models"
-output: 
-  rmarkdown::html_vignette
-bibliography: garma_bibliography.bib
+author: "Richard Hunt"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to GARMA models}
+  %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: garma_bibliography.bib
 ---
 
 ```{r, include = FALSE}
@@ -20,7 +21,7 @@ knitr::opts_chunk$set(
 
 GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
 
-IF you are not very familiar with ARIMA models, it might be advisable to first have a look at the excellent online book by Rob Hyndman and George Athanasopoulos:- [Forecasting: Principals and Practice](https://otexts.com/fpp2/).
+If you are not very familiar with ARIMA models, it might be advisable to first have a look at the excellent online book by Rob Hyndman and George Athanasopoulos:- [Forecasting: Principals and Practice](https://otexts.com/fpp2/).
 
 
 ---
@@ -208,11 +209,12 @@ sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1)
 summary(sunspots_garma_mdl)
 
 #prepare 'future' actuals data for plotting
-future_df <- data.frame(yr=1925:1935, sunspots=sunspot.year[225:235],grp='Future Actuals')
+future_df <- data.frame(yr=1925:1935, sunspots=sunspot.year[225:235],.grp='Actuals')
 
-ggplot(sunspots_garma_mdl, h=22) +
+ggplot(sunspots_garma_mdl, h=12) +
   geom_line(data=future_df,aes(x=yr,y=sunspots)) +
   ggtitle('Sunspot Forecast using GARMA(8,0)')
 ```
+
 
 ## References

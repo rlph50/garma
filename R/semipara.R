@@ -59,15 +59,17 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5
 print.ggbr_factors<-function(x,...) {
   printf_9_4<-function(f) cat(sprintf('%9.4f',f))
 
-  cat('                      ')
-  for (k1 in 1:length(x)) cat(sprintf('%9.9s',paste0('Factor',k1)))
-  cat('\nGegenbauer frequency: ')
-  for (factor in x) printf_9_4(factor$f)
-  cat('\nGegenbauer Period:    ')
-  for (factor in x) printf_9_4(1/factor$f)
-  cat('\nGegenbauer Exponent:  ')
-  for (factor in x) printf_9_4(factor$fd)
-  cat('\n')
+  if (length(x)>0) {
+    cat('                      ')
+    for (k1 in 1:length(x)) cat(sprintf('%9.9s',paste0('Factor',k1)))
+    cat('\nGegenbauer frequency: ')
+    for (factor in x) printf_9_4(factor$f)
+    cat('\nGegenbauer Period:    ')
+    for (factor in x) printf_9_4(1/factor$f)
+    cat('\nGegenbauer Exponent:  ')
+    for (factor in x) printf_9_4(factor$fd)
+    cat('\n')
+  } else cat('No Gegenbauer factors.\n')
 }
 
 #' Print a semiparameteric Gegenbauer estimation object.
