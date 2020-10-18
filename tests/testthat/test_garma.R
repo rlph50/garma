@@ -45,7 +45,7 @@ test_that("Test 2-RESID. Short Memory AR model resid match 'arima'", {
   expect_true(
     # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
     sqrt(mean((residuals(garma(dap,order=c(2,1,0),k=0,method='CSS',include.mean=F)) -
-                 residuals(arima(dap,order=c(2,0,0),method='CSS',include.mean=F)))^2)) < 0.08
+                 residuals(arima(dap,order=c(2,1,0),method='CSS',include.mean=F)))^2)) < 0.08
   )
 })
 
@@ -60,8 +60,16 @@ test_that("Test 3-RESID. Short Memory MA model resid match 'arima'", {
 test_that("Test 4-RESID. Short Memory ARMA model resid match 'arima'", {
   expect_true(
     # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
+    sqrt(mean((residuals(garma(dap,order=c(2,0,2),k=0,method='CSS',include.mean=F)) -
+                 residuals(arima(dap,order=c(2,0,2),method='CSS',include.mean=F)))^2)) < 0.07
+  )
+})
+
+test_that("Test 5-RESID. Short Memory ARMA model with intercept resid match 'arima'", {
+  expect_true(
+    # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
     sqrt(mean((residuals(garma(dap,order=c(2,0,2),k=0,method='CSS',include.mean=T)) -
-                 residuals(arima(dap,order=c(2,0,2),method='CSS',include.mean=T)))^2)) < 0.03
+                 residuals(arima(dap,order=c(2,0,2),method='CSS',include.mean=T)))^2)) < 0.15
   )
 })
 
@@ -94,6 +102,6 @@ test_that("Test 4-PRED. Short Memory ARIMA model with diff pred match 'arima'", 
   expect_true(
     # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
     sqrt(mean((predict(garma(ap,order=c(2,1,2),k=0,method='CSS',include.mean=F),n.ahead=6)$pred -
-                 predict(arima(ap,order=c(2,1,2),method='CSS',include.mean=F),n.ahead=6)$pred)^2)) < 0.7
+                 predict(arima(ap,order=c(2,1,2),method='CSS',include.mean=F),n.ahead=6)$pred)^2)) < 0.3
   )
 })

@@ -20,8 +20,8 @@ utils::globalVariables(c('.dt','.value','.grp'))
 
 # default title for plots
 .generate_default_plot_title<-function(mdl,h) {
-  if (h>0) main <- paste('Forecast for',mdl$process_name)
-  else main <- paste('Actual and Fitted for',mdl$process_name)
+  if (h>0) main <- paste('Forecast for',mdl$series)
+  else main <- paste('Actual and Fitted for',mdl$series)
   sub <- sprintf('Model details: order=(%d,%d,%d), k=%d (method: %s)',
                  mdl$order[1],mdl$order[2],mdl$order[3],mdl$k,mdl$method)
   return(list(main=main,sub=sub))
@@ -85,7 +85,7 @@ ggplot.garma_model<-function(mdl,h=24,include_fitted=FALSE,...) {
 .plot_garma_model<-function(mdl,h=24,include_fitted=FALSE,xlab,ylab,main,sub,ylim,...) {
   # plot forecasts from model
   if (missing(xlab)) xlab<-''
-  if (missing(ylab)) ylab<-ifelse(is.null(mdl$process_name),'',mdl$process_name)
+  if (missing(ylab)) ylab<-ifelse(is.null(mdl$series),'',mdl$series)
   actuals <- zoo(stats::ts(c(as.numeric(mdl$y),rep(NA,h)),start=mdl$y_start,frequency=mdl$y_freq))
   fitted <- zoo(stats::ts(as.numeric(mdl$fitted),start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
 

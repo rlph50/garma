@@ -10,6 +10,7 @@ garma(
   order = list(0, 0, 0),
   k = 1,
   include.mean = (order[2] == 0),
+  include.drift = (order[2] > 0),
   method = "Whittle",
   allow_neg_d = FALSE,
   opt_method = NULL,
@@ -31,6 +32,9 @@ differencing to apply prior to any fitting. WARNING: Currently only d==0 or d==1
 
 \item{include.mean}{(bool) A boolean value indicating whether a mean should be fit.
 Note that no mean term is fit if the series is integer differenced.}
+
+\item{include.drift}{(bool) A boolean value indicating whether a 'drift' term should be fit to the predictions.
+The default is to fit a drift term to the predictions if the process is integer-differenced.}
 
 \item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
 The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
