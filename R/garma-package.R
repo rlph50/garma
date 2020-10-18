@@ -13,7 +13,6 @@
 #' @importFrom zoo zoo index
 #' @importFrom lubridate make_date day days_in_month
 #' @importFrom forecast forecast ggtsdisplay
-#' @importFrom ltsa TrenchForecast
 #' @importFrom Rsolnp solnp gosolnp
 #' @importFrom ggplot2 ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
 #' @importFrom graphics abline lines par plot
