@@ -121,8 +121,8 @@ garma<-function(x,
     stop('order parameter must be a 3 integers only.\n')
   if (any(order<0))
     stop('order parameter must consist of positive integers.\n')
-  # if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
-  #   stop('Sorry. Currently only d==0 or d==1 are supported.\n')
+  if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
+    stop('Sorry. Currently only d==0 or d==1 are supported.\n')
   if (k<0)
     stop('k parameter must be a non-negative integer.\n')
   if (order[1]+order[3]+k<=0)
