@@ -2,6 +2,7 @@
 title: "An introduction to GARMA models"
 author: "Richard Hunt"
 date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Vignette Title}
   %\VignetteEngine{knitr::rmarkdown}
@@ -41,7 +42,7 @@ ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.', theme=theme_bw())
 ```
 
 
-The first thing to note here is that the ACF (autocorrelation function) is showing highly significant correlations between Nile measurements, even at 350 years apart! 
+The first thing to note here is that the ACF (the autocorrelation function) is showing highly significant correlations between Nile measurements, even at 350 years apart! 
 
 We won't attempt to address the question of how it is that a flood or minima level of a river flow today could be significantly related to what was happening 350 years ago, but scientists believe this is a real affect, not an artifact of measurement. This time series has been investigated many times by researchers.
 
@@ -49,22 +50,22 @@ The phenomena of long memory has been identified in a number of different types 
 
 ---
 
-ARMA models which can model long memory like this are sometimes known generically as 'long memory models' or 'fractionally differenced' models, and the default version of these can be fit by a number of existing R packages, including **fracdiff**, **longmemo**, **rugarch** and even **forecast**, amoung many others.
+Generically, long memory models (sometimes known as 'fractionally differenced' models) can also have 'short memory' components, and a number of these have been explored. One popular type of short memory model is the ARMA model. There are a number of R packages which can fit these models, including **fracdiff**, **longmemo**, **rugarch** and even **forecast**, among others.
 
-You might be wondering why these models might be useful - the answer is that they tend to produce long range forecasts which are more accurate than other short-memory models.
+These models are considered useful because they produce long range forecasts which tend to be more accurate than other short-memory models, particularly if the model assumptions are correct.
 
 
-At time of writing there are few packages on CRAN which can fit GARMA models.
+At time of writing there are few R packages on CRAN which can fit GARMA models.
 
-Package **tswge** provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can results in rather inaccurate results. It also does not allow any MA terms to be fitted.
+Package **tswge** provides a function "est.garma.wge" which can fit a GARMA model, but unfortunately can only do so via a grid search technique (searching a grid of values of the likelihood function), which tends to be slow and can result in rather inaccurate results. It also does not allow any MA terms to be fitted.
 
-Package **waveslim** has functions "spp.mle" and "spp2.mle" which can identify the parameters of a white noise process only, using a wavelet method.
+Package **waveslim** has functions "spp.mle" and "spp2.mle" which can identify the parameters of a white noise process only (ie a process without any short memory component), using a wavelet method.
 
 Package **VGAM** to have a function called "garma" but this actually fits very different models - it fits short-memory models which can include count data. Package **gsarima** also fits these short memory count models.
 
 ---
 
-The models fit by the **garma** package are models which are not just long memory models, but where the long memory phenomena actually cycles in strength. An example of this is the Southern Oscillation Index.
+The models fit by the **garma** package are models which are not just long memory models, but where the long memory phenomena *cycles* in strength. An example of this is the Southern Oscillation Index.
 
 ```{r soi, fig.width=6, fig.height=4}
 soi <-
@@ -80,14 +81,20 @@ ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index', theme=theme_
 ```
 
 
-In this plot the ACF shows the cyclical nature which is so typical of the GARMA models.
+The first hing to note is that there are significant correlations in the ACF even up to lag 400, so this qualifies as a long memory process.
+
+But also the ACF shows the cyclical nature which is very typical of Gegenbauer models.
 
 
 ---
+When a long memory Gegenbauer model is combined with a short memory ARMA model, the result is known as a GARMA model.
+
 GARMA stands for Gegenbauer AR-MA, and the AR and MA letters have their usual meaning in time series of "auto-regressive" and "moving average". 'Gegenbauer' refers to a mathematician Leopold Gegenbauer who lived in the 19th century and developed a series of orthogonal polynomials now called Gegenbauer polynomials, and sometimes called 'ultraspherical' polynomials [@Szego1959]. These polynomials feature strongly in the mathematics of GARMA models [@Gray1989], [@Gray1994].
 
 
-All long memory models, including GARMA models, share one thing in common. When you examine them on the frequency domain, they will show evidence of an unbounded (read: very large) peak in the spectrum. The more traditional models - known as "short memory" models do not have such a peak - whilst the spectrum may vary up and down, it has absolute bounds beyond which it will not go.
+All long memory models, including GARMA models, share one thing in common. When you examine them on the frequency domain, they will show evidence of an unbounded (read: very large) peak in the spectrum. The more traditional models - known as "short memory" models do not have such a peak - whilst the spectrum may vary up and down, a short memory model has a spectrum which has absolute bounds beyond which it will not go.
+
+In the chart below we illustrate two long memory processes, one which would be well modelled by an ARFIMA model and the other which would be modelled by a Gegenbauer model.
 
 ```{r spectrum, fig.width=7, fig.height=4}
 spectrum_nilemin <- spectrum(NileMin, plot=FALSE)
@@ -114,32 +121,33 @@ ggplot(spec_df, aes(x=freq,y=spec)) +
 
 From the above you can see that the NileMin spectrum shows an (essentially) unbounded peak at 0 which is the marker of a traditional long memory process.
 
-However the SOI has 3 main peaks, all separated away from 0. Although these are not as large as the NileMin peaks, compared with the rest of the spectrum they are quite large, so it is not inappropriate to at least try to model the SOI by a 3-factor (or k=3) Gegenbauer model. This was first pointed out by [@Lustig2017].
+However the SOI has 3 main peaks, all separated away from 0. Although these are not as large as the NileMin peaks, compared with the rest of the spectrum they are quite large, so it is not inappropriate to at least try to model the SOI by a 3-factor (or $k=3$) Gegenbauer model. This was first pointed out by [@Lustig2017].
 
 ## Technical details of the model.
 
 The GARMA model as fit by the **garma** package is specified as
-$$ \displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}} $$
+$$ \displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(1-B)^{id}(X_{t}-\mu)= \theta(B) \epsilon _{t}} $$
 where
 
 1. $\phi(B)$ represents the short-memory Autoregressive component of order p,
 2. $\theta(B)$ represents the short-memory Moving Average component of order q,
 3. $(1-2u_{i}B+B^{2})^{d_{i}}$ represents the long-memory Gegenbauer component (there may in general be k of these),
-4. $X_{t}$ represents the observed process,
-5. $\epsilon_{t}$ represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
+4. $id$ represents integer differencing (currently only $id$=0 or 1 is supported).
+5. $X_{t}$ represents the observed process,
+6. $\epsilon_{t}$ represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
      Generally the routines in this package will work best if these have an approximate Gaussian distribution.
-6. $B$ represents the Backshift operator, defined by $B X_{t}=X_{t-1}$.
+7. $B$ represents the Backshift operator, defined by $B X_{t}=X_{t-1}$.
 
-When k=0, then this is just a short memory model as fit by the stats "arima" function.
+When $k=0$, then this is just a short memory model as fit by the stats "arima" function.
 
 
 ## Fitting a short memory model
 
 We have deliberately kept the fitting process close to that of the "arima" and "forecast::Arima" functions.
 
-To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. the "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that.
+To illustrate basic usage of the routine, we will first look at fitting a simple ARIMA model to the "AirPassengers" data supplied with R. To achieve stationarity with this data, we'll need to seasonally difference it. The "arima" function can do this but unfortunately "garma" as yet does not fit a seasonal model - seasonality is essentially modelled by the Gegenbauer components, but we won't initially use that.
 
-To ensure the results are as comparable as possible we will specify the estimation method as 'CSS' for both.
+To ensure the results are as comparable as possible we will work with the seasonally differenced series, and specify the estimation method as 'CSS' for both.
 
 ```{r arima}
 library(garma)
@@ -158,16 +166,34 @@ garma_mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS')
 summary(garma_mdl)
 
 ```
+We note here that [@Box2015] advise taking logarithms as the more correct way to model this data, however we are illustrating the similarity of methods here and feel additional code may obscure the intention. The interested reader may care to repeat this using logs themselves.
 
 As can be seen above, the coefficients produced are similar but not identical - the log-likelihood from the "garma" run is a larger value than that produced by the "arima" run, indicating that the routine has in fact found a (slightly) better solution (estimating parameters like these involves non-linear optimisation - "arima" uses R's built-in optimiser called "optim"; garma however by default uses "solnp" from the **Rsolnp** package).
 
 ## Fitting a GARMA model.
 
-In this section we'll look at fitting a GARMA model to the Sunspots data, again as supplied with R. This data has been analysed many times in the literature; the first time was by [@Gray1989]. Generally, authors have used a standard subset of this data from 1749 to 1924.
+In this section we'll look at fitting a GARMA model to the Sunspots data, which is supplied with R. This data has been analysed many times in the literature; the first time with a GARMA model was by [@Gray1989]. Generally, authors have used a standard subset of this data from 1749 to 1924.
 
-The Sunspot data consists of counts of sunspots as observed over a considerable period. In recent years a large project by the Royal Observatory of Belgium has checked and extended this key dataset [@Clette2014], but we'll use the original here.
+The Sunspot data consists of counts of sunspots as observed over a considerable period. In terms of ARIMA models, [@Box2015] suggest an AR(9) model may be best.
 
+First we fit an ARIMA model to this data:
 ```{r sunspot1}
+library(garma)
+
+data(sunspot.year)
+
+# Next we subset the data to ensure we are using the years used in the literature.
+sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
+
+# Now as in Gray et al 1989 we fit a GARMA(1,0) model:
+sunspots_arima_mdl <- arima(sunspots, order=c(9,0,0),method='CSS')
+
+summary(sunspots_arima_mdl)
+
+```
+
+Next we look at a GARMA model, but instead of 9 AR parameters, we will only fit 1.
+```{r sunspot2}
 library(garma)
 
 data(sunspot.year)
@@ -182,8 +208,7 @@ summary(sunspots_garma_mdl)
 
 ```
 
-
-Above, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "whittle" method by default, since this method not only produces very accurate results very quickly, but has a lot of theoretical results available to support its use - for example [@Giraitis2001].
+For the GARMA model, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "whittle" method by default, since this method not only produces very accurate results very quickly, but also has a lot of theoretical results available to support its use - for example [@Giraitis2001].
 
 The following table compares the values found by Gray et al and by the "garma" function:
 
@@ -200,19 +225,40 @@ Notice also that the routine displays the Gegenbauer Period - in this case 11.2 
 
 Also shown is the degree of fractional differencing and the Fractional Dimension of the original series.
 
-Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989] and which we fit then forecast below, for the 11 years of a sunspot cycle.
+Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989], however to compare with the ARIMA model, we can fit the same number of AR terms - 9 - and then forecast below, for the next sunspot cycle.
+```{r sunspot3}
+library(yardstick)
 
-```{r sunspot2, fig.width=7, fig.height=5}
-# fit a GARMA(8,0,0) model
-sunspots_garma_mdl <- garma(sunspots, order=c(8,0,0),k=1)
-summary(sunspots_garma_mdl)
+(sunspots_garma_mdl <- garma(sunspots, order = c(9, 0, 0), k = 1))
 
-#prepare 'future' actuals data for plotting
-future_df <- data.frame(yr=1925:1935, sunspots=sunspot.year[225:235],.grp='Actuals')
+compare_df <- data.frame(yr=1925:1935,
+                         Actuals=as.numeric(sunspot.year[225:235]),
+                         ARIMA=forecast(sunspots_arima_mdl,h=11)$mean,
+                         GARMA=forecast(sunspots_garma_mdl,h=11)$mean)
 
-ggplot(sunspots_garma_mdl, h=12) +
-  geom_line(data=future_df,aes(x=yr,y=sunspots)) +
-  ggtitle('Sunspot Forecast using GARMA(8,0)')
+cat(sprintf('\n\nEvaluating Test set data from 1925 to 1936.\n\nARIMA RMSE: %.2f\nGARMA RMSE: %.2f\n',
+            yardstick::rmse(compare_df,Actuals,ARIMA)$.estimate,
+            yardstick::rmse(compare_df,Actuals,GARMA)$.estimate))
+```
+The RMSE for the ARIMA model is `r round(yardstick::rmse(compare_df,Actuals,ARIMA)$.estimate,2)` and the RMSE for the GARMA model is `r round(yardstick::rmse(compare_df,Actuals,GARMA)$.estimate,2)` - which shows in terms of future predictions the GARMA model has a smaller error.
+
+But visually there appears to be little difference between the models.
+
+```{r sunspot4, fig.width=7, fig.height=5}
+arima_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_arima_mdl,h=11)$mean,grp='AR(11) forecasts')
+
+garma_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_garma_mdl,h=11)$mean,grp='GARMA(1),k=1 forecasts')
+
+actuals_df <- data.frame(yr=1749:1935,sunspots=as.numeric(sunspot.year[49:235]),grp='Actuals')
+
+df <- rbind(actuals_df,garma_df,arima_df)
+
+ggplot(df,aes(x=yr,y=sunspots,color=grp)) + geom_line() +
+  scale_color_manual(name='',values=c('Actuals'='darkgray','AR(11) forecasts'='darkgreen','GARMA(1),k=1 forecasts'='blue')) +
+  xlab('') + ylab('Sunspot Counts') +
+  geom_vline(xintercept=1924,color='red',linetype='dashed',size=0.3) +
+  theme_bw() +
+  ggtitle('Sunspot Forecasts: Comparing ARIMA(9,0,0) and GARMA(9,0),k=1')
 ```
 
 

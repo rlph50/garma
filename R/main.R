@@ -121,8 +121,8 @@ garma<-function(x,
     stop('order parameter must be a 3 integers only.\n')
   if (any(order<0))
     stop('order parameter must consist of positive integers.\n')
-  if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
-    stop('Sorry. Currently only d==0 or d==1 are supported.\n')
+  # if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
+  #   stop('Sorry. Currently only d==0 or d==1 are supported.\n')
   if (k<0)
     stop('k parameter must be a non-negative integer.\n')
   if (order[1]+order[3]+k<=0)
@@ -452,36 +452,24 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   # jump over the ggbr params; we get those separately.
   start <- start + (k*2)
 
-  phi_vec <- theta_vec <- delta_vec <- ggbr_vec <- ggbr_inv_vec <-  1
+  phi_vec <- theta_vec <- ggbr_inv_vec <-  1
   if (p>0) phi_vec   <- c(1,-coef[start:(start+p-1)])
   if (q>0) theta_vec <- c(1,-coef[(p+start):(length(coef))])
   if (k>0) {
-    for (gf in object$ggbr_factors) ggbr_vec <- pracma::conv(ggbr_vec,.ggbr.coef(n+n.ahead+3,-gf$fd,gf$u))
-    for (gf in object$ggbr_factors) ggbr_inv_vec <- pracma::conv(ggbr_inv_vec,.ggbr.coef(n+n.ahead+3,gf$fd,gf$u))
-
-
+    for (gf in object$ggbr_factors) ggbr_inv_vec <- pracma::conv(ggbr_inv_vec,.ggbr.coef(n+n.ahead+3,-gf$fd,gf$u))
     # Next line multiplies and divides the various polynomials to get psi = theta * delta * ggbr / phi
     # pracma::conv gives polynomial multiplication, and pracma::deconv gives polynomial division.
     # we don't bother with the remainder. For non-ggbr models this may be a mistake.
-    psi1 <- pracma::conv(theta_vec,ggbr_vec)
-    psi1 <- pracma::deconv(psi1,phi_vec)$q
-    psi_vec <- psi1[1:(n+n.ahead+1)]
-
     pi1 <- pracma::conv(phi_vec,ggbr_inv_vec)
-    pi_vec  <- pracma::deconv(pi1,theta_vec)$q[1:(n+n.ahead+1)]
+    pi_vec  <- pracma::deconv(pi1,theta_vec)$q
 
-    pred <- vector(length=n.ahead)
-    y_dash <- y
-    m <- length(y_dash)
-    xi_m<-matrix(0,nrow=n.ahead,ncol=m)
-    for (i in 1:m) {
-      a <- psi_vec[1:i]
-      for (j in 1:n.ahead) {
-        b <- pi_vec[(i+j):(j+1)]
-        xi_m[j,i] <- (sum(a*b))
-      }
+    if (id==0) y_dash <- y-beta0 else y_dash <- y-mean_y
+    for (h in 1:n.ahead) {
+      yy <- y_dash
+      vec <- pi_vec[(length(yy)+1):2]
+      y_dash <- c(yy, -sum(yy*vec))
     }
-    pred <- (xi_m%*%rev(y_dash))[,1]
+    pred <- tail(y_dash,n.ahead)
   } else { # ARIMA forecasting only
     if (id==0) y_dash <- y-beta0 else y_dash <- y-mean_y
     phi_vec <- rev(-phi_vec[2:length(phi_vec)])
@@ -509,20 +497,19 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   }
 
   if (id>0) {
-    # if (object$include.drift) pred <- pred + mean(y)
-    # .printf(id)
-    # pred<-diffinv(pred,differences=id,xi=tail(orig_y,id))
-    # if (length(pred)>n.ahead) pred <- pred[2:(n.ahead+1)]
-    last_y <- y
-    for (id1 in 1:id) {
-      if (id1==id) dy <- as.numeric(orig_y)
-      else dy <- diff(as.numeric(orig_y),differences=(id-id1))
-      pred[1] <- pred[1] + as.numeric(dy[length(dy)])
-      if (object$include.drift) pred <- pred + mean(last_y)
-      pred <- cumsum(pred)
-      last_y <- dy
-    }
-  }
+    if (object$include.drift) pred <- pred + mean(y)
+    pred<-diffinv(pred,differences=id,xi=tail(orig_y,id))
+    if (length(pred)>n.ahead) pred <- pred[2:(n.ahead+1)]
+    # last_y <- y
+    # for (id1 in 1:id) {
+    #   if (id1==id) dy <- as.numeric(orig_y)
+    #   else dy <- diff(as.numeric(orig_y),differences=(id-id1))
+    #   pred[1] <- pred[1] + as.numeric(dy[length(dy)])
+    #   if (object$include.drift) pred <- pred + mean(last_y)
+    #   pred <- cumsum(pred)
+    #   last_y <- dy
+    # }
+  } else pred <- pred + beta0
 
   # Now we have the forecasts, we set these up as a "ts" object
   y_end = object$y_end
@@ -538,131 +525,6 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   return(list(pred=res))
 }
 
-# predict2.garma_model<-function(object,n.ahead=1,...) {
-#   comb_factor_coef<-function(ggbr_coef,h,max_j,k,n) {
-#     psi_pi_k <- matrix(0,nrow=k,ncol=max_j)
-#     psi_pi_k[1,] <- ggbr_coef[1,1:max_j]
-#     if (k>1) for (k1 in 2:k) {
-#       for (j in 1:max_j) {
-#         psi_pi_k[k1,j] <- sum(psi_pi_k[k1-1,j:1]*ggbr_coef[k1,1:j])
-#       }
-#     }
-#     return(psi_pi_k[k,])
-#   }
-#   xi2_fcn<-function(h,k,n) {
-#     max_j <- n+h
-#     pi_ggbr_coef <- matrix(0,nrow=k,ncol=max_j)
-#     psi_ggbr_coef <- matrix(0,nrow=k,ncol=max_j)
-#     for (k1 in 1:k) {
-#       gf <- object$ggbr_factors[[k1]]
-#       pi_ggbr_coef[k1,] <- .ggbr.coef(max_j+1,-gf$fd,gf$u)[1:max_j]
-#       psi_ggbr_coef[k1,1:h] <- .ggbr.coef(h+1,gf$fd,gf$u)[1:h]
-#     }
-#     psi_fcn <- comb_factor_coef(psi_ggbr_coef,h,max_j,k,n)
-#     pi_fcn  <- comb_factor_coef(pi_ggbr_coef,h,max_j,k,n)
-#
-#     res <- matrix(0,nrow=1,ncol=n)
-#     for (j in 1:n) {
-#       res[1,j] <- (-sum(psi_fcn[1:h]*pi_fcn[(h+j):(j+1)]))
-#     }
-#     return(t(res))
-#   }
-#
-#   ## Start of Function "predict"
-#
-#   if (n.ahead<=0) {
-#     message('n.ahead must be g.t. 0.')
-#     return(NA)
-#   }
-#
-#   coef <- unname(object$coef[1,])
-#   p  <- object$order[1]
-#   id <- object$order[2]
-#   q  <- object$order[3]
-#   k  <- object$k
-#   y  <- as.numeric(object$diff_y)
-#   orig_y <- as.numeric(object$y)
-#   resid  <- as.numeric(object$resid)
-#
-#   mean_y <- beta0  <- 0
-#   start  <- 1
-#   if (object$include.mean&id==0) {
-#     mean_y <- mean(y)
-#     if (names(object$coef[1,])[1]=='intercept') {
-#       beta0  <- coef[1]
-#       start  <- 2
-#     } else beta0 <- mean_y
-#   }
-#   # jump over the ggbr params; we get those separately.
-#   start <- start + (k*2)
-#
-#   if (id==0) y_dash <- y-beta0
-#   else y_dash <- y-mean_y
-#
-#   phi_vec <- theta_vec <- 1
-#
-#   if (p>0) phi_vec   <- coef[start:(start+p-1)]
-#   if (q>0) theta_vec <- coef[(p+start):(length(coef))]
-#   n <- length(y_dash) + n.ahead
-#
-#   # now we generate polynomial coefficients for ggbr factors.
-#   if (k>0) {
-#     xi_m<-matrix(0,nrow=n.ahead,ncol=length(y_dash))
-#     for (h in 1:n.ahead) # need a separate set of coefficients for each forecast ahead
-#       xi_m[h,] <- xi2_fcn(h,k,length(y_dash))
-#   }
-#
-#   pp <- length(phi_vec)
-#   qq <- length(theta_vec)
-#
-#   phi_vec <- rev(phi_vec)
-#   theta_vec <- rev(theta_vec[1:qq])
-#
-#   if (k>0) {
-#     print(xi_m[1:6,1:6])
-#     print(dim(xi_m))
-#     pred <- xi_m %*% rev(y_dash)
-#     print(head(pred))
-#     if (id>0) pred <- pred + mean(y)
-#   } else pred <- rep(beta0,n.ahead)
-#
-#   if (pp+qq>2) for (i in 1:n.ahead) {
-#     if (i>1) ar_vec <- tail(c(rep(0,pp),y_dash,pred[1:(i-1)]),pp)
-#     else ar_vec <- tail(c(rep(0,pp),y_dash),pp)
-#     if (i>qq) ma_vec <- rep(0,qq)
-#     else if (i>1) ma_vec <- tail(c(rep(0,qq),resid[1:(i-1)],rep(0,i-1)),qq)
-#     else ma_vec <- rep(0,qq)
-#     if (pp>1) pred[i] <- pred[i] + sum(phi_vec*ar_vec)
-#     if (qq>1) pred[i] <- pred[i] + sum(theta_vec*ma_vec)
-#   }
-#
-#   pred <- pred + beta0
-#   if (id>0) {
-#     # pred2 <- pred[1] + as.numeric(orig_y[length(orig_y)])
-#     # for (i in 2:n.ahead) pred2 <- c(pred2,pred[i]+pred2[i-1])
-#     # pred <- pred2
-#     for (id1 in 1:id) {
-#       if (id1==id) dy <- as.numeric(orig_y)
-#       else dy <- diff(as.numeric(orig_y),differences=(id-id1))
-#       pred2 <- pred[1] + as.numeric(dy[length(dy)])
-#       for (i in 2:n.ahead) pred2 <- c(pred2,pred[i]+pred2[i-1])
-#       pred <- pred2
-#     }
-#   }
-#
-#   # Now we have the forecasts, we set these up as a "ts" object
-#   y_end = object$y_end
-#   if(length(y_end)>1) {
-#     if (object$y_freq >= y_end[2]) {
-#       y_end[1] <- y_end[1]+1
-#       y_end[2] <- y_end[2]-object$y_freq+1
-#     }
-#     else y_end[2] <- y_end[2] + 1
-#   } else y_end <- y_end +1
-#
-#   res <- stats::ts(pred,start=y_end,frequency=object$y_freq)
-#   return(list(pred=res))
-# }
 
 #' Forecast future values.
 #'

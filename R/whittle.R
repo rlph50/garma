@@ -40,7 +40,7 @@
 
   # spec_den_inv[spec_den_inv==0] <- NA
   I_f <- spec*spec_den_inv
-  res <- sum(I_f,na.rm=TRUE) - sum(log(spec_den_inv[spec_den_inv>0]),na.rm=TRUE)
+  res <- sum(I_f,na.rm=TRUE) #- sum(log(spec_den_inv[spec_den_inv>0]),na.rm=TRUE)
 
   return(res)
 }

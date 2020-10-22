@@ -28,6 +28,7 @@ Imports:
     utils
 Suggests:
     longmemo,
+    yardstick,
     tidyverse,
     BB,
     GA,

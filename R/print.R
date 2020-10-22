@@ -30,6 +30,10 @@ print.garma_model<-function(x,...) {
 
 .print_garma_model<-function(mdl,verbose=TRUE) {
   cat("\nCall:", deparse(mdl$call, width.cutoff = 75L), "", sep = "\n")
+  if (!mdl$include.mean) cat('No ')
+  cat('Mean term was fitted.\n')
+  if (!mdl$include.drift) cat('No ')
+  cat('Drift (trend) term was fitted.\n\n')
   if (verbose) {
     with(mdl,
          cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
