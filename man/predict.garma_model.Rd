@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{predict.garma_model}
 \alias{predict.garma_model}
-\title{The predict future values.}
+\title{Predict future values.}
 \usage{
 \method{predict}{garma_model}(object, n.ahead = 1, ...)
 }
@@ -17,9 +17,9 @@
 A "ts" object containing the requested forecasts.
 }
 \description{
-Predict ahead using algorithm of Ferrara, Laurent & Guegan, Dominique, 2001.
-"Forecasting with k-Factor Gegenbauer Processes: Theory and Applications,"
-Journal of Forecasting, John Wiley & Sons, Ltd., vol. 20(8), pages 581-601, December.
+Predict ahead using algorithm of (2009) Godet, F
+"Linear prediction of long-range dependent time series", ESAIM: PS 13 115-134.
+DOI: 10.1051/ps:2008015
 }
 \examples{
 data(AirPassengers)
