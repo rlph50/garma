@@ -32,6 +32,7 @@ gg_raw_pgram <- function(x,k=1) {
   # now plot it
   ggplot2::ggplot(data=df,ggplot2::aes(x=Frequency,y=Intensity)) +
     ggplot2::geom_line() +
+    ggplot2::ggtitle(paste('Raw periogram of',deparse(match.call()$x))) +
     ggplot2::geom_text(data=annotate_df,aes(x=x,y=y,label=label),size=2.5,hjust=0) +
     ggplot2::theme_bw()
 }
