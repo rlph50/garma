@@ -2,7 +2,7 @@
 #'
 #' For a Gegenbauer process, use semi-parametric methods to estimate the Gegenbauer frequency and fractional differencing.
 #' @param x (num) This should be a numeric vector representing the process to estimate.
-#' @param k (int) The number of Gegenabuer frequencies
+#' @param k (int) The number of Gegenbauer frequencies
 #' @param alpha (num)
 #' @param method (char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
 #' semi-parametric technique. "gsp" is the default. Refer Arteche (1998).

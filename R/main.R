@@ -30,7 +30,7 @@
 #' @param include.drift (bool) A boolean value indicating whether a 'drift' term should be fit to the predictions.
 #'     The default is to fit a drift term to the predictions if the process is integer-differenced.
 #' @param method (character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
-#'     The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
+#'     The default (Whittle) will generally return very accurate estimates quite quickly, provided the assumption of a Gaussian
 #'     distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
 #'     'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
 #'     'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)

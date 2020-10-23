@@ -2,7 +2,7 @@
 #'
 #' Display the raw periodogram for a time series, and not on a log scale.
 #'
-#' The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differring frequencies.
+#' The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differing frequencies.
 #' This routine will display the peaks on a raw scale.
 #'
 #' @param x (num) This should be a numeric vector representing the process to estimate.
