@@ -406,11 +406,11 @@ garma<-function(x,
 
 
 
-#' The predict future values.
+#' Predict future values.
 #'
-#' Predict ahead using algorithm of Ferrara, Laurent & Guegan, Dominique, 2001.
-#' "Forecasting with k-Factor Gegenbauer Processes: Theory and Applications,"
-#' Journal of Forecasting, John Wiley & Sons, Ltd., vol. 20(8), pages 581-601, December.
+#' Predict ahead using algorithm of (2009) Godet, F
+#' "Linear prediction of long-range dependent time series", ESAIM: PS 13 115-134.
+#' DOI: 10.1051/ps:2008015
 #'
 #' @param object (garma_model) The garma_model from which to predict the values.
 #' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
