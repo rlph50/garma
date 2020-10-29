@@ -5,13 +5,14 @@
 #' for those parameters.
 #'
 #' The GARMA model is specified as
-#' \deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) (X(t) - \mu) = \theta(B) \epsilon(t)}
+#' \deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(1-B)^{id} (X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B)(1-B)^{id} (X(t) - \mu) = \theta(B) \epsilon(t)}
 #'
 #' where
 #' \itemize{
 #' \item \eqn{\phi(B)}{\phi(B)} represents the short-memory Autoregressive component of order p,
 #' \item \eqn{\theta(B)}{\theta(B)} represents the short-memory Moving Average component of order q,
 #' \item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in general be k of these),
+#' \item \eqn{id} represents the degree of integer differencing.
 #' \item \eqn{X_{t}}{X(t)} represents the observed process,
 #' \item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
 #'       Generally the routines in this package will work best if these have an approximate Gaussian distribution.
@@ -121,8 +122,8 @@ garma<-function(x,
     stop('order parameter must be a 3 integers only.\n')
   if (any(order<0))
     stop('order parameter must consist of positive integers.\n')
-  if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
-    stop('Sorry. Currently only d==0 or d==1 are supported.\n')
+  # if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
+  #   stop('Sorry. Currently only d==0 or d==1 are supported.\n')
   if (k<0)
     stop('k parameter must be a non-negative integer.\n')
   if (order[1]+order[3]+k<=0)
@@ -497,9 +498,12 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   }
 
   if (id>0) {
+    # print(tail(y,n.ahead))
+    # print(round(pred,2))
+    # print(mean(pred))
     if (object$include.drift) pred <- pred + mean(y)
     pred<-diffinv(pred,differences=id,xi=tail(orig_y,id))
-    if (length(pred)>n.ahead) pred <- pred[2:(n.ahead+1)]
+    if (length(pred)>n.ahead) pred <- tail(pred,n.ahead)
     # last_y <- y
     # for (id1 in 1:id) {
     #   if (id1==id) dy <- as.numeric(orig_y)

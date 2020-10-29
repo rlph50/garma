@@ -37,7 +37,7 @@ Note that no mean term is fit if the series is integer differenced.}
 The default is to fit a drift term to the predictions if the process is integer-differenced.}
 
 \item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
-The default (Whittle) will generally return very accurate estimates quite quickly, provided the asumption of a Gaussian
+The default (Whittle) will generally return very accurate estimates quite quickly, provided the assumption of a Gaussian
 distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
 'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
 'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
@@ -89,13 +89,14 @@ for those parameters.
 }
 \details{
 The GARMA model is specified as
-\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B) (X(t) - \mu) = \theta(B) \epsilon(t)}
+\deqn{\displaystyle{\phi(B)\prod_{i=1}^{k}(1-2u_{i}B+B^{2})^{d_{i}}(1-B)^{id} (X_{t}-\mu)= \theta(B) \epsilon _{t}}}{\prod(i=1 to k) (1-2u(i)B+B^2)^d(i) \phi(B)(1-B)^{id} (X(t) - \mu) = \theta(B) \epsilon(t)}
 
 where
 \itemize{
 \item \eqn{\phi(B)}{\phi(B)} represents the short-memory Autoregressive component of order p,
 \item \eqn{\theta(B)}{\theta(B)} represents the short-memory Moving Average component of order q,
 \item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in general be k of these),
+\item \eqn{id} represents the degree of integer differencing.
 \item \eqn{X_{t}}{X(t)} represents the observed process,
 \item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
       Generally the routines in this package will work best if these have an approximate Gaussian distribution.

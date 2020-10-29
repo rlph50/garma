@@ -16,7 +16,7 @@ ggbr_semipara(
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate.}
 
-\item{k}{(int) The number of Gegenabuer frequencies}
+\item{k}{(int) The number of Gegenbauer frequencies}
 
 \item{alpha}{(num)}
 
