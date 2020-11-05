@@ -10,7 +10,7 @@
 #' summary(mdl)
 #' @export
 summary.garma_model<-function(object,...) {
-  .print_garma_model(object,verbose=FALSE)
+  .print_garma_model(object,verbose=TRUE)
 }
 
 #' print a garma_model object.
@@ -25,7 +25,7 @@ summary.garma_model<-function(object,...) {
 #' print(mdl)
 #' @export
 print.garma_model<-function(x,...) {
-  .print_garma_model(x,verbose=TRUE)
+  .print_garma_model(x,verbose=FALSE)
 }
 
 .print_garma_model<-function(mdl,verbose=TRUE) {
@@ -65,5 +65,4 @@ print.garma_model<-function(x,...) {
     cat('\n')
   }
 }
-
 

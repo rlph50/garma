@@ -122,8 +122,6 @@ garma<-function(x,
     stop('order parameter must be a 3 integers only.\n')
   if (any(order<0))
     stop('order parameter must consist of positive integers.\n')
-  # if (order[2]!=0&order[2]!=1) # this restriction exists because the "predict" function cannot handle higher differencing
-  #   stop('Sorry. Currently only d==0 or d==1 are supported.\n')
   if (k<0)
     stop('k parameter must be a non-negative integer.\n')
   if (order[1]+order[3]+k<=0)
@@ -297,7 +295,7 @@ garma<-function(x,
   # check convergence. Unfortunately "solnp" routine uses positive values to indicate an error.
   conv_ok <- TRUE
   if (opt_method[[1]]=='solnp') conv_ok <- (fit$convergence==0)
-  else conv_of <- (fit$convergence>=0)
+  else conv_ok <- (fit$convergence>=0)
 
   if (conv_ok&method!='WLL'&!is.null(hh)) {
     # Next, find the se's for coefficients
@@ -364,7 +362,12 @@ garma<-function(x,
   }
   class(gf) <- 'ggbr_factors'
 
-  # get fitted values and residuals
+  # set up the 'model' list
+  model <- list('phi'=coef[1,substr(colnames(coef),1,2)=='ar'],
+                'theta'=coef[1,substr(colnames(coef),1,2)=='ma'],
+                'Delta'=order[2])
+  if (k>0) model <-c(model, 'ggbr_factors' = list(gf))  # get fitted values and residuals
+
   fitted_and_resid <- .fitted_values(fit$par,params,gf,sigma2)
   fitted <- ts(fitted_and_resid$fitted, start=x_start,frequency=x_freq)
   resid <- ts(fitted_and_resid$residuals, start=x_start,frequency=x_freq)
@@ -377,6 +380,7 @@ garma<-function(x,
             'obj_value'=fit$value,
             'loglik'=loglik,
             'aic'=-2*loglik + 2*(n_coef+1),
+            'model'=model,
             'convergence'=fit$convergence,
             'conv_message'=c(fit$message,message),
             'method'=method,
@@ -393,13 +397,12 @@ garma<-function(x,
             'include.drift'=include.drift,
             'fitted'=fitted,
             'residuals'=resid,
-            fit_par = fit$par,
-            params = params,
+            # 'fit_par' = fit$par,
+            # params = params,
             'm_trunc'=m_trunc)
   if (opt_method[1]=='best') res<-c(res,'opt_method_selected'=fit$best_method)
-  if (k>0) res<-c(res, 'ggbr_factors' = list(gf))
 
-  class(res)<-c('garma_model','arima')
+  class(res) <- 'garma_model'
 
   return(res)
 }
@@ -498,21 +501,9 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   }
 
   if (id>0) {
-    # print(tail(y,n.ahead))
-    # print(round(pred,2))
-    # print(mean(pred))
     if (object$include.drift) pred <- pred + mean(y)
     pred<-diffinv(pred,differences=id,xi=tail(orig_y,id))
     if (length(pred)>n.ahead) pred <- tail(pred,n.ahead)
-    # last_y <- y
-    # for (id1 in 1:id) {
-    #   if (id1==id) dy <- as.numeric(orig_y)
-    #   else dy <- diff(as.numeric(orig_y),differences=(id-id1))
-    #   pred[1] <- pred[1] + as.numeric(dy[length(dy)])
-    #   if (object$include.drift) pred <- pred + mean(last_y)
-    #   pred <- cumsum(pred)
-    #   last_y <- dy
-    # }
   } else pred <- pred + beta0
 
   # Now we have the forecasts, we set these up as a "ts" object
@@ -621,91 +612,6 @@ forecast.garma_model<-function(object,h=1,...) {
 
   return(list(fitted=fitted,residuals=resid))
 }
-
-# .fitted_values<-function(par,params,ggbr_factors) { # Generate fitted values and residuals for GARMA process
-#   y <- as.numeric(params$y)
-#   orig_y <- as.numeric(params$orig_y)
-#   p <- params$p
-#   q <- params$q
-#   id <- params$d
-#   k <- params$k
-#   include.mean <- params$include.mean
-#   method <- params$method
-#
-#   beta0  <- 0
-#   start  <- 1
-#   if (include.mean) {
-#     if (method%in%c('CSS','QML')) {
-#       beta0  <- par[1]
-#       start <- 2
-#     } else beta0 <- mean(y)
-#   }
-#
-#   # skip over Gegenbauer paramaters
-#   start <- start + k*2
-#
-#   y_dash  <- y - beta0
-#   n       <- length(y_dash)
-#   phi_vec <- theta_vec <- 1
-#   if (p>0) phi_vec   <- par[start:(start+p-1)]
-#   if (q>0) theta_vec <- par[(p+start):(length(par))]
-#   if (q==2) theta_vec <- c(0.2357262, -0.2934927)
-#   print('params')
-#   .printf(include.mean)
-#   .printf(p)
-#   .printf(q)
-#   .printf(start)
-#   print(theta_vec)
-#   print(par)
-#   print(" ")
-#
-#   # now we generate polynomial coefficients for MA part to include ggbr factors
-#   # basic tool is pracma::conv which does polynomial multiplication (same as polymul())
-#   if (k>0) {
-#     print(theta_vec)
-#     if (length(theta_vec)>1|theta_vec[1]!=1) theta_vec <- c(1,theta_vec)
-#     print(theta_vec)
-#     for (gf in ggbr_factors) {
-#       gc <- .ggbr.coef(n,gf$fd,gf$u)
-#       theta_vec <- pracma::conv(theta_vec,gc)
-#     }
-#     print(head(theta_vec,10))
-#   }
-#   if (p>0) resid <- rep(0,p) else resid <- numeric(0)
-#   qk <- ifelse(k>0,n,q)
-#   theta_vec_rev <- rev(theta_vec)[1:qk]
-#   flt <- signal::Arma(a=1, b=phi_vec)
-#   for (i in (p+1):n) {
-#     fitted_i <- as.numeric(y_dash[1:(i-1)])
-#     # if (p>0) fitted_i <- stats::filter(fitted_i, filter=phi_vec, method='convolution', sides=1)
-#     if (p>0) fitted_i <- signal::filter(flt,fitted_i)
-#     if (qk>0) {
-#       ma_vec <- tail(c(rep(0,qk),resid),qk)
-#       ma_resid <- sum(theta_vec_rev*ma_vec)
-#       #   if (i<p+3) {
-#       #     .printf(i)
-#       #     .printf(qk)
-#       #     print(head(ma_vec))
-#       #     print(head(theta_vec_rev))
-#       #     .printf(ma_resid)
-#       #   }
-#     } #else ma_resid <- 0
-#     if (p>0) ar_resid <- y_dash[i]-tail(fitted_i,1) else ar_resid<-0
-#     resid <- c(resid,-ma_resid+ar_resid)
-#   }
-#
-#   fitted <- y - resid
-#   if (id>0) {
-#     for (id1 in 1:id) {
-#       if (id1==id) dy <- as.numeric(orig_y)
-#       else dy <- diff(as.numeric(orig_y),differences=(id-id1))
-#       fitted <- dy - c(0,resid)
-#       resid <- dy-fitted
-#     }
-#   }
-#
-#   return(list(residuals=resid,fitted=fitted))
-# }
 
 #' Fitted values
 #'

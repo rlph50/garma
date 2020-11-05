@@ -1,3 +1,9 @@
+# garma 0.9.7
+
+Version 0.9.7 adds the "tsdiag" function for garma models - we just call the base version of tsdiag, so all parameters for that should work. 
+
+Otherwise some redundant code has been removed, and also the restriction that integer differencing be restricted to 1 only.
+
 # garma 0.9.6
 
 Version 0.9.6 implements new functions to more accurately reflect residuals, fitted values and predictions. Some changes have been made to the plotting routines to provide default titles and captions etc. Further some functions like AIC(), logLik(), vcov(), and coef() have been implemented, to provide greater similarity with the standard 'arima' functionality.

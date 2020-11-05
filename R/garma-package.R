@@ -14,9 +14,9 @@
 #' @importFrom lubridate make_date day days_in_month
 #' @importFrom forecast forecast ggtsdisplay
 #' @importFrom Rsolnp solnp gosolnp
-#' @importFrom ggplot2 ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
+#' @importFrom ggplot2 autoplot ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
 #' @importFrom graphics abline lines par plot
-#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise arima
+#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise arima Box.test acf tsdiag
 #' @importFrom utils tail packageVersion head globalVariables
 NULL
 

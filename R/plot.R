@@ -32,7 +32,7 @@ utils::globalVariables(c('.dt','.value','.grp'))
 #' The ggplot function generates a ggplot of actuals and predicted values for a "garma_model" object.
 #' This adds in sensible titles etc as best it can determine.
 #'
-#' @param mdl (garma_model) The garma_model from which to ggplot the values.
+#' @param object (garma_model) The garma_model from which to ggplot the values.
 #' @param h (int) The number of time periods to predict ahead. Default: 24
 #' @param include_fitted (bool) whether to include the 1-step ahead 'fitted' values in the plot. Default: FALSE
 #' @param ... other parameters passed to ggplot.
@@ -43,34 +43,34 @@ utils::globalVariables(c('.dt','.value','.grp'))
 #' data(AirPassengers)
 #' ap  <- as.numeric(diff(AirPassengers,12))
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
-#' ggplot(mdl)
+#' autoplot(mdl)
 #' @export
-ggplot.garma_model<-function(mdl,h=24,include_fitted=FALSE,...) {
+autoplot.garma_model<-function(object,h=24,include_fitted=FALSE,...) {
   # plot forecasts from model
 
-  if (mdl$y_freq>1) { # then we have actual dates not just an index; set it up on x-axis
+  if (object$y_freq>1) { # then we have actual dates not just an index; set it up on x-axis
     by_str <- 'day'
-    if (mdl$y_freq==4) by_str <- 'qtr'
-    if (mdl$y_freq==12) by_str<-'month'
-    idx <- seq(lubridate::make_date(mdl$y_start[1],mdl$y_start[2],1),by=by_str,length.out=(length(mdl$y)+h))
+    if (object$y_freq==4) by_str <- 'qtr'
+    if (object$y_freq==12) by_str<-'month'
+    idx <- seq(lubridate::make_date(object$y_start[1],object$y_start[2],1),by=by_str,length.out=(length(object$y)+h))
     lubridate::day(idx) <- lubridate::days_in_month(idx)
-    cutoff <- lubridate::make_date(mdl$y_end[1],mdl$y_end[2],1)
+    cutoff <- lubridate::make_date(object$y_end[1],object$y_end[2],1)
   } else {
-    idx <- (mdl$y_start[1]):(mdl$y_end[1]+h)
-    cutoff <- mdl$y_end[1]+1
+    idx <- (object$y_start[1]):(object$y_end[1]+h)
+    cutoff <- object$y_end[1]+1
   }
-  titles <- .generate_default_plot_title(mdl,h)
+  titles <- .generate_default_plot_title(object,h)
 
   if (h>0) {
-    fc <- predict.garma_model(mdl,n.ahead=h)
-    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=c(as.numeric(mdl$y),rep(NA,h)))
-    if (include_fitted) fitted <- as.numeric(mdl$fitted)
-    else fitted <- c(rep(NA,length(mdl$fitted)-1),as.numeric(tail(mdl$y,1)))
+    fc <- predict.garma_model(object,n.ahead=h)
+    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=c(as.numeric(object$y),rep(NA,h)))
+    if (include_fitted) fitted <- as.numeric(object$fitted)
+    else fitted <- c(rep(NA,length(object$fitted)-1),as.numeric(tail(object$y,1)))
     df2 <- data.frame(.dt=idx,.grp='Forecasts',.value=c(fitted,as.numeric(fc$pred)))
     df <- rbind(df1,df2)
   } else {
-    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=as.numeric(mdl$y))
-    df2 <- data.frame(.dt=idx,.grp='Fitted',.value=as.numeric(mdl$fitted))
+    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=as.numeric(object$y))
+    df2 <- data.frame(.dt=idx,.grp='Fitted',.value=as.numeric(object$fitted))
     df <- rbind(df1,df2)
   }
 
