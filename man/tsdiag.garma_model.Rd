@@ -18,7 +18,7 @@ None. Diagnostics are generated.
 }
 \description{
 Produces diagnostic plots of the model fit.
-This function uses 'tsdiag' of the "stats" package.
+This function is copied from stats::tsdiag but modifies the fit_df for the Ljung-Box test for use with garma models.
 }
 \examples{
 data(AirPassengers)

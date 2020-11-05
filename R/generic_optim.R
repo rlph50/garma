@@ -3,7 +3,7 @@
   nlopt_control <- list(maxeval=control[['max_eval']],ftol_rel=control[['tol']],xtol_rel=0)
   fit <- save_fit <- list(value=Inf,convergence= -999,par=initial_pars,pars=initial_pars) # default value
   if (opt_method=='solnp'&!is.null(ineq_fcn)) {
-    tryCatch(fit <- Rsolnp::solnp(pars=initial_pars,
+    fit <- tryCatch(Rsolnp::solnp(pars=initial_pars,
                                   fun=fcn,
                                   LB=lb,
                                   UB=ub,
@@ -12,8 +12,7 @@
                                   ineqUB=ineq_ub,
                                   control=control,
                                   params=params),
-             warning=function(cond) {fit$message<-cond},
-             error=function(cond) {fit<-save_fit;fit$message<-cond}
+             error=function(cond) save_fit
     )
     fit$par <- fit$pars  # copy across for consistency with other optimisation methods
   }
@@ -32,51 +31,51 @@
   }
 
   if (opt_method=='slsqp'&!is.null(ineq_fcn)) {
-    tryCatch(fit <- nloptr::slsqp(x0=initial_pars, fn=fcn, lower=lb, upper=ub, hin=ineq_fcn, params=params, control=nlopt_control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(nloptr::slsqp(x0=initial_pars, fn=fcn, lower=lb, upper=ub, hin=ineq_fcn, params=params, control=nlopt_control),
+             error=function(cond) save_fit
     )
   }
   if (opt_method=='slsqp'&is.null(ineq_fcn)) {
-    tryCatch(fit <- nloptr::slsqp(x0=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(nloptr::slsqp(x0=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
+             error=function(cond) save_fit
     )
   }
 
   if (opt_method=='cobyla'&!is.null(ineq_fcn)) {
-    tryCatch(fit <- nloptr::cobyla(x0=initial_pars, fn=fcn, lower=lb, upper=ub, hin=ineq_fcn, params=params, control=nlopt_control),
-           error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(nloptr::cobyla(x0=initial_pars, fn=fcn, lower=lb, upper=ub, hin=ineq_fcn, params=params, control=nlopt_control),
+           error=function(cond) save_fit
     )
   }
   if (opt_method=='cobyla'&is.null(ineq_fcn)) {
-    tryCatch(fit <- nloptr::cobyla(x0=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(nloptr::cobyla(x0=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
+             error=function(cond) save_fit
     )
   }
 
   if (opt_method=='directL') {
-    tryCatch(fit <- nloptr::directL(fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(nloptr::directL(fn=fcn, lower=lb, upper=ub, params=params, control=nlopt_control),
+             error=function(cond) save_fit
     )
   }
 
   if (opt_method=='BBoptim') {
-    tryCatch(fit <- BB::BBoptim(par=initial_pars, fn=fcn, lower=lb, upper=ub, control=control, params=params,quiet=TRUE),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(BB::BBoptim(par=initial_pars, fn=fcn, lower=lb, upper=ub, control=control, params=params,quiet=TRUE),
+             error=function(cond) save_fit
     )
   }
   if (opt_method=='psoptim') {
-    tryCatch(fit <-pso::psoptim(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(pso::psoptim(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
+             error=function(cond) save_fit
     )
   }
   if (opt_method=='hjkb') {
-    tryCatch(fit <- dfoptim::hjkb(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(dfoptim::hjkb(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
+             error=function(cond) save_fit
     )
   }
   if (opt_method=='nmkb') {
-    tryCatch(fit <- dfoptim::nmkb(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
-             error=function(cond) {fit<-save_fit}
+    fit <- tryCatch(dfoptim::nmkb(par=initial_pars, fn=fcn, lower=lb, upper=ub, params=params, control=control),
+             error=function(cond) save_fit
     )
   }
 

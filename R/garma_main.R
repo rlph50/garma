@@ -193,7 +193,7 @@ garma<-function(x,
 
   if (k>0) {# initial parameter estimates for Gegenbauer factors
     gf <- ggbr_semipara(y,k=k,min_freq=min_freq,max_freq=max_freq)
-    for (k1 in 1:k) {
+    for (k1 in seq_len(k)) {
       n_pars    <- n_pars+2
       gf1 <- gf$ggbr_factors[[k1]]
       start_u <- gf1$u
@@ -353,7 +353,7 @@ garma<-function(x,
   if (k>0) {
     if (include.mean) start_idx <- 2
     else start_idx <- 1
-    for (k1 in 1:k) {
+    for (k1 in seq_len(k)) {
       u <- coef[1,start_idx]
       gf1 <- list(u=u, f=acos(u)/(2*pi), fd=coef[1,start_idx+1], m=NA, f_idx=NA)
       gf <- c(gf,list(gf1))
@@ -363,9 +363,17 @@ garma<-function(x,
   class(gf) <- 'ggbr_factors'
 
   # set up the 'model' list
+  mean_y<-beta0<-0
+  if (include.mean&order[2]==0) {
+    mean_y <- mean(y)
+    if (colnames(coef)[1]=='intercept') beta0  <- coef[1]
+    else beta0 <- mean_y
+  }
+
   model <- list('phi'=coef[1,substr(colnames(coef),1,2)=='ar'],
                 'theta'=coef[1,substr(colnames(coef),1,2)=='ma'],
-                'Delta'=order[2])
+                'Delta'=order[2],
+                'beta0'=beta0)
   if (k>0) model <-c(model, 'ggbr_factors' = list(gf))  # get fitted values and residuals
 
   fitted_and_resid <- .fitted_values(fit$par,params,gf,sigma2)
@@ -444,23 +452,29 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   n <- length(orig_y)
   resid  <- as.numeric(object$resid)
 
-  mean_y <- beta0  <- 0
-  start  <- 1
-  if (object$include.mean&id==0) {
-    mean_y <- mean(y)
-    if (names(object$coef[1,])[1]=='intercept') {
-      beta0  <- coef[1]
-      start  <- 2
-    } else beta0 <- mean_y
-  }
-  # jump over the ggbr params; we get those separately.
-  start <- start + (k*2)
+  # mean_y <- beta0  <- 0
+  # start  <- 1
+  # if (object$include.mean&id==0) {
+  #   mean_y <- mean(y)
+  #   if (names(object$coef[1,])[1]=='intercept') {
+  #     beta0  <- coef[1]
+  #     start  <- 2
+  #   } else beta0 <- mean_y
+  # }
+  # # jump over the ggbr params; we get those separately.
+  # start <- start + (k*2)
+  #
+  # phi_vec <- theta_vec <- ggbr_inv_vec <-  1
+  # if (p>0) phi_vec   <- c(1,-coef[start:(start+p-1)])
+  # if (q>0) theta_vec <- c(1,-coef[(p+start):(length(coef))])
 
-  phi_vec <- theta_vec <- ggbr_inv_vec <-  1
-  if (p>0) phi_vec   <- c(1,-coef[start:(start+p-1)])
-  if (q>0) theta_vec <- c(1,-coef[(p+start):(length(coef))])
+  mean_y <- beta0 <- object$model$beta0
+  phi_vec <- c(1,-object$model$phi)
+  theta_vec <- c(1,-object$model$theta)
+  ggbr_inv_vec <-  1
+
   if (k>0) {
-    for (gf in object$ggbr_factors) ggbr_inv_vec <- pracma::conv(ggbr_inv_vec,.ggbr.coef(n+n.ahead+3,-gf$fd,gf$u))
+    for (gf in object$model$ggbr_factors) ggbr_inv_vec <- pracma::conv(ggbr_inv_vec,.ggbr.coef(n+n.ahead+3,-gf$fd,gf$u))
     # Next line multiplies and divides the various polynomials to get psi = theta * delta * ggbr / phi
     # pracma::conv gives polynomial multiplication, and pracma::deconv gives polynomial division.
     # we don't bother with the remainder. For non-ggbr models this may be a mistake.

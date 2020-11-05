@@ -1,14 +1,22 @@
 # garma 0.9.7
 
-Version 0.9.7 adds the "tsdiag" function for garma models - we just call the base version of tsdiag, so all parameters for that should work. 
+Version 0.9.7 adds the "tsdiag" function for garma models - we just call the base version of tsdiag, so all parameters for that should work.
+
+The override of the ggplot function for garma models has been removed as this was not standard - the correct way to do this is 'autoplot' 
+so now the autoplot function has the ability to generate forecasts and plot them.
 
 Otherwise some redundant code has been removed, and also the restriction that integer differencing be restricted to 1 only.
 
 # garma 0.9.6
 
-Version 0.9.6 implements new functions to more accurately reflect residuals, fitted values and predictions. Some changes have been made to the plotting routines to provide default titles and captions etc. Further some functions like AIC(), logLik(), vcov(), and coef() have been implemented, to provide greater similarity with the standard 'arima' functionality.
+Version 0.9.6 implements new functions to more accurately reflect residuals, fitted values and predictions. 
+Some changes have been made to the plotting routines to provide default titles and captions etc. 
+Further some functions like AIC(), logLik(), vcov(), and coef() have been implemented, to provide 
+greater similarity with the standard 'arima' functionality.
 
-Finally given the trouble with forecasting with integer differencing > 1, there is a new restriction in the code to restrict the integer differencing to be either 0 or 1. This does not affect the fractional differencing component of the models. If the problems with forecasting higher integer differencing can be resolved, this restriction will be lifted in the future.
+Finally given the trouble with forecasting with integer differencing > 1, there is a new restriction in the code to restrict
+the integer differencing to be either 0 or 1. This does not affect the fractional differencing component of the models. 
+If the problems with forecasting higher integer differencing can be resolved, this restriction will be lifted in the future.
 
 In particular please note that the 'predict'/'forecast' function(s) now use the algorithm of (2009) Godet, F
 "Linear prediction of long-range dependent time series", ESAIM: PS 13 115-134. DOI: 10.1051/ps:2008015.

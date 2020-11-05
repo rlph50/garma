@@ -24,7 +24,7 @@
 
   u <- c()
   fd <- c()
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
     u     <- c(u,par[start])
     fd    <- c(fd,par[start+1])
     start <- start+2
@@ -42,8 +42,6 @@
   }
 
   ret <- sum(eps^2,na.rm=TRUE)
-  if (!is.finite(ret)|is.na(ret)) ret<-(1e500)
 
-  #return(0.5*log(ret))
   return(ret)
 }

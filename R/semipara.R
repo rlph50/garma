@@ -24,20 +24,20 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5
   peak_idx_list <- c()
   peaks <- c()
   if (method=='gsp')
-    for (k1 in 1:k) {
+    for (k1 in seq_len(k)) {
       r <- .gsp(x,alpha,peak_idx_list,min_freq,max_freq)
       peaks <- c(peaks,list(r))
       peak_idx_list <- c(peak_idx_list,r$f_idx)
     }
   if (method=='lpr')
-    for (k1 in 1:k) {
+    for (k1 in seq_len(k)) {
       r <- .lpr(x,alpha,peak_idx_list,min_freq,max_freq)
       peaks <- c(peaks,list(r))
       peak_idx_list <- c(peak_idx_list,r$f_idx)
     }
   # look for repeated peaks. Shouldn't happen but sometimes does
   note<-''
-  for (i in 1:(length(peaks)-1)) {
+  for (i in seq_len(length(peaks)-1)) {
     if (i>=length(peaks)) break;
     r1 <- peaks[[i]]
     for (j in length(peaks):(i+1)) {

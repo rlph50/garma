@@ -11,13 +11,13 @@
   q  <- params$q
   k  <- params$k
 
-  n_freq<-length(ss$freq)#-1
+  n_freq<-length(ss$freq)
   freq<-ss$freq[1:n_freq]
   spec<-ss$spec[1:n_freq]
 
   start=1
   u <- fd <- c()
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
       u <- c(u,par[start])
       fd <- c(fd,par[start+1])
       start<-start+2
@@ -32,7 +32,7 @@
   if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
 
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
     u_k  <- u[k1]
     fd_k <- fd[k1]
     spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u_k)^2))^fd_k
@@ -52,13 +52,13 @@
   q  <- params$q
   k  <- params$k
 
-  n_freq<-length(ss$freq)#-1
+  n_freq<-length(ss$freq)
   freq<-ss$freq[1:n_freq]
   spec<-ss$spec[1:n_freq]
 
   start=1
   u <- fd <- c()
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
     u <- c(u,par[start])
     fd <- c(fd,par[start+1])
     start<-start+2
@@ -73,7 +73,7 @@
   if (q>0) mod_theta <- .a_fcn(theta_vec,freq)
   spec_den_inv <- mod_phi / mod_theta    # Inverse of spectral density
 
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
     u_k  <- u[k1]
     fd_k <- fd[k1]
     spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u_k)^2))^fd_k

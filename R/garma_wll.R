@@ -18,14 +18,9 @@
   spec<-ss$spec[1:n_freq]
 
   start=1
-  # if (k==1) {
-  #   u     <- par[start]
-  #   fd    <- par[start+1]
-  #   start <- start+2
-  # }
   u <- c()
   fd <- c()
-  if (k>0) for (k1 in 1:k) {
+  for (k1 in seq_len(k)) {
     u     <- c(u,par[start])
     fd    <- c(fd,par[start+1])
     start <- start+2
@@ -40,14 +35,12 @@
   if (q>0) mod_theta <- .a_fcn(theta_vec,ss$freq)
 
   spec_den_inv <- 2.0*pi / sigma2 * mod_phi / mod_theta    # Inverse of spectral density
-  if (k>0) for (k1 in 1:k) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u[k1])^2))^fd[k1]
+  for (k1 in seq_len(k)) spec_den_inv <- spec_den_inv * (4*((cos_2_pi_f-u[k1])^2))^fd[k1]
 
   spec_den_inv[is.infinite(spec_den_inv)] <- NA #1.0e500
   spec_den_inv[spec_den_inv<=0] <- NA
-  #print(spec_den_inv)
   I_f <- spec*spec_den_inv
   res <- sum((log(I_f))^2,na.rm=TRUE)
-  #cat(sprintf("ret %.4f\n",res))
   return(res)
 }
 .wll_d_se<-function(u,ss) {
