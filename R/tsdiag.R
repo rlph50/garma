@@ -31,7 +31,7 @@ tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
   n_param <- sum(object$order)+object$k*2
   if (n_param<1) n_param<-1
   if (n_param>nlag) nlag <- n_param+nlag
-  for(i in n_param:nlag) pval[i] <- Box.test(rs, i, type="Ljung-Box", fitdf=n_param)$p.value
+  for(i in 1L:nlag) pval[i] <- Box.test(rs, i, type="Ljung-Box", fitdf=min(i,n_param))$p.value
   plot(1L:nlag, pval, xlab = "lag", ylab = "p value", ylim = c(0,1),
        main = "p values for Ljung-Box statistic")
   abline(h = 0.05, lty = 2, col = "blue")

@@ -53,7 +53,7 @@ print.garma_model<-function(x,...) {
     print.default(mdl$coef, print.gap=2, digits=4)
     cat('\n')
 
-    if (mdl$k>0) print(mdl$ggbr_factors)
+    if (mdl$k>0) print(mdl$model$ggbr_factors)
 
     if (mdl$sigma2>0) {
       cat(sprintf('\n\nsigma^2 estimated as %0.4f',mdl$sigma2))
