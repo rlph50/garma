@@ -25,10 +25,10 @@ tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
   stdres <- rs/sqrt(object$sigma2)
   plot(stdres, type = "h", main = "Standardized Residuals", ylab = "")
   abline(h = 0)
-  acf(object$residuals, plot = TRUE, main = "ACF of Residuals", na.action = na.pass)
+  acf(as.numeric(object$residuals), plot = TRUE, main = "ACF of Residuals", na.action = na.pass)
   nlag <- gof.lag
   pval <- rep(NA,nlag)
-  n_param <- sum(object$order)+object$k*2
+  n_param <- object$order[1]+object$order[3]+object$k*2
   if (n_param<1) n_param<-1
   if (n_param>nlag) nlag <- n_param+nlag
   for(i in 1L:nlag) pval[i] <- Box.test(rs, i, type="Ljung-Box", fitdf=min(i,n_param))$p.value

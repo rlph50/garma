@@ -24,16 +24,16 @@ Imports:
     lubridate,
     crayon,
     utils,
-    FKF,
-    nloptr
+    nloptr,
+    BB,
+    GA,
+    dfoptim,
+    pso,
+    FKF
 Suggests:
     longmemo,
     yardstick,
     tidyverse,
-    BB,
-    GA,
-    pso,
-    dfoptim,
     testthat,
     knitr,
     rmarkdown

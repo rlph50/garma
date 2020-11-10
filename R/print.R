@@ -47,7 +47,7 @@ print.garma_model<-function(x,...) {
   if (mdl$convergence<0) cat(sprintf('Model did not converge.\n\n',mdl$conv_message))
   else {
     if (mdl$convergence>0)
-      cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (%d)\n\n',
+      cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (code %d)\n\n',
                   ifelse(mdl$opt_method=='best',mdl$opt_method_selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
     cat('Coefficients:\n')
     print.default(mdl$coef, print.gap=2, digits=4)

@@ -1,9 +1,16 @@
 # garma 0.9.7
 
-Version 0.9.7 adds the "tsdiag" function for garma models - we just call the base version of tsdiag, so all parameters for that should work.
+Version 0.9.7 adds the "tsdiag" function for garma models - this is essentially a copy of the base stats 'tsdiag'
+but the fitdf for the Ljung-Box test is set to p+q+k*2.
 
-The override of the ggplot function for garma models has been removed as this was not standard - the correct way to do this is 'autoplot' 
-so now the autoplot function has the ability to generate forecasts and plot them.
+There was a bug with the standard errors which resulted in Nan being returned for some parameters. This has been fixed.
+
+The override of the ggplot function for garma models has been removed as this was not standard - the correct way to do this
+is 'autoplot' so now the autoplot function has the ability to generate forecasts and plot them.
+
+A new optimisation method has been added for the "garma" function - this is a genetic algorithm from package GA.
+It can be used by specifying opt_method='ga'. For now please treat this as experimental - it has given some interesting
+results on some standard problems and these probably need to be checked further before more general use.
 
 Otherwise some redundant code has been removed, and also the restriction that integer differencing be restricted to 1 only.
 

@@ -8,6 +8,10 @@
 #' @author Richard Hunt
 #'
 #' @importFrom nloptr nloptr cobyla directL lbfgs mma auglag
+#' @importFrom BB BBoptim
+#' @importFrom pso psoptim
+#' @importFrom dfoptim hjkb nmkb
+#' @importFrom GA de
 #' @importFrom pracma pinv hessian conv deconv
 #' @importFrom signal Arma filter
 #' @importFrom zoo zoo index
@@ -16,7 +20,7 @@
 #' @importFrom Rsolnp solnp gosolnp
 #' @importFrom ggplot2 autoplot ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
 #' @importFrom graphics abline lines par plot
-#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise arima Box.test acf tsdiag na.pass
+#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise arima Box.test acf tsdiag na.pass optim
 #' @importFrom utils tail packageVersion head globalVariables
 NULL
 

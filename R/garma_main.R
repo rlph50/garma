@@ -138,8 +138,9 @@ garma<-function(x,
     stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.\n')
 
   if (is.null(opt_method)) {
-    if (k>=2) opt_method <- 'solnp'
-    else opt_method <- c('directL','solnp')
+    opt_method <- c('directL','solnp')
+    # if (k>=2) opt_method <- 'solnp'
+    # else opt_method <- c('directL','solnp')
   }
 
   for (om in opt_method) {
@@ -177,18 +178,14 @@ garma<-function(x,
   pars     <- numeric(0)
   lb       <- numeric(0)
   ub       <- numeric(0)
-  lb_finite<- numeric(0)
-  ub_finite<- numeric(0)
 
   mean_methods <- c('QML','CSS')
   if (include.mean&method%in%mean_methods) {
     n_pars    <- n_pars+1
     mean_y    <- mean(y)
     pars      <- c(pars,mean_y)
-    lb_finite <- c(lb_finite,ifelse(mean_y<0, 2*mean_y, -2*mean_y))
-    ub_finite <- c(ub_finite,ifelse(mean_y<0,-2*mean_y,  2*mean_y))
-    lb        <- c(lb,-Inf)
-    ub        <- c(ub,Inf)
+    lb <- c(lb,ifelse(mean_y<0, 2*mean_y, -2*mean_y))
+    ub <- c(ub,ifelse(mean_y<0,-2*mean_y,  2*mean_y))
   }
 
   if (k>0) {# initial parameter estimates for Gegenbauer factors
@@ -213,8 +210,6 @@ garma<-function(x,
       pars      <- c(pars,start_u,start_d)
       lb        <- c(lb,min_u,ifelse(allow_neg_d,-1,0))
       ub        <- c(ub,max_u,0.5)
-      lb_finite <- c(lb_finite,min_u,ifelse(allow_neg_d,-1,0))
-      ub_finite <- c(ub_finite,max_u,0.5)
     }
   }
 
@@ -233,21 +228,13 @@ garma<-function(x,
     if (p==1&q==0) { # special limits for AR(1)
       lb<-c(lb,-1)
       if (method%in%methods_to_estimate_var) lb <- c(lb, 1e-10)
-      lb_finite <- c(lb_finite,-1)
-      if (method%in%methods_to_estimate_var) lb_finite <- c(lb_finite, 1e-10)
       ub<-c(ub,1)
-      if (method%in%methods_to_estimate_var) ub<-c(ub,Inf)
-      ub_finite <- c(ub_finite,1)
-      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*stats::var(y))
+      if (method%in%methods_to_estimate_var) ub<-c(ub,2*stats::var(y))
     } else {
-      lb<- c(lb,rep(-Inf,p+q))
+      lb <- c(lb,rep(-10,p+q))
       if (method%in%methods_to_estimate_var) lb <- c(lb,1e-10)
-      ub<- c(ub,rep(Inf,p+q))
-      if (method%in%methods_to_estimate_var) ub <- c(ub,Inf)
-      lb_finite <- c(lb_finite,rep(-10,p+q))
-      if (method%in%methods_to_estimate_var) lb_finite <- c(lb_finite,1e-10)
-      ub_finite <- c(ub_finite,rep(10,p+q))
-      if (method%in%methods_to_estimate_var) ub_finite <- c(ub_finite,2*stats::var(y))
+      ub <- c(ub,rep(10,p+q))
+      if (method%in%methods_to_estimate_var) ub <- c(ub,2*stats::var(y))
     }
   }
 
@@ -260,15 +247,17 @@ garma<-function(x,
   message <- c()
 
   # Optimisation functions for each method
-  fcns <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
+  fcns  <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
+  grads <- list('CSS'=NULL,'Whittle'=.whittle.ggbr.grad,'QML'=NULL,'WLL'=NULL)
 
   if (opt_method[[1]]=='best') {
-    fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, control=control)
+    fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], grad=grads[[method]],
+                       lb=lb, ub=ub, params=params, control=control)
   } else {
-      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
-                                   lb=lb, ub=ub, lb_finite=lb_finite, ub_finite=ub_finite, params=params, control=control)
+      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]], grad=grads[[method]],
+                                 lb=lb, ub=ub, params=params, control=control)
   }
-  if (fit$convergence== -999) stop('Failed to converge.')
+  if (fit$convergence== -999) stop('ERROR: Failed to converge.')
 
   hh <- fit$hessian
 
@@ -297,33 +286,33 @@ garma<-function(x,
   if (opt_method[[1]]=='solnp') conv_ok <- (fit$convergence==0)
   else conv_ok <- (fit$convergence>=0)
 
+  vcov1 <- matrix(nrow=length(fit$par),ncol=length(fit$par))  # default
   if (conv_ok&method!='WLL'&!is.null(hh)) {
     # Next, find the se's for coefficients
     start<-1
     se<-c()   # default to set this up in the right environment
     # next check the hessian
     h_inv_diag <- diag(inv_hessian <- pracma::pinv(hh))
-    if (!any(h_inv_diag<0)) { # if hessian doesn't look valid then... generate another one
+    if (any(h_inv_diag<0)) { # if hessian doesn't look valid then... generate another one
       hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
       h_inv_diag <- diag(inv_hessian <- pracma::pinv(hh))
     }
     if (method=='Whittle') {
       se <- suppressWarnings(sqrt(2*pi*h_inv_diag)) #var(y)/length(y) *
-      vcov <- 2*pi*inv_hessian
+      vcov1 <- 2*pi*inv_hessian
     }
     if (method=='CSS') {
       se <- suppressWarnings(sqrt(h_inv_diag*sigma2*2))
-      vcov <- inv_hessian*2*sigma2
+      vcov1 <- inv_hessian*2*sigma2
     }
     if (method=='QML') {
       se <- suppressWarnings(sqrt(h_inv_diag*length(y)))
-      vcov <- inv_hessian*length(y)
+      vcov1 <- inv_hessian*length(y)
     }
   }
   if (method=='WLL') {
     se<-rep(NA,length(par))
     if (k==1) se[2] <- .wll_d_se(fit$par[1],ss)  # result only holds for k=1
-    vcov <- matrix(nrow=length(fit$par),ncol=length(fit$par))
   }
   nm<-list()
   if (include.mean) nm <- c(nm,'intercept')
@@ -346,7 +335,7 @@ garma<-function(x,
   coef <- t(matrix(c(temp_coef,temp_se),nrow=n_coef))
   colnames(coef) <- nm
   rownames(coef) <- c('','s.e.')
-  colnames(vcov) <- rownames(vcov) <- tail(nm,nrow(vcov))
+  colnames(vcov1) <- rownames(vcov1) <- tail(nm,nrow(vcov1))
 
   # build a ggbr_factors object
   gf <- list()
@@ -383,7 +372,7 @@ garma<-function(x,
   res<-list('call' = match.call(),
             'series' = deparse(match.call()$x),
             'coef'=coef,
-            'var.coef'=vcov,
+            'var.coef'=vcov1,
             'sigma2'=sigma2,
             'obj_value'=fit$value,
             'loglik'=loglik,

@@ -19,6 +19,25 @@
   return( (1+cos_sum)^2+sin_sum^2)
 }
 
+.a_fcn_cos<-function(a_vec,freq){
+  # this is a utility function used to find the short-memory spectral density.
+  n_freq <- length(freq)
+  cos_sum <- rep(0.0,n_freq)
+  a_len<-length(a_vec)
+  for (i in 1:a_len) cos_sum <- cos_sum + a_vec[i]*cos(2*i*pi*freq)
+
+  return(1+cos_sum)
+}
+.a_fcn_sin<-function(a_vec,freq){
+  # this is a utility function used to find the short-memory spectral density.
+  n_freq <- length(freq)
+  sin_sum <- rep(0.0,n_freq)
+  a_len<-length(a_vec)
+  for (i in 1:a_len) sin_sum <- sin_sum + a_vec[i]*sin(2*i*pi*freq)
+
+  return(sin_sum)
+}
+
 .getPackageVersion<-function(pkgname) {
   return(paste0(crayon::black("\n\nPackage "),crayon::blue(pkgname),': ',crayon::black(utils::packageVersion('garma')),'\n'))
 }
