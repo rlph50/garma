@@ -10,13 +10,12 @@ garma(
   order = list(0, 0, 0),
   k = 1,
   include.mean = (order[2] == 0),
-  include.drift = (order[2] > 0),
+  include.drift = (order[2] == 1),
   method = "Whittle",
-  allow_neg_d = FALSE,
+  d_lim = c(0, 0.5),
+  freq_lim = c(0, 0.5),
   opt_method = NULL,
   m_trunc = 50,
-  min_freq = 0,
-  max_freq = 0.5,
   control = NULL
 )
 }
@@ -44,8 +43,12 @@ distribution is even approximately correct, and is probably the method of choice
 'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.}
 
-\item{allow_neg_d}{(bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
-of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.}
+\item{d_lim}{(list) the limits for the d parameter. The default is c(0,0.5), which restricts the model to be stationary.
+However sometimes it is desirable to understand what the unrestricted value might be.}
+
+\item{freq_lim}{(list) the limits for the frequencies to be searched for Gegenbauer factors.
+When searching for Gegenbauer peaks, when there is an AR(1) component, the peaks corresponding to the AR(1)
+can be higher than the Gegenbauer peaks. Setting these limits to c(0.05,0.45) or similar can help the routine find the correct optima.}
 
 \item{opt_method}{(character) This names the optimisation method used to find the parameter estimates.
 This may be a list of methods, in which case the methods are applied in turn,
@@ -57,22 +60,18 @@ Supported algorithms include:
     \item cobyla algorithm in package nloptr
     \item directL algorithm in package nloptr
     \item BBoptim from package BB
-    \item psoptim from package pso
+    \item psoptim from package pso - Particle Swarm algorithm
     \item hjkb from dfoptim package
     \item nmkb from dfoptim package
     \item solnp from Rsolnp package
     \item gosolnp from Rsolnp package
+    \item ga from package GA - a Genetic Algorithm
     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
     particularly for the 'CSS' method.
     }
 Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.}
 
 \item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
-
-\item{min_freq}{(num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
-AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.}
-
-\item{max_freq}{(num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.}
 
 \item{control}{(list) list of optimisation routine specific values.}
 }

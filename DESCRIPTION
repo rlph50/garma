@@ -29,7 +29,8 @@ Imports:
     GA,
     dfoptim,
     pso,
-    FKF
+    FKF,
+    tswge
 Suggests:
     longmemo,
     yardstick,

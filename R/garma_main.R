@@ -37,9 +37,13 @@
 #'     'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
 #'     'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 #'     However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.
-#' @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
-#'     of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.
-## @param maxeval (int) the maximum function eveluations to be allowed during each optimisation.
+## @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
+##     of the Gegenbauer term is allowed. This can be set to FALSE (the default) to force the routine to find a positive value.
+#' @param d_lim (list) the limits for the d parameter. The default is c(0,0.5), which restricts the model to be stationary.
+#'        However sometimes it is desirable to understand what the unrestricted value might be.
+#' @param freq_lim (list) the limits for the frequencies to be searched for Gegenbauer factors.
+#' When searching for Gegenbauer peaks, when there is an AR(1) component, the peaks corresponding to the AR(1)
+#' can be higher than the Gegenbauer peaks. Setting these limits to c(0.05,0.45) or similar can help the routine find the correct optima.
 #' @param opt_method (character) This names the optimisation method used to find the parameter estimates.
 #' This may be a list of methods, in which case the methods are applied in turn,
 #' each using the results of the previous one as the starting point for the next. The default is to use c('directL', 'solnp') when k<2 and 'solnp' when k>=2. The
@@ -50,19 +54,20 @@
 #'     \item cobyla algorithm in package nloptr
 #'     \item directL algorithm in package nloptr
 #'     \item BBoptim from package BB
-#'     \item psoptim from package pso
+#'     \item psoptim from package pso - Particle Swarm algorithm
 #'     \item hjkb from dfoptim package
 #'     \item nmkb from dfoptim package
 #'     \item solnp from Rsolnp package
 #'     \item gosolnp from Rsolnp package
+#'     \item ga from package GA - a Genetic Algorithm
 #'     \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
 #'     particularly for the 'CSS' method.
 #'     }
 #' Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.
 #' @param m_trunc Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.
-#' @param min_freq (num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
-#' AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.
-#' @param max_freq (num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.
+## @param min_freq (num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
+## AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.
+## @param max_freq (num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.
 #' @param control (list) list of optimisation routine specific values.
 #' @return An S3 object of class "garma_model".
 #'
@@ -86,14 +91,12 @@ garma<-function(x,
                 order=list(0,0,0),
                 k=1,
                 include.mean=(order[2]==0),
-                include.drift=(order[2]>0),
+                include.drift=(order[2]==1),
                 method='Whittle',
-                allow_neg_d=FALSE,
-                # maxeval=10000,
+                d_lim=c(0,0.5),
+                freq_lim=c(0,0.5),
                 opt_method=NULL,
                 m_trunc=50,
-                min_freq=0,
-                max_freq=0.5,
                 control=NULL) {
 
   ## Start of "garma" function logic.
@@ -152,9 +155,13 @@ garma<-function(x,
       stop(sprintf('Package %s is required to use method %s\n',optimisation_packages[[om]],om))
 
   }
+  # check d_lim
+  if (!is.numeric(d_lim)|length(d_lim)!=2|d_lim[1]>d_lim[2]) {
+    stop(cat('parameter d_lim should be a list of 2 numerics, Eg c(0,0.5) and the minimum should be <= maximum.\n'))
+  }
   # check min_freq and max_freq
-  if (!is.numeric(min_freq)|!is.numeric(max_freq)|min_freq<0|min_freq>=0.5|max_freq<=0|max_freq>0.5|min_freq>=max_freq)
-    stop('min_freq and max_freq must be numeric and between 0 and 0.5 and min_freq<max_freq.\n')
+  if (!is.numeric(freq_lim)|length(freq_lim)!=2|freq_lim[1]<0|freq_lim[2]>0.5|freq_lim[1]>freq_lim[2])
+    stop('freq_lim must be numeric and between 0 and 0.5 and the minimum should be <= maximum.\n')
 
   if (missing(control)|is.null(control)) control <- list(tol=1e-15,maxeval=10000,max_eval=10000,maxit=10000,trace=0,delta=1e-10)
 
@@ -165,13 +172,28 @@ garma<-function(x,
   q=as.integer(order[3])
   storage.mode(x) <- 'double'
 
-  if (d>0) y <- diff(x,differences=d) else y <- x
+  # drift term
+  if (include.drift) {
+    drift_term <- 1:length(x)
+    lm1 <- stats::lm(as.numeric(x)~1+drift_term)
+    lm_coef <- stats::coef(lm1)
+    drift_const <- lm_coef[1]
+    drift<-lm_coef[2]
+    drift_se <- summary(lm1)$coef[2,2]
+    drift_const_se <- summary(lm1)$coef[1,2]
+    x1<-as.numeric(stats::residuals(lm1))+lm_coef[1]
+  } else {
+    x1 <- x
+    drift <- 0
+    drift_const <- 0
+    drift_se<-0
+    drift_const_se <- 0
+  }
+
+  if (d>0) y <- diff(x1,differences=d) else y <- x1
   mean_y <- mean(y)
   sd_y   <- stats::sd(y)
-  # ss<-stats::spectrum((y-mean_y)/sd_y,plot=FALSE,detrend=FALSE,demean=FALSE,method='pgram',taper=0,fast=FALSE)
-  no_scaling <- TRUE
-  if (no_scaling) ss<-stats::spectrum((y-mean_y),plot=FALSE,detrend=TRUE,demean=TRUE,method='pgram',taper=0,fast=FALSE)
-  else ss<-stats::spectrum((y-mean_y)/sd_y,plot=FALSE,detrend=TRUE,demean=TRUE,method='pgram',taper=0,fast=FALSE)
+  ss<-stats::spectrum(as.numeric(y-mean_y),plot=FALSE,detrend=TRUE,demean=TRUE,method='pgram',taper=0,fast=FALSE)
 
   # Now set up params and lb (lower bounds) and ub (upper bounds)
   n_pars   <- 0
@@ -189,27 +211,23 @@ garma<-function(x,
   }
 
   if (k>0) {# initial parameter estimates for Gegenbauer factors
-    gf <- ggbr_semipara(y,k=k,min_freq=min_freq,max_freq=max_freq)
+    gf <- ggbr_semipara(y,k=k,min_freq=freq_lim[1],max_freq=freq_lim[2])
     for (k1 in seq_len(k)) {
       n_pars    <- n_pars+2
       gf1 <- gf$ggbr_factors[[k1]]
       start_u <- gf1$u
       start_d <- gf1$fd
 
-      max_u <- cos(2*pi*min_freq)
-      min_u <- cos(2*pi*max_freq)
+      max_u <- cos(2*pi*freq_lim[1])
+      min_u <- cos(2*pi*freq_lim[2])
       #params
       if (start_u< min_u|start_u > max_u) start_u <- (min_u+max_u)/2
-      if (start_d>=0.5)  start_d <- 0.49
-      if (allow_neg_d) {
-        if (start_d<= -0.5) start_d<- -0.49
-      } else {
-        if (start_d<=0.0) start_d<-0.01
-      }
+      if (start_d>=d_lim[2])  start_d <- d_lim[2]-0.01
+      if (start_d<=d_lim[1])  start_d <- d_lim[1]+0.01
 
       pars      <- c(pars,start_u,start_d)
-      lb        <- c(lb,min_u,ifelse(allow_neg_d,-1,0))
-      ub        <- c(ub,max_u,0.5)
+      lb        <- c(lb,min_u,d_lim[1])
+      ub        <- c(ub,max_u,d_lim[2])
     }
   }
 
@@ -218,10 +236,11 @@ garma<-function(x,
   if (p+q>0) {
     # if any ARMA params to be estimated, we use the semipara estimates to get ggbf factors then get the underlying ARMA process,
     # and then ask "arima" for estimates. Semi para estimates should make good starting points for optimisation.
-    if (k>0) arma_y <- extract_arma(y,gf$ggbr_factors)
-    else arma_y <- y
-    a <- stats::arima(arma_y,order=c(p,0,q),include.mean=FALSE)
-    pars <- c(pars,a$coef)
+    # if (k>0) arma_y <- extract_arma(y,gf$ggbr_factors)
+    # else arma_y <- y
+    # a <- stats::arima(arma_y,order=c(p,0,q),include.mean=FALSE)
+    # pars <- c(pars,a$coef)
+    pars <- c(pars,rep(0,p+q))
     if (method%in%methods_to_estimate_var) {
       pars <- c(pars,a$sigma2)
     }
@@ -238,26 +257,25 @@ garma<-function(x,
     }
   }
 
-  # create a list of all possible params any 'method' might need. The various objective functions can extract the parameters which are relevant to that method.
+  # create a list of all possible params any 'method' might need.
+  # The various objective functions can extract the parameters which are relevant to that method.
   params <- list(y=y, orig_y=x, ss=ss, p=p,q=q,d=d,k=k,
-                 include.mean=include.mean,
+                 include.mean=include.mean, include.drift=include.drift, drift=drift,
                  method=method,
                  est_mean=ifelse(method%in%mean_methods,TRUE,FALSE),
                  scale=sd_y,m_trunc=m_trunc)
   message <- c()
 
   # Optimisation functions for each method
-  fcns  <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
-  grads <- list('CSS'=NULL,'Whittle'=.whittle.ggbr.grad,'QML'=NULL,'WLL'=NULL)
-
+  fcns  <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj.short,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
   if (opt_method[[1]]=='best') {
-    fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]], grad=grads[[method]],
+    fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]],
                        lb=lb, ub=ub, params=params, control=control)
   } else {
-      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]], grad=grads[[method]],
+      fit <- .generic_optim_list(opt_method_list=opt_method, initial_pars=pars, fcn=fcns[[method]],
                                  lb=lb, ub=ub, params=params, control=control)
   }
-  if (fit$convergence== -999) stop('ERROR: Failed to converge.')
+  if (fit$convergence== -999) stop('ERROR: Failed to converge.\n')
 
   hh <- fit$hessian
 
@@ -268,7 +286,7 @@ garma<-function(x,
   }
   else if (method=='QML')     sigma2 <- .qml.ggbr.se2(fit$par, params=params)
   else if (method=='CSS')     sigma2 <- fit$value[length(fit$value)]/length(y)
-  else if (method=='Whittle') sigma2 <- ifelse(no_scaling,1,sd_y) * .whittle.ggbr.obj.short(fit$par,params) * 4 * pi / length(y)  # 1997 Ferrara & Geugen eqn 3.7
+  else if (method=='Whittle') sigma2 <- .whittle.ggbr.obj.short(fit$par,params) # GHR 2001.
 
   # log lik
   loglik <- numeric(0)
@@ -277,7 +295,7 @@ garma<-function(x,
   if (method=='QML')
     loglik <- -fit$value[length(fit$value)]
   if (method=='Whittle')
-    loglik <- fit$value[length(fit$value)] /(2*pi)
+    loglik <- .whittle.ggbr.obj.short(fit$par,params)  #refer GHR 2001. This may not be correct.
 
   se <- numeric(length(fit$par))
 
@@ -293,13 +311,11 @@ garma<-function(x,
     se<-c()   # default to set this up in the right environment
     # next check the hessian
     h_inv_diag <- diag(inv_hessian <- pracma::pinv(hh))
-    if (any(h_inv_diag<0)) { # if hessian doesn't look valid then... generate another one
-      hh <- pracma::hessian(fcns[[method]], fit$par, params=params)
-      h_inv_diag <- diag(inv_hessian <- pracma::pinv(hh))
-    }
     if (method=='Whittle') {
-      se <- suppressWarnings(sqrt(2*pi*h_inv_diag)) #var(y)/length(y) *
-      vcov1 <- 2*pi*inv_hessian
+      # Next line from GHR (2001) thm 3.2
+      omega <- .whittle_omega(fit$par,params)
+      vcov1 <- pracma::pinv(omega)/length(y)
+      se <- suppressWarnings(sqrt(diag(vcov1)))
     }
     if (method=='CSS') {
       se <- suppressWarnings(sqrt(h_inv_diag*sigma2*2))
@@ -320,22 +336,27 @@ garma<-function(x,
   if (k>0) nm<-c(nm,unlist(lapply(1:k,function(x) paste0(c('u','fd'),x))))
   if (p>0) nm<-c(nm,paste0('ar',1:p))
   if (q>0) nm<-c(nm,paste0('ma',1:q))
+  vcov_nm <- nm
 
   n_coef    <- ifelse(method%in%methods_to_estimate_var,length(fit$par)-1,length(fit$par))  # ignore var on end if it is there
   temp_coef <- fit$par[1:n_coef]
   temp_se   <- se[1:n_coef]
   if (include.mean&!method%in%mean_methods) {# then add an Intercept anyway; use Kunsch 1987 result for se
     temp_coef <- c(mean(y),temp_coef)
-    # calc se of mean using Kunsch (1987) thm 1; 1-H = 1-(d+.5) = .5-d
-    if (k==0) mean_se <- sqrt(sigma2/length(y))
-    else mean_se <- suppressWarnings(sqrt(sigma2/(length(y)^(0.5-fit$par[2]))))
+    mean_se <- sigma2 * .spec_den_0(fit$par,params)/(2*pi) # Chung (1996)
     temp_se   <- c(mean_se, temp_se)
+    n_coef <- n_coef+1
+  }
+  if (include.drift) {
+    temp_coef <- c(temp_coef,drift)
+    temp_se   <- c(temp_se,drift_se)
+    nm <- c(nm,'drift')
     n_coef <- n_coef+1
   }
   coef <- t(matrix(c(temp_coef,temp_se),nrow=n_coef))
   colnames(coef) <- nm
   rownames(coef) <- c('','s.e.')
-  colnames(vcov1) <- rownames(vcov1) <- tail(nm,nrow(vcov1))
+  colnames(vcov1) <- rownames(vcov1) <- tail(vcov_nm,nrow(vcov1))
 
   # build a ggbr_factors object
   gf <- list()
@@ -362,7 +383,11 @@ garma<-function(x,
   model <- list('phi'=coef[1,substr(colnames(coef),1,2)=='ar'],
                 'theta'=coef[1,substr(colnames(coef),1,2)=='ma'],
                 'Delta'=order[2],
-                'beta0'=beta0)
+                'beta0'=beta0,
+                'drift'=drift,
+                'drift_se'=drift_se,
+                'drift_const'=drift_const,
+                'drift_const_se'=drift_const_se)
   if (k>0) model <-c(model, 'ggbr_factors' = list(gf))  # get fitted values and residuals
 
   fitted_and_resid <- .fitted_values(fit$par,params,gf,sigma2)
@@ -392,10 +417,10 @@ garma<-function(x,
             'y_freq'=x_freq,
             'include.mean'=include.mean,
             'include.drift'=include.drift,
+            'd_lim'=d_lim,
+            'freq_lim'=freq_lim,
             'fitted'=fitted,
             'residuals'=resid,
-            # 'fit_par' = fit$par,
-            # params = params,
             'm_trunc'=m_trunc)
   if (opt_method[1]=='best') res<-c(res,'opt_method_selected'=fit$best_method)
 
@@ -426,8 +451,8 @@ garma<-function(x,
 predict.garma_model<-function(object,n.ahead=1,...) {
   ## Start of Function "predict"
 
-  if (n.ahead<=0) {
-    message('n.ahead must be g.t. 0.')
+  if (n.ahead<=0|!is.numeric(n.ahead)|is.na(n.ahead)) {
+    message('n.ahead must be an integer g.t. 0.')
     return(NA)
   }
 
@@ -441,25 +466,12 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   n <- length(orig_y)
   resid  <- as.numeric(object$resid)
 
-  # mean_y <- beta0  <- 0
-  # start  <- 1
-  # if (object$include.mean&id==0) {
-  #   mean_y <- mean(y)
-  #   if (names(object$coef[1,])[1]=='intercept') {
-  #     beta0  <- coef[1]
-  #     start  <- 2
-  #   } else beta0 <- mean_y
-  # }
-  # # jump over the ggbr params; we get those separately.
-  # start <- start + (k*2)
-  #
-  # phi_vec <- theta_vec <- ggbr_inv_vec <-  1
-  # if (p>0) phi_vec   <- c(1,-coef[start:(start+p-1)])
-  # if (q>0) theta_vec <- c(1,-coef[(p+start):(length(coef))])
-
   mean_y <- beta0 <- object$model$beta0
   phi_vec <- c(1,-object$model$phi)
   theta_vec <- c(1,-object$model$theta)
+  if (any(Mod(polyroot(phi_vec))<1)|any(Mod(polyroot(theta_vec))<1))
+    warning('model estimates are not Stationary! Forecasts may become unbounded.\n')
+
   ggbr_inv_vec <-  1
 
   if (k>0) {
@@ -504,10 +516,14 @@ predict.garma_model<-function(object,n.ahead=1,...) {
   }
 
   if (id>0) {
-    if (object$include.drift) pred <- pred + mean(y)
+    if (object$include.drift) pred <- pred + object$model$drift  # mean(y)
     pred<-diffinv(pred,differences=id,xi=tail(orig_y,id))
     if (length(pred)>n.ahead) pred <- tail(pred,n.ahead)
-  } else pred <- pred + beta0
+  } else {
+    pred <- pred + beta0
+    n <- length(orig_y)
+    if (object$include.drift) pred <- pred + ((n+1):(n+length(pred)))*object$model$drift
+  }
 
   # Now we have the forecasts, we set these up as a "ts" object
   y_end = object$y_end
@@ -580,38 +596,38 @@ forecast.garma_model<-function(object,h=1,...) {
   # if (q==2) theta_vec <- c(0.2357262, -0.2934927)
   # if (p==2) phi_vec <- c(0.2396479, -0.1674436)
 
-  # now we generate polynomial coefficients for MA part to include ggbr factors
-  # basic tool is pracma::conv which does polynomial multiplication (same as polymul())
-  qk <- q
-  if (k>0) {
-    if (length(theta_vec)>1|theta_vec[1]!=1) theta_vec <- c(1,theta_vec)
-    for (gf in ggbr_factors) {
-      gc <- .ggbr.coef(n,gf$fd,gf$u)
-      theta_vec <- pracma::conv(theta_vec,gc)
-    }
-    if (theta_vec[1]==1) theta_vec <- theta_vec[2:min(length(theta_vec),n)]
-    qk <- length(theta_vec)
+  inf_ar_vec <- c(1, -phi_vec)
+  if (k>0) { # multiply by inverse ggbr expansion polynomial
+    for (gf in ggbr_factors) inf_ar_vec <- pracma::conv(inf_ar_vec,.ggbr.coef(n,-gf$fd,gf$u))
+    # Divide by theta vec; ignore the remainder. That can be a problem for k=0, q>0 models.
+    inf_ar_vec <- pracma::deconv(inf_ar_vec,theta_vec)$q
+  }
+  # finally get rid of the first "1"
+  inf_ar_vec <- c(inf_ar_vec, rep(0,n))  # extra zeros in case this is pure AR
+  inf_ar_vec <- inf_ar_vec[2:(n+1)]
+
+  if (id==0) y_dash <- y-beta0 else y_dash <- y-mean(y)
+  if (p>0) start<-p else start<-1
+
+  fitted <- y_dash[1:start] # Assume we have the first p correct... Thus first p residuals are 0.
+  for (i in (start+1):n) {
+    yy_to   <- (i-1)
+    yy_from <- ifelse(k==0,yy_to-p,1)
+    if (yy_from<1) yy_from <- 1
+    yy <- y_dash[yy_from:yy_to]
+    vec <- inf_ar_vec[yy_to:yy_from]
+    fitted <- c(fitted, -sum(yy*vec))
   }
 
-  phi_vec   <- rev(phi_vec)
-  theta_vec <- rev(theta_vec)
-
-  resid   <- rep(0,p)
-  for (i in (p+1):n) {
-    s <- beta0
-    if (p>0) {
-      ar_vec <- tail(c(rep(0,p),y[1:(i-1)]),p)
-      s <- s + sum(ar_vec*phi_vec)
-    }
-    if (qk>0) {
-      ma_vec <- tail(c(rep(0,qk),resid),qk)
-      s <- s + sum(theta_vec*ma_vec)
-    }
-    resid <- c(resid,y[i]-s)
+  if (id>0) {
+    fitted <- diffinv(fitted,differences=id,xi=head(orig_y,id))
+    n <- length(orig_y)
+    if (length(fitted)>n) fitted <- utils::head(fitted,n)
+  } else {
+    fitted <- fitted + beta0
+    n <- length(orig_y)
   }
-
-  if (id>0) resid <- c(rep(0,id),resid)
-  fitted <- orig_y - resid
+  resid=orig_y-fitted
 
   return(list(fitted=fitted,residuals=resid))
 }

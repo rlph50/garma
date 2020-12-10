@@ -41,7 +41,10 @@
     eps         <- signal::filter(ggbr_filter, eps)
   }
 
-  ret <- sum(eps^2,na.rm=TRUE)
+  eps <- eps^2
+  if (any(is.infinite(eps))) {
+    ret <- 1.0e200
+  } else ret <- sum(eps,na.rm=TRUE)
 
   return(ret)
 }

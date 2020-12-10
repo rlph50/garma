@@ -15,8 +15,8 @@
 #' tsdiag(mdl)
 #' @export
 tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
-#  class(object)<-'Arima'
-#  stats::tsdiag(object,gof.lag=gof.lag, ...)
+
+  titles <- .generate_default_plot_title(object,h=0)
 
   ## plot standardized residuals, acf of residuals, Ljung-Box p-values
   oldpar <- par(mfrow = c(3, 1))
@@ -26,13 +26,15 @@ tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
   plot(stdres, type = "h", main = "Standardized Residuals", ylab = "")
   abline(h = 0)
   acf(as.numeric(object$residuals), plot = TRUE, main = "ACF of Residuals", na.action = na.pass)
+  #pacf(as.numeric(object$residuals), plot = TRUE, main = "PACF of Residuals", na.action = na.pass)
   nlag <- gof.lag
   pval <- rep(NA,nlag)
-  n_param <- object$order[1]+object$order[3]+object$k*2
-  if (n_param<1) n_param<-1
-  if (n_param>nlag) nlag <- n_param+nlag
-  for(i in 1L:nlag) pval[i] <- Box.test(rs, i, type="Ljung-Box", fitdf=min(i,n_param))$p.value
-  plot(1L:nlag, pval, xlab = "lag", ylab = "p value", ylim = c(0,1),
-       main = "p values for Ljung-Box statistic")
+  n_param <- object$order[1]+object$order[3]+object$k
+  for(i in 1L:nlag) pval[i] <- Box.test(rs, i, type="Ljung-Box", fitdf=ifelse(i>n_param,n_param,0))$p.value
+  plot(1L:nlag, pval, xlab = "Lag", ylab = "p value", ylim = c(0,1), xaxp=c(1,nlag,nlag-1),
+       main = "p values for Ljung-Box statistic", sub=titles$sub)
   abline(h = 0.05, lty = 2, col = "blue")
+
+  cat('NOTE: The degrees of freedom for the Ljung-Box statistic are determined differently to the standard R "tsdiag".\n')
+  cat('      An adjustment is made for the number of model parameters as per Ljung & Box (1978).\n')
 }

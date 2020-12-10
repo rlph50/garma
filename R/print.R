@@ -49,8 +49,13 @@ print.garma_model<-function(x,...) {
     if (mdl$convergence>0)
       cat(sprintf('WARNING: Only partial convergence achieved!\n%s reports: %s (code %d)\n\n',
                   ifelse(mdl$opt_method=='best',mdl$opt_method_selected,mdl$opt_method),mdl$conv_message,mdl$convergence))
+    phi_vec <- c(1,-mdl$model$phi)
+    theta_vec <- c(1,-mdl$model$theta)
+    if (any(Mod(polyroot(phi_vec))<1)|any(Mod(polyroot(theta_vec))<1))
+      warning('model estimates are not Stationary! Forecasts may become unbounded.\n')
     cat('Coefficients:\n')
-    print.default(mdl$coef, print.gap=2, digits=4)
+    coef<-mdl$coef
+    print.default(coef, print.gap=2, digits=4)
     cat('\n')
 
     if (mdl$k>0) print(mdl$model$ggbr_factors)
@@ -63,6 +68,15 @@ print.garma_model<-function(x,...) {
     if (mdl$method=='QML') cat(sprintf('log likelihood = %f',mdl$loglik))
     if (mdl$method=='Whittle') cat(sprintf('log likelihood = %f, aic = %f',mdl$loglik, mdl$aic))
     cat('\n')
+    if (mdl$order[1]>0&any(mdl$model$phi!=0)&!any(is.na(mdl$model$phi))) {
+      cat('\nAR Factor Table.\n')
+      tswge::factor.wge(mdl$model$phi)
+    }
+    if (mdl$order[3]>0&any(mdl$model$theta!=0)&!any(is.na(mdl$model$theta))) {
+      cat('\nMA Factor Table.\n')
+      tswge::factor.wge(mdl$model$theta)
+    }
+
   }
 }
 

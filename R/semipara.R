@@ -104,15 +104,32 @@ print.garma_semipara<-function(x,...) {
 #' summary(arima(ap_arma,order=c(1,0,0)))
 #' @export
 extract_arma<-function(x,ggbr_factors) {
-  if (!is.null(ggbr_factors)) {
-    for (factor in ggbr_factors) {
-      ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(length(x),factor$fd,factor$u))
-      sm          <- signal::filter(ggbr_filter, x)
-    }
-    sm            <- stats::ts(sm,start=stats::start(x),frequency=stats::frequency(x))
+  # if (!is.null(ggbr_factors)) {
+  #   sm <- x
+  #   for (factor in ggbr_factors) {
+  #     ggbr_filter <- signal::Arma(b=1, a=.ggbr.coef(length(sm),factor$fd,factor$u))
+  #     sm          <- signal::filter(ggbr_filter, sm)
+  #   }
+  #   sm            <- stats::ts(sm,start=stats::start(x),frequency=stats::frequency(x))
+  # }
+  # else sm<-x
+  # return(sm)
+  n <- length(x)
+  theta_vec <- 1
+  for (gf in ggbr_factors) {
+    gc <- .ggbr.coef(n,gf$fd,gf$u)
+    theta_vec <- pracma::conv(theta_vec,gc)
   }
-  else sm<-x
-  return(sm)
+  if (theta_vec[1]==1) theta_vec <- theta_vec[2:min(length(theta_vec),n)]
+  theta_vec <- rev(theta_vec)
+  qk <- length(theta_vec)
+  resid   <- numeric(0)
+  for (i in 1:n) {
+    ma_vec <- tail(c(rep(0,qk),resid),qk)
+    s <- sum(theta_vec*ma_vec)
+    resid <- c(resid,x[i]-s)
+  }
+  return(resid)
 }
 
 .garma_pgram<-function(x) {
