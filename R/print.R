@@ -34,6 +34,12 @@ print.garma_model<-function(x,...) {
   cat('Mean term was fitted.\n')
   if (!mdl$include.drift) cat('No ')
   cat('Drift (trend) term was fitted.\n\n')
+  if (mdl$method=='Whittle'&mdl$k>1) {
+    cat('NOTE: Giraitis, Hidalgo & Robinson (2001) establish consistency and asymptotic Normality only for k=1 processes.\n')
+    cat('      Whilst it seems likely that the results also hold for a general k factor process, we are unaware of specific papers\n')
+    cat('      which establish this point. The user should be aware therefore that the estimate standard errors etc are provided\n')
+    cat('      without the relevant theory being established.\n')
+  }
   if (verbose) {
     with(mdl,
          cat(sprintf('Summary of a Gegenbauer Time Series model.\n\nFit using %s method.\nOrder=(%d,%d,%d) k=%d %s\n\nOptimisation.\nMethod:  %s\nMaxeval: %d\n',
@@ -60,7 +66,7 @@ print.garma_model<-function(x,...) {
 
     if (mdl$k>0) print(mdl$model$ggbr_factors)
 
-    if (mdl$sigma2>0) {
+    if (mdl$sigma2>0) { # make sure we have a valid sigma2 before printing it...
       cat(sprintf('\n\nsigma^2 estimated as %0.4f',mdl$sigma2))
       if (mdl$method %in% c('CSS','QML','Whittle')) cat (': ')
     }
