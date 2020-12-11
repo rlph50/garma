@@ -39,7 +39,6 @@ The default is to fit a drift term to the predictions if the process is integer-
 The default (Whittle) will generally return very accurate estimates quite quickly, provided the assumption of a Gaussian
 distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
 'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
-'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
 'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.}
 

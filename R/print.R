@@ -38,7 +38,7 @@ print.garma_model<-function(x,...) {
     cat('NOTE: Giraitis, Hidalgo & Robinson (2001) establish consistency and asymptotic Normality only for k=1 processes.\n')
     cat('      Whilst it seems likely that the results also hold for a general k factor process, we are unaware of specific papers\n')
     cat('      which establish this point. The user should be aware therefore that the estimate standard errors etc are provided\n')
-    cat('      without the relevant theory being established.\n')
+    cat('      without the relevant theory being established.\n\n')
   }
   if (verbose) {
     with(mdl,
@@ -71,8 +71,8 @@ print.garma_model<-function(x,...) {
       if (mdl$method %in% c('CSS','QML','Whittle')) cat (': ')
     }
     if (mdl$method=='CSS') cat(sprintf('part log likelihood = %f',mdl$loglik))
-    if (mdl$method=='QML') cat(sprintf('log likelihood = %f',mdl$loglik))
-    if (mdl$method=='Whittle') cat(sprintf('log likelihood = %f, aic = %f',mdl$loglik, mdl$aic))
+    if (mdl$method=='QML') cat(sprintf('approx. log likelihood = %f',mdl$loglik))
+    if (mdl$method=='Whittle') cat(sprintf('approx. log likelihood = %f, aic = %f',mdl$loglik, mdl$aic))
     cat('\n')
     if (mdl$order[1]>0&any(mdl$model$phi!=0)&!any(is.na(mdl$model$phi))) {
       cat('\nAR Factor Table.\n')

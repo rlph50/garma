@@ -34,7 +34,7 @@
 #'     The default (Whittle) will generally return very accurate estimates quite quickly, provided the assumption of a Gaussian
 #'     distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
 #'     'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
-#'     'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
+##     'QML' is a Quasi-Maximum-Likelihood technique, and can also be quite slow. Reference Dissanayake (2016). (k>1 is not supported for QML)
 #'     'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
 #'     However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.
 ## @param allow_neg_d (bool) A boolean value indicating if a negative value is allowed for the fractional differencing component
@@ -134,6 +134,9 @@ garma<-function(x,
     include.mean <- FALSE
   }
 
+  if (method=='QML')  # Major problems with this method. It is not giving accurate results.
+    stop('The QML method is not currently supported due to likely bugs.\n')
+
   allowed_methods <- c('CSS','Whittle','WLL','QML')
   if (!method%in%allowed_methods)
     stop('Method must be one of CSS, Whittle, QML or WLL.\n')
@@ -141,9 +144,8 @@ garma<-function(x,
     stop('QML method does not support k>1. It is suggested you try either the CSS or Whittle methods.\n')
 
   if (is.null(opt_method)) {
-    opt_method <- c('directL','solnp')
-    # if (k>=2) opt_method <- 'solnp'
-    # else opt_method <- c('directL','solnp')
+    if (method=='WLL') opt_method <- c('optim','solnp')
+        else opt_method <- c('directL','solnp')
   }
 
   for (om in opt_method) {
@@ -242,7 +244,7 @@ garma<-function(x,
     # pars <- c(pars,a$coef)
     pars <- c(pars,rep(0,p+q))
     if (method%in%methods_to_estimate_var) {
-      pars <- c(pars,a$sigma2)
+      pars <- c(pars,sd(y))
     }
     if (p==1&q==0) { # special limits for AR(1)
       lb<-c(lb,-1)
@@ -285,7 +287,7 @@ garma<-function(x,
     sigma2 <- fit$par[length(fit$par)] <- fit$par[length(fit$par)]/(2*pi) * exp(-digamma(1))
   }
   else if (method=='QML')     sigma2 <- .qml.ggbr.se2(fit$par, params=params)
-  else if (method=='CSS')     sigma2 <- fit$value[length(fit$value)]/length(y)
+  else if (method=='CSS')     sigma2 <- fit$value[length(fit$value)]/length(y)  # Chung (1996)
   else if (method=='Whittle') sigma2 <- .whittle.ggbr.obj.short(fit$par,params) # GHR 2001.
 
   # log lik
@@ -295,7 +297,7 @@ garma<-function(x,
   if (method=='QML')
     loglik <- -fit$value[length(fit$value)]
   if (method=='Whittle')
-    loglik <- .whittle.ggbr.obj.short(fit$par,params)  #refer GHR 2001. This may not be correct.
+    loglik <- -0.5*(2*length(y)*log(2*pi)+ .whittle.ggbr.obj(fit$par,params))  #refer GHR 2001, Whittle (1953) thm 6.
 
   se <- numeric(length(fit$par))
 
