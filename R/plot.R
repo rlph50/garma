@@ -22,8 +22,8 @@ utils::globalVariables(c('.dt','.value','.grp'))
 .generate_default_plot_title<-function(mdl,h) {
   if (h>0) main <- paste('Forecast for',mdl$series)
   else main <- paste('Actual and Fitted for',mdl$series)
-  sub <- sprintf('GARMA Model details: order=(%d,%d,%d), k=%d (method: %s)',
-                 mdl$order[1],mdl$order[2],mdl$order[3],mdl$k,mdl$method)
+  sub <- sprintf('Series: %s. GARMA Model details: order=(%d,%d,%d), k=%d (method: %s)',
+                 mdl$series, mdl$order[1],mdl$order[2],mdl$order[3],mdl$k,mdl$method)
   return(list(main=main,sub=sub))
 }
 
