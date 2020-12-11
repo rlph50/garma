@@ -37,4 +37,5 @@ tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
 
   cat('NOTE: The degrees of freedom for the Ljung-Box statistic are determined differently to the standard R "tsdiag".\n')
   cat('      An adjustment is made for the number of model parameters as per Ljung & Box (1978).\n')
+  cat('      Note also that the Ljung-Box test has not been formally established as valid for GARMA processes.\n')
 }
