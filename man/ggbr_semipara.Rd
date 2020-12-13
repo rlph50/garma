@@ -8,7 +8,7 @@ ggbr_semipara(
   x,
   k = 1,
   alpha = 0.8,
-  method = "gsp",
+  method = "lpr",
   min_freq = 0,
   max_freq = 0.5
 )
@@ -21,7 +21,7 @@ ggbr_semipara(
 \item{alpha}{(num)}
 
 \item{method}{(char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
-semi-parametric technique. "gsp" is the default. Refer Arteche (1998).}
+semi-parametric technique. "lpr" is the default. Refer Arteche (1998).}
 
 \item{min_freq}{(num) The minimum frequency to search through for peaks - default 0.0.}
 

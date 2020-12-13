@@ -5,7 +5,7 @@
 #' @param k (int) The number of Gegenbauer frequencies
 #' @param alpha (num)
 #' @param method (char) One of "gsp" or "lpr" - lpr is the log-periodogram-regression technique, "gsp" is the Gaussian
-#' semi-parametric technique. "gsp" is the default. Refer Arteche (1998).
+#' semi-parametric technique. "lpr" is the default. Refer Arteche (1998).
 #' @param min_freq (num) The minimum frequency to search through for peaks - default 0.0.
 #' @param max_freq (num) The maximum frequency to search through for peaks - default 0.5.
 #' @return An object of class "garma_semipara".
@@ -15,7 +15,7 @@
 #' sp <- ggbr_semipara(ap)
 #' print(sp)
 #' @export
-ggbr_semipara <- function(x,k=1,alpha=0.8,method='gsp',min_freq=0.0,max_freq=0.5) {
+ggbr_semipara <- function(x,k=1,alpha=0.8,method='lpr',min_freq=0.0,max_freq=0.5) {
   if (!method%in%c('gsp','lpr')) stop('Invalid method. Should be one of "gsp" or "lpr".')
   if (alpha<=0|alpha>=1) stop('alpha should be between 0 and 1, but not 0 and not 1.')
   x <- as.numeric(x)

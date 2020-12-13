@@ -1,18 +1,28 @@
 # garma 0.9.7
 
 Version 0.9.7 adds the "tsdiag" function for garma models - this is essentially a copy of the base stats 'tsdiag'
-but the fitdf for the Ljung-Box test is set to p+q+k*2.
+but the fitdf for the Ljung-Box test is set to p+q+k*2. We note also that the formal residual tests for GARMA processes does 
+not appear to have been formally established at this time.
 
 There was a bug with the standard errors which resulted in Nan being returned for some parameters. This has been fixed.
+Further fixes have applied to the Whittle estimation of the standard errors and to the likelihood calculation.
+
+The fitted values/residuals were not being properly calculated as per 1-step ahead forecasts. This has been rectified
+(although for non-Gegenbauer ARIMA models there may still be some issues which will be looked at later).
 
 The override of the ggplot function for garma models has been removed as this was not standard - the correct way to do this
-is 'autoplot' so now the autoplot function has the ability to generate forecasts and plot them.
+is 'autoplot' so now the autoplot function has the ability to generate forecasts and plot them. If no titles and 
+subtitles are supplied, these routines will now generate some default ones for you.
 
 A new optimisation method has been added for the "garma" function - this is a genetic algorithm from package GA.
 It can be used by specifying opt_method='ga'. For now please treat this as experimental - it has given some interesting
 results on some standard problems and these probably need to be checked further before more general use.
 
-Otherwise some redundant code has been removed, and also the restriction that integer differencing be restricted to 1 only.
+The "QML" method of estimation was producing too many errors and appeared to be converging to non-optimal solutions too often.
+Until such time as this can be fixed, it has been removed as a valid option. In any case it only supports a k=1 model.
+
+Otherwise some redundant code has been removed, and also the restriction that integer differencing be restricted to 1 
+only - general integer differencing is not supported.
 
 # garma 0.9.6
 
