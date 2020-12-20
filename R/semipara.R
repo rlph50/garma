@@ -81,8 +81,9 @@ print.ggbr_factors<-function(x,...) {
 #' @param ... further parameters for print function
 #' @export
 print.garma_semipara<-function(x,...) {
-  cat(sprintf('%s estimation of Gegenbauer process (k=1)\nFrequencies to use: (alpha=%f)\n\n',
+  cat(sprintf('%s estimation of Gegenbauer process (k=%d)\nFrequencies to use: (alpha=%f)\n\n',
               ifelse(x$method=='gsp','Gaussian Semi-Parametric','Log Periodogram Regression'),
+              length(x$ggbr_factors),
               x$alpha))
   print(x$ggbr_factors)
   if(length(x$note)>0) if (nchar(x$note)>1) cat(paste0('\n',x$note))

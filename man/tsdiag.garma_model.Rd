@@ -4,14 +4,14 @@
 \alias{tsdiag.garma_model}
 \title{Diagnostic fit of a garma_model.}
 \usage{
-\method{tsdiag}{garma_model}(object, gof.lag = 10, ...)
+\method{tsdiag}{garma_model}(object, ...)
 }
 \arguments{
 \item{object}{(garma_model) The garma_model to produce the diagnostic plots for.}
 
-\item{gof.lag}{(int) the maximum number of lags for a Portmanteau goodness-of-fit test.}
-
 \item{...}{further arguments to be passed to particular methods.}
+
+\item{gof.lag}{(int) the maximum number of lags for a Portmanteau goodness-of-fit test.}
 }
 \value{
 None. Diagnostics are generated.

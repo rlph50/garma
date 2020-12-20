@@ -14,7 +14,7 @@
 #' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
 #' tsdiag(mdl)
 #' @export
-tsdiag.garma_model<-function(object, gof.lag = 10, ...) {
+tsdiag.garma_model<-function(object, ...) {
 
   titles <- .generate_default_plot_title(object,h=0)
 
