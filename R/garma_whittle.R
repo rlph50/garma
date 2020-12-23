@@ -4,13 +4,13 @@
 # @param par - the parameters to evaluate the function at
 # @param params - other parameters - including the p, q, k, and scale parameters and (ss) the spectrum .
 # @return The value of the objective at the point par.
-.whittle.ggbr.obj<-function(par,params) {
+.whittle.garma.obj<-function(par,params) {
   # objective function to be minimised for Whittle estimates
   ss <- params$ss
   spec<-ss$spec
   n_freq <- length(spec)
 
-  spec_den_inv <- .calc_spec_den_inv(par,params)
+  spec_den_inv <- .calc_garma_spec_den_inv(par,params)
 
   ## I have checked the source for for "spectrum" which is used to calculate the "spec"
   ## The I/f calc includes spectrum and the "f" we calc as above.
@@ -23,14 +23,14 @@
   return(res)
 }
 
-.whittle.ggbr.obj.short<-function(par,params) {
+.whittle.garma.obj.short<-function(par,params) {
   # Just the first part of the objective function.
   # This is the "S" function of Giraitis, Hidalgo & Robinson 2001.
   ss <- params$ss
   spec<-ss$spec
   n_freq <- length(spec)
 
-  spec_den_inv <- .calc_spec_den_inv(par,params)
+  spec_den_inv <- .calc_garma_spec_den_inv(par,params)
 
   ## I have checked the source for for "spectrum" which is used to calculate the "spec"
   ## The I/f calc includes spectrum and the "f" we calc. f includes the factor 1/(2 pi)
@@ -42,7 +42,10 @@
   return(res)
 }
 
-.calc_spec_den_inv<-function(par,params) {
+## @export
+## calc_garma_spec_den_inv<-function(par,params) return(.calc_garma_spec_den_inv(par,params))
+
+.calc_garma_spec_den_inv<-function(par,params) {
   # This is the "k" function of Giraitis, Hidalgo & Robinson 2001.
   # true spec den is this times sigma^2/(2*pi)
   ss <- params$ss
@@ -85,7 +88,7 @@
 }
 
 
-.spec_den_0 <-function(par,params) {
+.garma_spec_den_0 <-function(par,params) {
   # Just the first part of the objective function - used for calculating the variance of the process.
   ss <- params$ss
   p  <- params$p
@@ -119,16 +122,16 @@
 }
 
 # for vcov calcs...
-.whittle_omega<-function(par,params) {
+.whittle_garma_omega<-function(par,params) {
   # This returns the estimate of the "omega" matrix from GHR (2001). Used for determining se's.
 
   calc_grad_log_k<-function(par,params) {
     calc_log_k<-function(par,params) {
-      k <- .calc_spec_den_inv(par,params)
+      k <- .calc_garma_spec_den_inv(par,params)
       return(log(k))
     }
     calc_log_k_j<-function(par,params,j) {
-      k <- .calc_spec_den_inv(par,params)
+      k <- .calc_garma_spec_den_inv(par,params)
       return(log(k[j]))
     }
 

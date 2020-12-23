@@ -269,7 +269,7 @@ garma<-function(x,
   message <- c()
 
   # Optimisation functions for each method
-  fcns  <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.ggbr.obj.short,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
+  fcns  <- list('CSS'=.css.ggbr.obj,'Whittle'=.whittle.garma.obj.short,'QML'=.qml.ggbr.obj,'WLL'=.wll.ggbr.obj)
   if (opt_method[[1]]=='best') {
     fit <- .best_optim(initial_pars=pars, fcn=fcns[[method]],
                        lb=lb, ub=ub, params=params, control=control)
@@ -288,7 +288,7 @@ garma<-function(x,
   }
   else if (method=='QML')     sigma2 <- .qml.ggbr.se2(fit$par, params=params)
   else if (method=='CSS')     sigma2 <- fit$value[length(fit$value)]/length(y)  # Chung (1996)
-  else if (method=='Whittle') sigma2 <- .whittle.ggbr.obj.short(fit$par,params) # GHR 2001.
+  else if (method=='Whittle') sigma2 <- .whittle.garma.obj.short(fit$par,params) # GHR 2001.
 
   # log lik
   loglik <- numeric(0)
@@ -297,7 +297,7 @@ garma<-function(x,
   if (method=='QML')
     loglik <- -fit$value[length(fit$value)]
   if (method=='Whittle')
-    loglik <- -0.5*(2*length(y)*log(2*pi)+ .whittle.ggbr.obj(fit$par,params))  #refer GHR 2001, Whittle (1953) thm 6.
+    loglik <- -0.5*(2*length(y)*log(2*pi)+ .whittle.garma.obj(fit$par,params))  #refer GHR 2001, Whittle (1953) thm 6.
 
   se <- numeric(length(fit$par))
 
@@ -315,7 +315,7 @@ garma<-function(x,
     h_inv_diag <- diag(inv_hessian <- pracma::pinv(hh))
     if (method=='Whittle') {
       # Next line from GHR (2001) thm 3.2
-      omega <- .whittle_omega(fit$par,params)
+      omega <- .whittle_garma_omega(fit$par,params)
       vcov1 <- pracma::pinv(omega)/length(y)
       se <- suppressWarnings(sqrt(diag(vcov1)))
     }
@@ -345,7 +345,7 @@ garma<-function(x,
   temp_se   <- se[1:n_coef]
   if (include.mean&!method%in%mean_methods) {# then add an Intercept anyway; use Kunsch 1987 result for se
     temp_coef <- c(mean(y),temp_coef)
-    mean_se <- sigma2 * .spec_den_0(fit$par,params)/(2*pi) # Chung (1996)
+    mean_se <- sigma2 * .garma_spec_den_0(fit$par,params)/(2*pi) # Chung (1996)
     temp_se   <- c(mean_se, temp_se)
     n_coef <- n_coef+1
   }

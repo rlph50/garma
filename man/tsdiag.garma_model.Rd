@@ -10,8 +10,6 @@
 \item{object}{(garma_model) The garma_model to produce the diagnostic plots for.}
 
 \item{...}{further arguments to be passed to particular methods.}
-
-\item{gof.lag}{(int) the maximum number of lags for a Portmanteau goodness-of-fit test.}
 }
 \value{
 None. Diagnostics are generated.
