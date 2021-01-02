@@ -69,7 +69,7 @@ test_that("Test 5-RESID. Short Memory ARMA model with intercept resid match 'ari
   expect_true(
     # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
     sqrt(mean((residuals(garma(dap,order=c(2,0,2),k=0,method='CSS',include.mean=T)) -
-                 residuals(arima(dap,order=c(2,0,2),method='CSS',include.mean=T)))^2)) < 0.1
+                 residuals(arima(dap,order=c(2,0,2),method='CSS',include.mean=T)))^2)) < 0.07
   )
 })
 

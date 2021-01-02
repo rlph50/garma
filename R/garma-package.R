@@ -12,7 +12,7 @@
 #' @importFrom pso psoptim
 #' @importFrom dfoptim hjkb nmkb
 #' @importFrom GA de
-#' @importFrom pracma pinv hessian conv deconv grad psi digamma
+#' @importFrom pracma pinv hessian conv deconv grad psi
 #' @importFrom signal Arma filter
 #' @importFrom zoo zoo index
 #' @importFrom tswge factor.wge

@@ -4,10 +4,12 @@
 \alias{tsdiag.garma_model}
 \title{Diagnostic fit of a garma_model.}
 \usage{
-\method{tsdiag}{garma_model}(object, ...)
+\method{tsdiag}{garma_model}(object, gof.lag = 10, ...)
 }
 \arguments{
 \item{object}{(garma_model) The garma_model to produce the diagnostic plots for.}
+
+\item{gof.lag}{(int) The number of lags to examine for the Ljung-Box white noise test.}
 
 \item{...}{further arguments to be passed to particular methods.}
 }

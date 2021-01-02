@@ -67,7 +67,7 @@
   }
 
   if (p>0) phi_vec <- (-par[start:(start+p-1)])      else phi_vec<-1
-  if (q>0) theta_vec <- (par[(p+start):length(par)]) else theta_vec<-1
+  if (q>0) theta_vec <- (-par[(p+start):length(par)]) else theta_vec<-1
 
   cos_2_pi_f <- cos(2*pi*freq)
   mod_phi <- mod_theta <- 1
