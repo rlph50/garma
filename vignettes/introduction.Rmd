@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Introduction to GARMA models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+## output: pdf_document
 bibliography: garma_bibliography.bib
 ---
 
@@ -208,7 +209,7 @@ summary(sunspots_garma_mdl)
 
 ```
 
-For the GARMA model, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "whittle" method by default, since this method not only produces very accurate results very quickly, but also has a lot of theoretical results available to support its use - for example [@Giraitis2001].
+For the GARMA model, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "Whittle" method by default, since this method not only produces very accurate results very quickly, but also has a lot of theoretical results available to support its use - for example [@Giraitis2001].
 
 The following table compares the values found by Gray et al and by the "garma" function:
 
