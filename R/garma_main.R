@@ -286,7 +286,7 @@ garma<-function(x,
     # adjust sigma2 for theoretical bias...
     sigma2 <- fit$par[length(fit$par)] <- fit$par[length(fit$par)]/(2*pi) * exp(-digamma(1))
   }
-  else if (method=='QML')     sigma2 <- .qml.ggbr.se2(fit$par, params=params)
+  # else if (method=='QML')     sigma2 <- .qml.ggbr.se2(fit$par, params=params)
   else if (method=='CSS')     sigma2 <- fit$value[length(fit$value)]/length(y)  # Chung (1996)
   else if (method=='Whittle') sigma2 <- .whittle.garma.obj.short(fit$par,params) # GHR 2001.
 
@@ -294,8 +294,8 @@ garma<-function(x,
   loglik <- numeric(0)
   if (method=='CSS')
     loglik <- -0.5* (fit$value[length(fit$value)]/sigma2 + length(y)*(log(2*pi) + log(sigma2)))
-  if (method=='QML')
-    loglik <- -fit$value[length(fit$value)]
+  # if (method=='QML')
+  #   loglik <- -fit$value[length(fit$value)]
   if (method=='Whittle')
     loglik <- -0.5*(2*length(y)*log(2*pi)+ .whittle.garma.obj(fit$par,params))  #refer GHR 2001, Whittle (1953) thm 6.
 
@@ -323,10 +323,10 @@ garma<-function(x,
       se <- suppressWarnings(sqrt(h_inv_diag*sigma2*2))
       vcov1 <- inv_hessian*2*sigma2
     }
-    if (method=='QML') {
-      se <- suppressWarnings(sqrt(h_inv_diag*length(y)))
-      vcov1 <- inv_hessian*length(y)
-    }
+    # if (method=='QML') {
+    #   se <- suppressWarnings(sqrt(h_inv_diag*length(y)))
+    #   vcov1 <- inv_hessian*length(y)
+    # }
   }
   if (method=='WLL') {
     se<-rep(NA,length(par))

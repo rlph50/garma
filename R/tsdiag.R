@@ -29,6 +29,6 @@ tsdiag.garma_model<-function(object, gof.lag=10, ...) {
       main = paste(object$series," - ACF of Residuals"),
       sub=titles$sub,
       na.action = na.pass)
-
+  # gof(object,gof.lag)
 }
 
