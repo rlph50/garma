@@ -19,7 +19,7 @@ tsdiag.garma_model<-function(object, gof.lag=10, ...) {
   titles <- .generate_default_plot_title(object,h=0)
 
   ## plot standardized residuals, acf of residuals, Ljung-Box p-values
-  oldpar <- par(mfrow = c(2, 1))
+  oldpar <- par(mfrow = c(3, 1))
   on.exit(par(oldpar))
   rs <- object$residuals
   stdres <- rs/sqrt(object$sigma2)
@@ -27,8 +27,17 @@ tsdiag.garma_model<-function(object, gof.lag=10, ...) {
   abline(h = 0)
   acf(as.numeric(object$residuals), plot = TRUE,
       main = paste(object$series," - ACF of Residuals"),
-      sub=titles$sub,
       na.action = na.pass)
-  # gof(object,gof.lag)
+
+  pv <- gof(object)
+  plot((2:(length(pv)+1))/length(object$y),
+       pv,
+       type='l',
+       main = expression("p-values for Bartletts T"[p]*" test of residuals."),
+       sub=titles$sub,
+       ylab="p-value",
+       xlab=expression("Frequency (x"*2*pi*")"),
+       ylim=c(0,1))
+  abline(h=0.05,col="blue",lty=3)
 }
 

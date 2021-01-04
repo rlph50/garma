@@ -21,7 +21,7 @@
 #' @importFrom Rsolnp solnp gosolnp
 #' @importFrom ggplot2 autoplot ggplot geom_line aes geom_vline theme theme_bw scale_colour_manual geom_text labs element_blank
 #' @importFrom graphics abline lines par plot
-#' @importFrom stats diffinv end sd start ts tsp var spectrum frequency optimise arima Box.test acf pacf tsdiag na.pass optim lm residuals coef fft
+#' @importFrom stats diffinv end sd start ts tsp var spectrum spec.pgram ks.test ecdf frequency optimise arima Box.test acf pacf tsdiag na.pass optim lm residuals coef fft
 #' @importFrom utils tail packageVersion head globalVariables
 NULL
 
