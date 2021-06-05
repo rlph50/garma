@@ -68,6 +68,9 @@
 ## @param min_freq (num) When searching for Gegenbauer peaks, this is the minimum frequency used. Default 0. Note that when there is an
 ## AR(1) component, the peaks corresponding to the AR(1) can be higher than the Gegenbauer peaks. Setting this parameter to 0.05 or above can help.
 ## @param max_freq (num) default 0.5. When searching for Gegenbauer peaks, this is the maximum frequency used.
+#' @param fitted (bool) indicates whether fitted values should be generated. For longer processes this can take a while and so this option is provided to disable
+#' that process. In any event if a call is made to the 'fitted' or 'resid' methods, they will then be generated on demand, but if the practitioner is just exploring
+#' different models then this option can be used to speed up the process. Default: TRUE.
 #' @param control (list) list of optimisation routine specific values.
 #' @return An S3 object of class "garma_model".
 #'
@@ -97,6 +100,7 @@ garma<-function(x,
                 freq_lim=c(0,0.5),
                 opt_method=NULL,
                 m_trunc=50,
+                fitted=TRUE,
                 control=NULL) {
 
   ## Start of "garma" function logic.
@@ -392,9 +396,7 @@ garma<-function(x,
                 'drift_const_se'=drift_const_se)
   if (k>0) model <-c(model, 'ggbr_factors' = list(gf))  # get fitted values and residuals
 
-  fitted_and_resid <- .fitted_values(fit$par,params,gf,sigma2)
-  fitted <- ts(fitted_and_resid$fitted, start=x_start,frequency=x_freq)
-  resid <- ts(fitted_and_resid$residuals, start=x_start,frequency=x_freq)
+  garma_version <- as.character(utils::packageVersion('garma'))
 
   res<-list('call' = match.call(),
             'series' = deparse(match.call()$x),
@@ -406,7 +408,6 @@ garma<-function(x,
             'loglik'=loglik,
             'aic'=-2*loglik + 2*(n_coef+1),
             'model'=model,
-            ## 'spectrum'=ss,
             'convergence'=fit$convergence,
             'conv_message'=c(fit$message,message),
             'method'=method,
@@ -423,12 +424,20 @@ garma<-function(x,
             'include.drift'=include.drift,
             'd_lim'=d_lim,
             'freq_lim'=freq_lim,
-            'fitted'=fitted,
-            'residuals'=resid,
-            'm_trunc'=m_trunc)
+            'm_trunc'=m_trunc,
+            'fitted_avail'=FALSE,
+            'garma_version'=garma_version)
   if (opt_method[1]=='best') res<-c(res,'opt_method_selected'=fit$best_method)
 
   class(res) <- 'garma_model'
+
+  if (fitted) { # add fitted values
+    res <- .fitted_values(res)
+
+  } else {
+    fitted_values<-list()
+    resid_values<-list()
+  }
 
   return(res)
 }
@@ -570,15 +579,26 @@ forecast.garma_model<-function(object,h=1,...) {
   cat(sprintf(fmtstr,as.character(substitute(val)),val))
 }
 
-.fitted_values<-function(par,params,ggbr_factors,sigma2) { # Generate fitted values and residuals for GARMA process
-  y <- as.numeric(params$y)
-  orig_y <- as.numeric(params$orig_y)
-  p <- params$p
-  q <- params$q
-  id <- params$d
-  k <- params$k
-  include.mean <- params$include.mean
-  method <- params$method
+.fitted_values<-function(object) {#par,params,ggbr_factors,sigma2) { # Generate fitted values and residuals for GARMA process
+  # y <- as.numeric(params$y)
+  # orig_y <- as.numeric(params$orig_y)
+  # p <- params$p
+  # q <- params$q
+  # id <- params$d
+  # k <- params$k
+  # include.mean <- params$include.mean
+  # method <- params$method
+  y <- object$diff_y
+  orig_y <- object$y
+  k <- object$k
+  include.mean <- object$include.mean
+  method <- object$method
+  p <- object$order[1]
+  id <- object$order[2]
+  q <- object$order[3]
+  sigma2 <- object$sigma2
+  ggbr_factors <- object$model$ggbr_factors
+  par <- object$obj_par
 
   beta0  <- 0
   start  <- 1
@@ -594,8 +614,8 @@ forecast.garma_model<-function(object,h=1,...) {
 
   n       <- length(y)
   phi_vec <- theta_vec <- 1
-  if (p>0) phi_vec   <- par[start:(start+p-1)]
-  if (q>0) theta_vec <- par[(p+start):(length(par))]
+  if (p>0) phi_vec   <- object$model$phi #par[start:(start+p-1)]
+  if (q>0) theta_vec <- object$model$theta #par[(p+start):(length(par))]
   # testing
   # if (q==2) theta_vec <- c(0.2357262, -0.2934927)
   # if (p==2) phi_vec <- c(0.2396479, -0.1674436)
@@ -633,7 +653,10 @@ forecast.garma_model<-function(object,h=1,...) {
   }
   resid=orig_y-fitted
 
-  return(list(fitted=fitted,residuals=resid))
+  object$fitted <- fitted
+  object$residuals  <- resid
+  object$fitted_avail <- TRUE
+  return(object)
 }
 
 #' Fitted values
@@ -643,9 +666,12 @@ forecast.garma_model<-function(object,h=1,...) {
 #' @param ... Other parameters. Ignored.
 #' @export
 fitted.garma_model<-function(object,...) {
+  .byRef(object)  # allows us to update the values of object
+  if (!object$fitted_avail) {
+    object <- .fitted_values(object)
+  }
   return(object$fitted)
 }
-
 
 #' Residuals
 #'
@@ -656,11 +682,15 @@ fitted.garma_model<-function(object,...) {
 #' @param ... Other parameters. Ignored.
 #' @export
 residuals.garma_model<-function(object,type='response',h=1,...) {
+  .byRef(object)  # allows us to update the values of object
   if (!missing(type)) {
     if (type!='response') stop('Only response residuals are available.')
   }
   if (!missing(h))
     if (h!=1) stop('Only h=1 response residuals are available.')
+  if (!object$fitted_avail) {
+    object <- .fitted_values(object)
+  }
   return(object$residuals)
 }
 

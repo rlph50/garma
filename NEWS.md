@@ -1,3 +1,8 @@
+# garma 0.9.8
+
+Version 0.9.8 includes an option to stop the automatic generation of fitted values for the garma function. This can take a while if the process is long,
+so this option may save time during the model fitting stage.
+
 # garma 0.9.7
 
 Version 0.9.7 adds the "tsdiag" function for garma models. The essential white noise test is set to be the Bartletts Tp test,

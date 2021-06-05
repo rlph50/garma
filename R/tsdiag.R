@@ -23,11 +23,11 @@ tsdiag.garma_model<-function(object, gof.lag=10, ...) {
   on.exit(par(oldpar))
   rs <- object$residuals
   stdres <- rs/sqrt(object$sigma2)
-  plot(stdres, type = "h", main = paste(object$series,"- Standardized Residuals"), ylab = "")
+  plot(stdres, type = "h", main = paste(object$series,"- Standardized Residuals"), ylab = "",...)
   abline(h = 0)
   acf(as.numeric(object$residuals), plot = TRUE,
       main = paste(object$series," - ACF of Residuals"),
-      na.action = na.pass)
+      na.action = na.pass,...)
 
   pv <- gof(object)
   plot((2:(length(pv)+1))/length(object$y),
@@ -37,7 +37,7 @@ tsdiag.garma_model<-function(object, gof.lag=10, ...) {
        sub=titles$sub,
        ylab="p-value",
        xlab=expression("Frequency (x"*2*pi*")"),
-       ylim=c(0,1))
+       ylim=c(0,1), ...)
   abline(h=0.05,col="blue",lty=3)
 }
 

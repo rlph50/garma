@@ -16,6 +16,7 @@ garma(
   freq_lim = c(0, 0.5),
   opt_method = NULL,
   m_trunc = 50,
+  fitted = TRUE,
   control = NULL
 )
 }
@@ -71,6 +72,10 @@ Supported algorithms include:
 Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.}
 
 \item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
+
+\item{fitted}{(bool) indicates whether fitted values should be generated. For longer processes this can take a while and so this option is provided to disable
+that process. In any event if a call is made to the 'fitted' or 'resid' methods, they will then be generated on demand, but if the practitioner is just exploring
+different models then this option can be used to speed up the process. Default: TRUE.}
 
 \item{control}{(list) list of optimisation routine specific values.}
 }
