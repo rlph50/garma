@@ -110,7 +110,7 @@ spec_df <- rbind(data.frame(freq=spectrum_nilemin$freq,
                             process='SOI'))
 
 # and plot
-ggplot(spec_df, aes(x=freq,y=spec)) +
+ggplot(filter(spec_df,freq<pi), aes(x=freq,y=spec)) +
   geom_line() + 
   facet_wrap(.~process,scales='free_y') +
   ggtitle('Spectrum of NileMin and SOI') + 
