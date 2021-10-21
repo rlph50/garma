@@ -31,16 +31,16 @@ If you are not very familiar with ARIMA models, it might be advisable to first h
 GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model proceses which have a high correlation between observations which are far apart in time.
 
 For instance, consider the data on the minimum level of the Nile [@Tousson1925], as measured from 622 to 1281 AD (from the **longmemo** package):
-```{r nile, fig.width=6, fig.height=6, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(forecast)
-
-data(NileMin,package='longmemo')
-# we'll just set the correct start year, for display purposes.
-NileMin<-ts(as.numeric(NileMin),start=622,frequency=1)
-
-ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.', theme=theme_bw())
 ```
+> library(tidyverse)
+> library(forecast)
+> data(NileMin,package='longmemo')
+> # we'll just set the correct start year, for display purposes.
+> NileMin<-ts(as.numeric(NileMin),start=622,frequency=1)
+> 
+> ggtsdisplay(NileMin,lag.max=350, main='NileMin time series.', theme=theme_bw())
+```
+![The NileMin series.](fig1.png)
 
 
 The first thing to note here is that the ACF (the autocorrelation function) is showing highly significant correlations between Nile measurements, even at 350 years apart! 
@@ -67,20 +67,19 @@ Package **VGAM** to have a function called "garma" but this actually fits very d
 ---
 
 The models fit by the **garma** package are models which are not just long memory models, but where the long memory phenomena *cycles* in strength. An example of this is the Southern Oscillation Index.
-
-```{r soi, fig.width=6, fig.height=4}
-soi <-
-  read_fwf('soi.long.data',fwf_widths(c(5, rep(7,12)), c("year", 1:12)),col_types='nnnnnnnnnnnnn') %>%
-  gather(mth_no,soi,-year) %>%
-  mutate(mth = lubridate::make_date(year,as.numeric(mth_no),1)) %>%
-  select(mth,soi) %>%
-  arrange(mth)
-
-soi_ts <- ts(soi$soi,start=c(1951,2),frequency=12)
-
-ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index', theme=theme_bw())
 ```
-
+> soi <-
++   read_fwf('soi.long.data',fwf_widths(c(5, rep(7,12)), c("year", 1:12)),col_types='nnnnnnnnnnnnn') %>%
++   gather(mth_no,soi,-year) %>%
++   mutate(mth = lubridate::make_date(year,as.numeric(mth_no),1)) %>%
++   select(mth,soi) %>%
++   arrange(mth)
+> 
+> soi_ts <- ts(soi$soi,start=c(1951,2),frequency=12)
+> 
+> ggtsdisplay(soi_ts, lag.max=400, main='Southern Oscillation Index', theme=theme_bw())
+```
+![The SOI series.](fig2.png)
 
 The first hing to note is that there are significant correlations in the ACF even up to lag 400, so this qualifies as a long memory process.
 
@@ -97,28 +96,27 @@ All long memory models, including GARMA models, share one thing in common. When 
 
 In the chart below we illustrate two long memory processes, one which would be well modelled by an ARFIMA model and the other which would be modelled by a Gegenbauer model.
 
-```{r spectrum, fig.width=7, fig.height=4}
-spectrum_nilemin <- spectrum(NileMin, plot=FALSE)
-spectrum_soi     <- spectrum(soi_ts,  plot=FALSE)
-
-# now munge these lists together into a single dataframe.
-spec_df <- rbind(data.frame(freq=spectrum_nilemin$freq,
-                            spec=spectrum_nilemin$spec, 
-                            process='NileMin'),
-                 data.frame(freq=spectrum_soi$freq,     
-                            spec=spectrum_soi$spec,     
-                            process='SOI'))
-
-# and plot
-ggplot(filter(spec_df,freq<pi), aes(x=freq,y=spec)) +
-  geom_line() + 
-  facet_wrap(.~process,scales='free_y') +
-  ggtitle('Spectrum of NileMin and SOI') + 
-  ylab('Intensity') + 
-  xlab(bquote('Frequency (0 -' ~ pi ~')' )) + xlim(0,pi) +
-  theme_bw()
+```
+> spectrum_nilemin <- spectrum(NileMin, plot=FALSE)
+> spectrum_soi     <- spectrum(soi_ts,  plot=FALSE)
+> # now munge these lists together into a single dataframe.
+> spec_df <- rbind(data.frame(freq=spectrum_nilemin$freq,
++                             spec=spectrum_nilemin$spec, 
++                             process='NileMin'),
++                  data.frame(freq=spectrum_soi$freq,     
++                             spec=spectrum_soi$spec,     
++                             process='SOI'))
+> # and plot
+> ggplot(filter(spec_df,freq<pi), aes(x=freq,y=spec)) +
++   geom_line() + 
++   facet_wrap(.~process,scales='free_y') +
++   ggtitle('Spectrum of NileMin and SOI') + 
++   ylab('Intensity') + 
++   xlab(bquote('Frequency (0 -' ~ pi ~')' )) + xlim(0,pi) +
++   theme_bw()
 ```
 
+![Comparing the Spectrum.](fig3.png)
 
 From the above you can see that the NileMin spectrum shows an (essentially) unbounded peak at 0 which is the marker of a traditional long memory process.
 
@@ -150,22 +148,42 @@ To illustrate basic usage of the routine, we will first look at fitting a simple
 
 To ensure the results are as comparable as possible we will work with the seasonally differenced series, and specify the estimation method as 'CSS' for both.
 
-```{r arima}
-library(garma)
-data(AirPassengers)
+```
+> # GARMA model
+> # Note in the below we specify k=0.
+> # This tells the routine is not to fit a Gegenbauer/GARMA model.
+> garma_mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS')
+> summary(garma_mdl)
 
-ap  <- as.numeric(diff(AirPassengers,12))
+Call:
+garma(x = ap, order = c(9, 1, 0), k = 0, method = "CSS")
 
-# Arima model
-arima_mdl <- arima(ap,order=c(9,1,0),method='CSS')
-summary(arima_mdl)
+No Mean term was fitted.
+Drift (trend) term was fitted.
 
-# GARMA model
-# Note in the below we specify k=0.
-# This tells the routine is not to fit a Gegenbauer/GARMA model.
-garma_mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS')
-summary(garma_mdl)
+Convergence Code: 0
+Optimal Value found: 16150.37572243
 
+Coefficients:
+           ar1       ar2       ar3       ar4       ar5      ar6      ar7       ar8     ar9    drift
+      -0.32003  -0.01625  -0.13821  -0.23457  -0.01306  0.03086  -0.1504  -0.09221  0.2211  0.19353
+s.e.   0.07194   0.08475   0.08014   0.06856   0.06669  0.07748   0.0744   0.07860  0.0794  0.03675
+
+
+
+sigma^2 estimated as 123.2853: part log likelihood = -501.230781
+
+AR Factor Table.
+
+Coefficients of Original polynomial:  
+-0.3200 -0.0163 -0.1382 -0.2346 -0.0131 0.0309 -0.1504 -0.0922 0.2211 
+
+Factor                 Roots                Abs Recip    System Freq 
+1+1.0357B+0.8090B^2   -0.6401+-0.9090i      0.8995       0.3476
+1+1.6600B+0.7690B^2   -1.0793+-0.3681i      0.8769       0.4477
+1-0.4062B+0.7464B^2    0.2721+-1.1250i      0.8639       0.2122
+1-1.2885B+0.6991B^2    0.9215+-0.7623i      0.8361       0.1100
+1-0.6809B              1.4686               0.6809       0.0000
 ```
 We note here that [@Box2015] advise taking logarithms as the more correct way to model this data, however we are illustrating the similarity of methods here and feel additional code may obscure the intention. The interested reader may care to repeat this using logs themselves.
 
@@ -178,47 +196,86 @@ In this section we'll look at fitting a GARMA model to the Sunspots data, which 
 The Sunspot data consists of counts of sunspots as observed over a considerable period. In terms of ARIMA models, [@Box2015] suggest an AR(9) model may be best.
 
 First we fit an ARIMA model to this data:
-```{r sunspot1}
-library(garma)
+```
+> data(sunspot.year)
+> 
+> # Next we subset the data to ensure we are using the years used in the literature.
+> sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
+> 
+> # Now as in Gray et al 1989 we fit a GARMA(1,0) model:
+> sunspots_arima_mdl <- arima(sunspots, order=c(9,0,0),method='CSS')
+> 
+> summary(sunspots_arima_mdl)
 
-data(sunspot.year)
+Call:
+arima(x = sunspots, order = c(9, 0, 0), method = "CSS")
 
-# Next we subset the data to ensure we are using the years used in the literature.
-sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
+Coefficients:
+         ar1      ar2      ar3     ar4      ar5     ar6      ar7     ar8     ar9  intercept
+      1.2419  -0.4976  -0.1406  0.1943  -0.1767  0.0979  -0.1139  0.1435  0.0570    45.1427
+s.e.  0.0753   0.1195   0.1245  0.1247   0.1245  0.1234   0.1266  0.1228  0.0766     5.6748
 
-# Now as in Gray et al 1989 we fit a GARMA(1,0) model:
-sunspots_arima_mdl <- arima(sunspots, order=c(9,0,0),method='CSS')
+sigma^2 estimated as 213.5:  part log likelihood = -721.72
 
-summary(sunspots_arima_mdl)
-
+Training set error measures:
+                        ME     RMSE      MAE  MPE MAPE      MASE         ACF1
+Training set -0.0002709438 14.23214 10.49252 -Inf  Inf 0.6405913 -0.001348032
 ```
 
 Next we look at a GARMA model, but instead of 9 AR parameters, we will only fit 1.
-```{r sunspot2}
-library(garma)
-
-data(sunspot.year)
-
-# Next we subset the data to ensure we are using the years used in the literature.
-sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
-
-# Now as in Gray et al 1989 we fit a GARMA(1,0) model:
-sunspots_garma_mdl <- garma(sunspots, order=c(1,0,0),k=1,method='CSS')
-
-summary(sunspots_garma_mdl)
-
 ```
+> library(garma)
+> 
+> data(sunspot.year)
+> 
+> # Next we subset the data to ensure we are using the years used in the literature.
+> sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
+> 
+> # Now as in Gray et al 1989 we fit a GARMA(1,0) model:
+> sunspots_garma_mdl <- garma(sunspots, order=c(1,0,0),k=1,method='CSS')
+> 
+> summary(sunspots_garma_mdl)
 
+Call:
+garma(x = sunspots, order = c(1, 0, 0), k = 1, method = "CSS")
+
+Mean term was fitted.
+No Drift (trend) term was fitted.
+
+Convergence Code: 0
+Optimal Value found: 40145.33980554
+
+Coefficients:
+      intercept        u1     fd1     ar1
+       45.13719  0.847533  0.4228  0.4937
+s.e.    0.02675  0.007103  0.1260  0.1119
+
+                        Factor1
+Gegenbauer frequency:    0.0890
+Gegenbauer Period:      11.2305
+Gegenbauer Exponent:     0.4228
+
+
+sigma^2 estimated as 228.0985: part log likelihood = -727.553615
+
+AR Factor Table.
+
+Coefficients of Original polynomial:  
+0.4937 
+
+Factor                 Roots                Abs Recip    System Freq 
+1-0.4937B              2.0257               0.4937       0.0000
+```
 For the GARMA model, we have specified **method='CSS'** to ensure we are using a method as close as possible to that used by [@Gray1989]. The "garma" function uses a frequency-domain method known as the "Whittle" method by default, since this method not only produces very accurate results very quickly, but also has a lot of theoretical results available to support its use - for example [@Giraitis2001].
 
 The following table compares the values found by Gray et al and by the "garma" function:
 
 Parameter  | Gray et al |  garma |
 -----------|-----------:|-------:|
-intercept  | 44.78      | `r sunspots_garma_mdl$coef[1,1]` |
-u          | 0.85       | `r sunspots_garma_mdl$coef[1,2]` |
-d          | 0.42       | `r sunspots_garma_mdl$coef[1,3]` |
-ar1        | 0.49       | `r sunspots_garma_mdl$coef[1,4]` |
+intercept  | 44.78      | 45.1350 |
+u          | 0.85       | 0.8475 |
+d          | 0.42       | 0.4228 |
+ar1        | 0.49       | 0.4937 |
 
 As you can see, the results are quite close (Gray et al only published their results to 2 decimal places).
 
@@ -227,40 +284,78 @@ Notice also that the routine displays the Gegenbauer Period - in this case 11.2 
 Also shown is the degree of fractional differencing and the Fractional Dimension of the original series.
 
 Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989], however to compare with the ARIMA model, we can fit the same number of AR terms - 9 - and then forecast below, for the next sunspot cycle.
-```{r sunspot3}
-library(yardstick)
-
-(sunspots_garma_mdl <- garma(sunspots, order = c(9, 0, 0), k = 1))
-
-compare_df <- data.frame(yr=1925:1935,
-                         Actuals=as.numeric(sunspot.year[225:235]),
-                         ARIMA=forecast(sunspots_arima_mdl,h=11)$mean,
-                         GARMA=forecast(sunspots_garma_mdl,h=11)$mean)
-
-cat(sprintf('\n\nEvaluating Test set data from 1925 to 1936.\n\nARIMA RMSE: %.2f\nGARMA RMSE: %.2f\n',
-            yardstick::rmse(compare_df,Actuals,ARIMA)$.estimate,
-            yardstick::rmse(compare_df,Actuals,GARMA)$.estimate))
 ```
-The RMSE for the ARIMA model is `r round(yardstick::rmse(compare_df,Actuals,ARIMA)$.estimate,2)` and the RMSE for the GARMA model is `r round(yardstick::rmse(compare_df,Actuals,GARMA)$.estimate,2)` - which shows in terms of future predictions the GARMA model has a smaller error.
+> library(yardstick)
+> (sunspots_garma_mdl <- garma(sunspots, order = c(9, 0, 0), k = 1))
+
+Call:
+garma(x = sunspots, order = c(9, 0, 0), k = 1)
+
+Mean term was fitted.
+No Drift (trend) term was fitted.
+
+Coefficients:
+      intercept      u1     fd1     ar1      ar2       ar3      ar4      ar5      ar6      ar7      ar8      ar9
+          45.03  0.8413  0.1213  0.9994  -0.2925  -0.16877  0.18380  -0.1445  0.03879  0.01112  0.04964  0.09302
+s.e.     136.53  0.0539  0.2833  0.4598   0.3662   0.07609  0.09225   0.1093  0.08272  0.07614  0.07520  0.07293
+
+                        Factor1
+Gegenbauer frequency:    0.0909
+Gegenbauer Period:      11.0000
+Gegenbauer Exponent:     0.1213
+
+
+sigma^2 estimated as 34.3504: approx. log likelihood = -342.309594, aic = 710.619187
+
+AR Factor Table.
+
+Coefficients of Original polynomial:  
+0.9994 -0.2925 -0.1688 0.1838 -0.1445 0.0388 0.0111 0.0496 0.0930 
+
+Factor                 Roots                Abs Recip    System Freq 
+1-1.4790B+0.8427B^2    0.8776+-0.6454i      0.9180       0.1009
+1-0.9014B              1.1094               0.9014       0.0000
+1-0.4277B+0.6241B^2    0.3427+-1.2186i      0.7900       0.2064
+1+0.5167B+0.4431B^2   -0.5830+-1.3844i      0.6657       0.3134
+1+1.2920B+0.4428B^2   -1.4588+-0.3606i      0.6655       0.4614
+  
+  
+> 
+> compare_df <- data.frame(yr=1925:1935,
++                          Actuals=as.numeric(sunspot.year[225:235]),
++                          ARIMA=forecast(sunspots_arima_mdl,h=11)$mean,
++                          GARMA=forecast(sunspots_garma_mdl,h=11)$mean)
+> 
+> cat(sprintf('\n\nEvaluating Test set data from 1925 to 1936.\n\nARIMA RMSE: %.2f\nGARMA RMSE: %.2f\n',
++             yardstick::rmse(compare_df,Actuals,ARIMA)$.estimate,
++             yardstick::rmse(compare_df,Actuals,GARMA)$.estimate))
+
+
+Evaluating Test set data from 1925 to 1936.
+
+ARIMA RMSE: 13.59
+GARMA RMSE: 11.73
+```
+The RMSE for the ARIMA model is 13.59 and the RMSE for the GARMA model is 11.73 - which shows in terms of future predictions the GARMA model has a smaller error.
 
 But visually there appears to be little difference between the models.
 
-```{r sunspot4, fig.width=7, fig.height=5}
-arima_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_arima_mdl,h=11)$mean,grp='AR(11) forecasts')
-
-garma_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_garma_mdl,h=11)$mean,grp='GARMA(1),k=1 forecasts')
-
-actuals_df <- data.frame(yr=1749:1935,sunspots=as.numeric(sunspot.year[49:235]),grp='Actuals')
-
-df <- rbind(actuals_df,garma_df,arima_df)
-
-ggplot(df,aes(x=yr,y=sunspots,color=grp)) + geom_line() +
-  scale_color_manual(name='',values=c('Actuals'='darkgray','AR(11) forecasts'='darkgreen','GARMA(1),k=1 forecasts'='blue')) +
-  xlab('') + ylab('Sunspot Counts') +
-  geom_vline(xintercept=1924,color='red',linetype='dashed',size=0.3) +
-  theme_bw() +
-  ggtitle('Sunspot Forecasts: Comparing ARIMA(9,0,0) and GARMA(9,0),k=1')
 ```
-
+> arima_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_arima_mdl,h=11)$mean,grp='AR(11) forecasts')
+> 
+> garma_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_garma_mdl,h=11)$mean,grp='GARMA(1),k=1 forecasts')
+> 
+> actuals_df <- data.frame(yr=1749:1935,sunspots=as.numeric(sunspot.year[49:235]),grp='Actuals')
+> 
+> df <- rbind(actuals_df,garma_df,arima_df)
+> 
+> ggplot(df,aes(x=yr,y=sunspots,color=grp)) + geom_line() +
++     scale_color_manual(name='',values=c('Actuals'='darkgray','AR(11) forecasts'='darkgreen','GARMA(1),k=1 forecasts'='blue')) +
++     xlab('') + ylab('Sunspot Counts') +
++     geom_vline(xintercept=1924,color='red',linetype='dashed',size=0.3) +
++     theme_bw() +
++     ggtitle('Sunspot Forecasts: Comparing ARIMA(9,0,0) and GARMA(9,0),k=1')
+```
+![Comparing the Forecasts.](fig4.png)
 
 ## References
