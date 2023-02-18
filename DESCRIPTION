@@ -3,7 +3,7 @@ Type: Package
 Title: Fitting and Forecasting Gegenbauer ARMA Time Series Models
 Version: 0.9.12
 Date: 2023-02-18
-Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
+Author: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
 Maintainer: Richard Hunt <maint@huntemail.id.au>
 Description: Methods for estimating univariate long memory-seasonal/cyclical

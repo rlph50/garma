@@ -594,7 +594,6 @@ predict.garma_model<-function(object,n.ahead=1,max_wgts=length(object$diff_y),gg
 #'
 #' @param object (garma_model) The garma_model from which to predict the values.
 #' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
-#' @param ... Other parameters. Ignored.
 #' @return A "ts" object containing the requested forecasts.
 #' @examples
 #' data(AirPassengers)
