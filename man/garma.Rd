@@ -10,7 +10,7 @@ garma(
   order = list(0, 0, 0),
   k = 1,
   include.mean = (order[2] == 0),
-  include.drift = (order[2] == 1),
+  include.drift = FALSE,
   method = "Whittle",
   d_lim = c(0, 0.5),
   freq_lim = c(0, 0.5),

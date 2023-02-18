@@ -11,8 +11,11 @@
 
 \item{...}{Other arguments. Ignored.}
 }
+\value{
+(null)
+}
 \description{
-The summary function provides a summary of a "garma_model" object.
+The summary function provides a summary of a "garma_model" object, printed to the output.
 }
 \examples{
 data(AirPassengers)

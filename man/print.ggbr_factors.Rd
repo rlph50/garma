@@ -11,6 +11,9 @@
 
 \item{...}{further parameters for print function}
 }
+\value{
+null
+}
 \description{
 Print a 'ggbr_factors' object.
 }

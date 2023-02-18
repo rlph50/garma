@@ -11,6 +11,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+(double) estimated variance-covariance matrix of the parameter estimates
+}
 \description{
 Covariance matrix of parameters if available
 }

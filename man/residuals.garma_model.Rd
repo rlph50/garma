@@ -15,6 +15,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+(double) array of resideuals from the model.
+}
 \description{
 Response Residuals from the model.
 }

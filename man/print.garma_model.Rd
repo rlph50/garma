@@ -11,8 +11,11 @@
 
 \item{...}{Other arguments. Ignored.}
 }
+\value{
+(null)
+}
 \description{
-The print function prints a summary of a "garma_model" object.
+The print function prints a summary of a "garma_model" object, printed to the output.
 }
 \examples{
 data(AirPassengers)

@@ -11,6 +11,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+(double) Approximate AIC - uses approximation of whichever methoid is used to find model params.
+}
 \description{
 AIC for model if available.
 }

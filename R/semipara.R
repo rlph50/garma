@@ -57,6 +57,7 @@ ggbr_semipara <- function(x,k=1,alpha=0.8,method='lpr',min_freq=0.0,max_freq=0.5
 #' Print a 'ggbr_factors' object.
 #' @param x An object of class ggbr_factors
 #' @param ... further parameters for print function
+#' @return null
 #' @export
 print.ggbr_factors<-function(x,...) {
   printf_9_4<-function(f) cat(sprintf('%9.4f',f))
@@ -79,6 +80,7 @@ print.ggbr_factors<-function(x,...) {
 #' Print a semiparameteric Gegenbauer estimation object.
 #' @param x An object of class garma_semipara.
 #' @param ... further parameters for print function
+#' @return null
 #' @export
 print.garma_semipara<-function(x,...) {
   cat(sprintf('%s estimation of Gegenbauer process (k=%d)\nFrequencies to use: (alpha=%f)\n\n',
@@ -208,7 +210,7 @@ extract_arma<-function(x,ggbr_factors) {
   denom    <- 4*sum(v^2)
   spec1    <- ssx$spec[(f_idx+1):(f_idx+m-1)]
   min_idx  <- f_idx - m
-  if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-2)]
+  if (m<f_idx+1) spec2 <- ssx$spec[(f_idx-m):(f_idx-1)]
   else {
     spec2 <- c(ssx$spec[(f_idx-1):1], ssx$spec[length(ssx$spec):(length(ssx$spec)-(m-f_idx))])
     spec2 <- spec2[1:(m-1)]

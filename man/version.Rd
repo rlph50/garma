@@ -6,6 +6,9 @@
 \usage{
 version()
 }
+\value{
+The package version.
+}
 \description{
 The version function returns the garma package version.
 }

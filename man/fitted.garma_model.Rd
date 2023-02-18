@@ -11,6 +11,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+(double) array of 1-step ahead fitted values for the model.
+}
 \description{
 Fitted values are 1-step ahead predictions.
 }

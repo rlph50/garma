@@ -11,6 +11,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+(double) array of parameter value estimates from the fitted model.
+}
 \description{
 Model Coefficients/parameters.
 }

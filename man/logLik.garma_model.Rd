@@ -11,6 +11,9 @@
 
 \item{...}{Other parameters. Ignored.}
 }
+\value{
+Object of class "logLik" with values for the (approx) log-likelihood for the model
+}
 \description{
 Log Likelihood, or approximate likelihood or part likelihood, depending on the method.
 }
