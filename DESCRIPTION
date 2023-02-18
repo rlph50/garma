@@ -7,7 +7,7 @@ Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
 Maintainer: Richard Hunt <maint@huntemail.id.au>
 Description: Methods for estimating univariate long memory-seasonal/cyclical
-             Gegenbauer time series processes. See for example (2018) <doi:10.1214/18-STS649>.
+             Gegenbauer time series processes. See for example (2022) <doi:10.1007/s00362-022-01290-3>.
              Refer to the vignette for details of fitting these processes.
 License: GPL-3
 URL: https://github.com/rlph50/garma
