@@ -1,3 +1,7 @@
+# garma 0.9.13
+
+Fixes to the garma-package.rd file.
+
 # garma 0.9.8
 
 Version 0.9.8 includes an option to stop the automatic generation of fitted values for the garma function. This can take a while if the process is long,

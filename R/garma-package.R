@@ -23,5 +23,8 @@
 #' @importFrom graphics abline lines par plot
 #' @importFrom stats diffinv end sd start ts tsp var spectrum spec.pgram ks.test ecdf frequency optimise arima Box.test acf pacf tsdiag na.pass optim lm residuals coef fft
 #' @importFrom utils tail packageVersion head globalVariables
-NULL
+
+#' @keywords internal
+#' @aliases garma-package
+"_PACKAGE"
 

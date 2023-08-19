@@ -152,11 +152,11 @@ To ensure the results are as comparable as possible we will work with the season
 > # GARMA model
 > # Note in the below we specify k=0.
 > # This tells the routine is not to fit a Gegenbauer/GARMA model.
-> garma_mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS')
+> garma_mdl <- garma_fit(ap,order=c(9,1,0),k=0,method='CSS')
 > summary(garma_mdl)
 
 Call:
-garma(x = ap, order = c(9, 1, 0), k = 0, method = "CSS")
+garma_fit(x = ap, order = c(9, 1, 0), k = 0, method = "CSS")
 
 No Mean term was fitted.
 Drift (trend) term was fitted.
@@ -202,7 +202,7 @@ First we fit an ARIMA model to this data:
 > # Next we subset the data to ensure we are using the years used in the literature.
 > sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
 > 
-> # Now as in Gray et al 1989 we fit a GARMA(1,0) model:
+> # Now as in Gray et al 1989 we fit a garma_fit(1,0) model:
 > sunspots_arima_mdl <- arima(sunspots, order=c(9,0,0),method='CSS')
 > 
 > summary(sunspots_arima_mdl)
@@ -231,13 +231,13 @@ Next we look at a GARMA model, but instead of 9 AR parameters, we will only fit 
 > # Next we subset the data to ensure we are using the years used in the literature.
 > sunspots <- ts(sunspot.year[49:224],start=1749,end=1924)
 > 
-> # Now as in Gray et al 1989 we fit a GARMA(1,0) model:
-> sunspots_garma_mdl <- garma(sunspots, order=c(1,0,0),k=1,method='CSS')
+> # Now as in Gray et al 1989 we fit a garma_fit(1,0) model:
+> sunspots_garma_mdl <- garma_fit(sunspots, order=c(1,0,0),k=1,method='CSS')
 > 
 > summary(sunspots_garma_mdl)
 
 Call:
-garma(x = sunspots, order = c(1, 0, 0), k = 1, method = "CSS")
+garma_fit(x = sunspots, order = c(1, 0, 0), k = 1, method = "CSS")
 
 Mean term was fitted.
 No Drift (trend) term was fitted.
@@ -283,13 +283,13 @@ Notice also that the routine displays the Gegenbauer Period - in this case 11.2 
 
 Also shown is the degree of fractional differencing and the Fractional Dimension of the original series.
 
-Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the GARMA(8,0) model, which was also examined by [@Gray1989], however to compare with the ARIMA model, we can fit the same number of AR terms - 9 - and then forecast below, for the next sunspot cycle.
+Whilst this model does fit the data quite well, is quite simple and does not produce very effective forecasts. A better model is the garma_fit(8,0) model, which was also examined by [@Gray1989], however to compare with the ARIMA model, we can fit the same number of AR terms - 9 - and then forecast below, for the next sunspot cycle.
 ```
 > library(yardstick)
-> (sunspots_garma_mdl <- garma(sunspots, order = c(9, 0, 0), k = 1))
+> (sunspots_garma_mdl <- garma_fit(sunspots, order = c(9, 0, 0), k = 1))
 
 Call:
-garma(x = sunspots, order = c(9, 0, 0), k = 1)
+garma_fit(x = sunspots, order = c(9, 0, 0), k = 1)
 
 Mean term was fitted.
 No Drift (trend) term was fitted.
@@ -343,18 +343,18 @@ But visually there appears to be little difference between the models.
 ```
 > arima_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_arima_mdl,h=11)$mean,grp='AR(11) forecasts')
 > 
-> garma_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_garma_mdl,h=11)$mean,grp='GARMA(1),k=1 forecasts')
+> garma_df <- data.frame(yr=1925:1935, sunspots=forecast(sunspots_garma_mdl,h=11)$mean,grp='garma_fit(1),k=1 forecasts')
 > 
 > actuals_df <- data.frame(yr=1749:1935,sunspots=as.numeric(sunspot.year[49:235]),grp='Actuals')
 > 
 > df <- rbind(actuals_df,garma_df,arima_df)
 > 
 > ggplot(df,aes(x=yr,y=sunspots,color=grp)) + geom_line() +
-+     scale_color_manual(name='',values=c('Actuals'='darkgray','AR(11) forecasts'='darkgreen','GARMA(1),k=1 forecasts'='blue')) +
++     scale_color_manual(name='',values=c('Actuals'='darkgray','AR(11) forecasts'='darkgreen','garma_fit(1),k=1 forecasts'='blue')) +
 +     xlab('') + ylab('Sunspot Counts') +
 +     geom_vline(xintercept=1924,color='red',linetype='dashed',size=0.3) +
 +     theme_bw() +
-+     ggtitle('Sunspot Forecasts: Comparing ARIMA(9,0,0) and GARMA(9,0),k=1')
++     ggtitle('Sunspot Forecasts: Comparing ARIMA(9,0,0) and garma_fit(9,0),k=1')
 ```
 ![Comparing the Forecasts.](fig4.png)
 

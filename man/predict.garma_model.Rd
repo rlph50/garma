@@ -17,6 +17,12 @@
 
 \item{n.ahead}{(int) The number of time periods to predict ahead. Default: 1}
 
+\item{max_wgts}{(int) The number of past values to use when forecasting ahead.
+By default, all available data is used.}
+
+\item{ggbr_scale}{(logical) - whether or not to scale the Gegenbauer weights
+to add up to 1. By default this is FALSE.}
+
 \item{...}{Other parameters. Ignored.}
 }
 \value{

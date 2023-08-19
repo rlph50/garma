@@ -75,11 +75,8 @@
 #' @return An S3 object of class "garma_model".
 #'
 #' @references
-#' C Chung. A generalized fractionally integrated autoregressive moving-average process.
-#' Journal of Time Series Analysis, 17(2):111–140, 1996.
-#'
-#' G Dissanayake, S Peiris, and T Proietti. State space modelling of Gegenbauer processes with long memory.
-#' Computational Statistics and Data Analysis, 100:115–130, 2016.
+#' R Hunt, S Peiris, N Weber. Estimation methods for stationary Gegenbauer processes.
+#' Statistical Papers 63:1707-1741 2022
 #'
 #' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
 #' The Annals of Statistics, 29(4):987–1023, 2001.
@@ -453,6 +450,10 @@ garma<-function(x,
 #'
 #' @param object (garma_model) The garma_model from which to predict the values.
 #' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
+#' @param max_wgts (int) The number of past values to use when forecasting ahead.
+#' By default, all available data is used.
+#' @param ggbr_scale (logical) - whether or not to scale the Gegenbauer weights
+#' to add up to 1. By default this is FALSE.
 #' @param ... Other parameters. Ignored.
 #' @return A "ts" object containing the requested forecasts.
 #' @examples
@@ -507,16 +508,12 @@ predict.garma_model<-function(object,n.ahead=1,max_wgts=length(object$diff_y),gg
 
     wgts <- build_weights(length(y)+n.ahead+id)
     y_dash <- y - beta0 # if differenced or just include.mean=FALSE then beta0 is zero.
-    #cat(sprintf("len yy %d\n",length(y_dash)))
     gf <- object$model$ggbr_factors[[1]]
     totsum <- (1-2.0*gf$u+gf$u^2)^(gf$fd)
-    #cat(sprintf("u %.6f d %.6f totsum %.6f\n",gf$u,gf$fd,totsum))
     for (h in 1:(n.ahead)) {
       yy <- y_dash
-      #next_forecast <- (-sum(yy*tail(wgts,length(yy))))
       wgts1 <- tail(wgts,max_wgts)
       yy <- tail(yy,max_wgts)
-      #if (h<12) cat(sprintf("wgts1 %.6f\n",sum(wgts1)))
       next_forecast <- (-sum(yy*wgts1))
       if (ggbr_scale) next_forecast <- next_forecast / abs(sum(wgts1)) * abs(totsum)
       y_dash <- c(y_dash, next_forecast)
@@ -534,16 +531,10 @@ predict.garma_model<-function(object,n.ahead=1,max_wgts=length(object$diff_y),gg
       if (object$include.drift) pred <- pred + ((n+1):(n+length(pred)))*object$model$drift
     }
   } else { # ARIMA forecasting only
-    #if (id==0) y_dash <- y-beta0 else y_dash <- y-mean_y
     y_dash <- y-beta0
     phi_vec <- rev(-phi_vec[2:length(phi_vec)])
     if (length(theta_vec)>1) theta_vec <- rev(-theta_vec[2:length(theta_vec)])
     else theta_vec<-numeric(0)  # length will be zero. thus not used.
-    # testing
-    # if (q==2) theta_vec <- rev(c(0.2357262, -0.2934927))
-    #print(phi_vec)
-    #if (p==2) phi_vec <- rev(c(0.2396479, -0.1674436))
-    #print(phi_vec)
     pp <- length(phi_vec)
     qq <- length(theta_vec)
     pred <- rep(beta0,n.ahead)
@@ -595,13 +586,8 @@ predict.garma_model<-function(object,n.ahead=1,max_wgts=length(object$diff_y),gg
 #' @param object (garma_model) The garma_model from which to predict the values.
 #' @param n.ahead (int) The number of time periods to predict ahead. Default: 1
 #' @return A "ts" object containing the requested forecasts.
-#' @examples
-#' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
-#' predict2(mdl, n.ahead=12)
 #' @export
-predict2<-function(object,n.ahead=1) {
+predict2<-function(object, n.ahead=1) {
   ## Start of Function "predict"
 
   if (n.ahead<=0|!is.numeric(n.ahead)|is.na(n.ahead)) {
@@ -710,7 +696,7 @@ forecast.garma_model<-function(object,h=1,...) {
 }
 
 .printf<-function(val) {
-  if (class(val)=='integer') fmtstr <- '%s: %d\n'
+  if (class(val)[1] == 'integer') fmtstr <- '%s: %d\n'
   else fmtstr <- '%s: %f\n'
   cat(sprintf(fmtstr,as.character(substitute(val)),val))
 }

@@ -10,8 +10,6 @@ predict2(object, n.ahead = 1)
 \item{object}{(garma_model) The garma_model from which to predict the values.}
 
 \item{n.ahead}{(int) The number of time periods to predict ahead. Default: 1}
-
-\item{...}{Other parameters. Ignored.}
 }
 \value{
 A "ts" object containing the requested forecasts.
@@ -20,10 +18,4 @@ A "ts" object containing the requested forecasts.
 Predict ahead using algorithm of (2009) Godet, F
 "Linear prediction of long-range dependent time series", ESAIM: PS 13 115-134.
 DOI: 10.1051/ps:2008015
-}
-\examples{
-data(AirPassengers)
-ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
-predict2(mdl, n.ahead=12)
 }
