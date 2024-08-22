@@ -3,34 +3,42 @@
 \docType{package}
 \name{garma}
 \alias{garma}
-\alias{_PACKAGE}
 \alias{garma-package}
 \title{garma: A package for estimating and foreasting Gegenbauer time series models.}
 \usage{
 garma(
   x,
-  order = list(0, 0, 0),
+  order = c(0L, 0L, 0L),
+  periods = NULL,
   k = 1,
-  include.mean = (order[2] == 0),
+  include.mean = (order[2] == 0L),
   include.drift = FALSE,
+  xreg = NULL,
   method = "Whittle",
   d_lim = c(0, 0.5),
-  freq_lim = c(0, 0.5),
-  opt_method = NULL,
-  m_trunc = 50,
-  fitted = TRUE,
+  opt_method = c("cobyla", "solnp"),
   control = NULL
 )
 }
 \arguments{
 \item{x}{(num) This should be a numeric vector representing the process to estimate. A minimum length of 96 is required.}
 
-\item{order}{(list) This should be a list (similar to the stats::arima order parameter) which will give the order of the process to fit.
-The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree of the
-autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
+\item{order}{(numeric vector) This should be a vector (similar to the stats::arima order parameter) which will give the order
+of the process to fit. The format should be list(p,d,q) where p, d, and q are all positive integers. p represents the degree
+of the autoregressive process to fit, q represents the order of the moving average process to fit and d is the (integer)
 differencing to apply prior to any fitting. WARNING: Currently only d==0 or d==1 are allowed.}
 
-\item{k}{(int) This is the number of (multiplicative) Gegenbauer terms to fit. Note the 'QML' method only allows k=1.}
+\item{periods}{(num) This parameter can be used to specify a fixed period or set of periods for the
+Gegenbauer periodicity. For instance if you have monthly data, then it might be sensible (after an examination of the
+periodogram) to set periods = 12. The default value is NULL. Either `periods` or `k` parameters must be specified
+but not both - `periods` implies fixed period(s) are to be used and `k` implies that the periods should
+be estimated.}
+
+\item{k}{(int) This parameter indicates that the algorithm should estimate the `k` frequencies as a part of the model.
+An alternative is the `periods` parameter which can be used to specify exactly which periods should be used by
+the model.
+
+This parameter can also be interpreted as specifying the number of (multiplicative) Gegenbauer terms to fit in the model.}
 
 \item{include.mean}{(bool) A boolean value indicating whether a mean should be fit.
 Note that no mean term is fit if the series is integer differenced.}
@@ -38,46 +46,52 @@ Note that no mean term is fit if the series is integer differenced.}
 \item{include.drift}{(bool) A boolean value indicating whether a 'drift' term should be fit to the predictions.
 The default is to fit a drift term to the predictions if the process is integer-differenced.}
 
-\item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', 'QML' and 'WLL'.
-The default (Whittle) will generally return very accurate estimates quite quickly, provided the assumption of a Gaussian
-distribution is even approximately correct, and is probably the method of choice for most users. For the theory behind this, refer Giraitis et. al. (2001)
-'CSS' is a conditional 'sum-of-squares' technique and can be quite slow. Reference: Chung (1996).
-'WLL' is a new technique which appears to work well even if the \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic).
-However the asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.}
+\item{xreg}{(numeric matrix) A numerical vector or matrix of external regressors, which must have the same number
+of rows as x. It should not have any NA values. It should not be a data frame. The default value is NULL.
 
-\item{d_lim}{(list) the limits for the d parameter. The default is c(0,0.5), which restricts the model to be stationary.
+Note that the algorithm used here is the same as that used by the R "arima" function - if any `xreg` is supplied, then
+a linear regression model is fit first, and the GARMA model is then based on the residuals from that regression model.
+
+Note also that the log likelihood and the AIC calculations relate only to the fit of the GARMA model to the residuals
+of the regression, and do not include any measure of the likelihood of the regression - again this follow the practice
+from the R "arima" function.}
+
+\item{method}{(character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', and
+  'WLL'. The default ('Whittle') method will generally return very accurate estimates quite quickly, provided the assumption
+  of a Gaussian distribution is even approximately correct, and is probably the method of choice for most users. For the
+  theory behind this, refer Giraitis et. al. (2001).
+
+  The 'CSS' method is a conditional 'sum-of-squares' technique and can be quite slow.
+  Reference: Robinson (2006), Chung (1996). Note that the paper of Chung (1996) was partially critisised by Giraitis et.
+  al. (2001), however still contains useful results.
+
+  'WLL' is a new technique, originally developed by the author of this package and which appears to work well even if the
+  \eqn{\epsilon_{t}}{\epsilon(t)} are highly skewed and/or have heavy tails (skewed and/or lepto-kurtic). However the
+  asymptotic theory for the WLL method is not complete and so standard errors are not available for most parameters.
+  Refer Hunt et. al. (2021).}
+
+\item{d_lim}{(list) the limits for the d parameter. The default is `c(0,0.5)`, which restricts the model to be stationary.
 However sometimes it is desirable to understand what the unrestricted value might be.}
-
-\item{freq_lim}{(list) the limits for the frequencies to be searched for Gegenbauer factors.
-When searching for Gegenbauer peaks, when there is an AR(1) component, the peaks corresponding to the AR(1)
-can be higher than the Gegenbauer peaks. Setting these limits to c(0.05,0.45) or similar can help the routine find the correct optima.}
 
 \item{opt_method}{(character) This names the optimisation method used to find the parameter estimates.
 This may be a list of methods, in which case the methods are applied in turn,
-each using the results of the previous one as the starting point for the next. The default is to use c('directL', 'solnp') when k<2 and 'solnp' when k>=2. The
-directL algorithm is used to perform a global search for the minima, and solnp to refine the values.
+each using the results of the previous one as the starting point for the next. The default is to use c('solnp', 'cobyla').
 For some data or some models, however, other methods may work well.
+
 Supported algorithms include:
-    \itemize{
-    \item cobyla algorithm in package nloptr
-    \item directL algorithm in package nloptr
-    \item BBoptim from package BB
-    \item psoptim from package pso - Particle Swarm algorithm
-    \item hjkb from dfoptim package
-    \item nmkb from dfoptim package
-    \item solnp from Rsolnp package
-    \item gosolnp from Rsolnp package
-    \item ga from package GA - a Genetic Algorithm
-    \item best - this option evaluates all the above options in turn and picks the one which finds the lowest value of the objective. This can be quite time consuming to run,
-    particularly for the 'CSS' method.
-    }
-Note further that if you specify a k>1, then inequality constraints are required, and this will further limit the list of supported routines.}
+ \itemize{
+ \item 'cobyla' algorithm in package nloptr
+ \item 'directL' algorithm in package nloptr
+ \item 'solnp' from Rsolnp package
+ \item 'gosolnp' from Rsolnp package.
+ }
 
-\item{m_trunc}{Used for the QML estimation method. This defines the AR-truncation point when evaluating the likelihood function. Refer to Dissanayake et. al. (2016) for details.}
+Note that the algorithms are selected to be those which do not require derivatives, even numerically calculated
+derivatives. The function being optimised by `garma()` has a point of discontinuity at the minimum value - the point
+we are trying to find. This means that standard algorithms like BFGS et al. perform very poorly here.
 
-\item{fitted}{(bool) indicates whether fitted values should be generated. For longer processes this can take a while and so this option is provided to disable
-that process. In any event if a call is made to the 'fitted' or 'resid' methods, they will then be generated on demand, but if the practitioner is just exploring
-different models then this option can be used to speed up the process. Default: TRUE.}
+Note further that if you specify a value of `k` > 1, then inequality constraints are required, and this will further limit
+the list of supported routines.}
 
 \item{control}{(list) list of optimisation routine specific values.}
 }
@@ -100,28 +114,42 @@ where
 \itemize{
 \item \eqn{\phi(B)}{\phi(B)} represents the short-memory Autoregressive component of order p,
 \item \eqn{\theta(B)}{\theta(B)} represents the short-memory Moving Average component of order q,
-\item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in general be k of these),
-\item \eqn{id} represents the degree of integer differencing.
+\item \eqn{(1-2u_{i}B+B^{2})^{d_{i}}}{(1-2u(i)B+B^2)^d(i)} represents the long-memory Gegenbauer component (there may in
+general be k of these),
+\item \eqn{id} represents the degree of integer differencing, where as \eqn{d_i} represents the degree of fractional
+differencing. Note that \eqn{id} is a value supplied by the user (the second number on the `order=` parameter - similarly
+to the way that the base R `arima` function works) whereas \eqn{d_i} is estimated by this function.
 \item \eqn{X_{t}}{X(t)} represents the observed process,
-\item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but identically distributed variates.
-      Generally the routines in this package will work best if these have an approximate Gaussian distribution.
+\item \eqn{\epsilon_{t}}{\epsilon(t)} represents the random component of the model - these are assumed to be uncorrelated but
+      identically distributed variates. Generally the routines in this package will work best if these have an approximate
+      Gaussian distribution.
 \item \eqn{B}{B} represents the Backshift operator, defined by \eqn{B X_{t}=X_{t-1}}{B X(t) = X(t-1)}.
 }
 when k=0, then this is just a short memory model as fit by the stats "arima" function.
 }
 \examples{
 data(AirPassengers)
-ap  <- as.numeric(diff(AirPassengers,12))
-print(garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE))
+ap <- as.numeric(diff(AirPassengers, 12))
+print(garma(ap, order = c(9, 1, 0), k = 0, method = "CSS", include.mean = FALSE))
 # Compare with the built-in arima function
-print(arima(ap,order=c(9,1,0),include.mean=FALSE))
+print(arima(ap, order = c(9, 1, 0), include.mean = FALSE))
 }
 \references{
-R Hunt, S Peiris, N Weber. Estimation methods for stationary Gegenbauer processes.
-Statistical Papers 63:1707-1741 2022
+C Chung. A generalized fractionally integrated autoregressive moving-average process.
+Journal of Time Series Analysis, 17(2):111-140, 1996. DOI: https://doi.org/10.1111/j.1467-9892.1996.tb00268.x
 
 L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
-The Annals of Statistics, 29(4):987–1023, 2001.
+The Annals of Statistics, 29(4):987–1023, 2001. DOI: https://doi.org/10.1214/AOS/1013699989
+
+R Hunt, S Peiris, N Webe. A General Frequency Domain Estimation Method for Gegenbauer Processes.
+Journal of Time Series Econometrics, 13(2):119-144, 2021. DOI: https://doi.org/10.1515/jtse-2019-0031
+
+R Hunt, S Peiris, N Weber. Estimation methods for stationary Gegenbauer processes.
+Statistical Papers 63:1707-1741, 2022. DOI: https://doi.org/10.1007/s00362-022-01290-3
+
+P. Robinson. Conditional-sum-of-squares estimation of models for stationary time series with long memory.
+IMS Lecture Notes Monograph Series, Time Series and Related Topics, 52:130-137, 2006.
+DOI: https://doi.org/10.1214/074921706000000996.
 }
 \seealso{
 Useful links:

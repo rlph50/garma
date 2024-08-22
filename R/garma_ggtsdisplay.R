@@ -10,11 +10,11 @@
 #' @return A ggplot object.
 #' @examples
 #' data(AirPassengers)
-#' ap <- as.numeric(diff(AirPassengers,12))
+#' ap <- as.numeric(diff(AirPassengers, 12))
 #' garma_ggtsdisplay(ap)
 #' @export
-garma_ggtsdisplay<-function(x,k=1,...) {
-  sp <- ggbr_semipara(x,k=k)
-  arma_process <- extract_arma(x, sp$ggbr_factors)
-  ggtsdisplay(arma_process,...)
+garma_ggtsdisplay <- function(x, k = 1, ...) {
+  sp <- ggbr_semipara(x, k = k)
+  arma_process <- extract_arma(x, sp)
+  ggtsdisplay(arma_process, ...)
 }

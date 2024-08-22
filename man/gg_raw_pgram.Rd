@@ -18,12 +18,12 @@ A ggplot object representing the raw periodogram
 Display the raw periodogram for a time series, and not on a log scale.
 }
 \details{
-The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the spectrum at differing frequencies.
-This routine will display the peaks on a raw scale.
+The standard "R" functions display periodograms on a log scale which can make it more difficult to locate high peaks in the
+spectrum at differing frequencies. This routine will display the peaks on a raw scale.
 }
 \examples{
 data(AirPassengers)
-ap <- as.numeric(diff(AirPassengers,12))
+ap <- as.numeric(diff(AirPassengers, 12))
 sp <- ggbr_semipara(ap)
 print(sp)
 }

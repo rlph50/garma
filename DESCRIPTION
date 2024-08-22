@@ -1,8 +1,8 @@
 Package: garma
 Type: Package
 Title: Fitting and Forecasting Gegenbauer ARMA Time Series Models
-Version: 0.9.13
-Date: 2023-08-19
+Version: 0.9.20
+Date: 2024-07-31
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
 Maintainer: Richard Hunt <maint@huntemail.id.au>
@@ -18,26 +18,20 @@ Depends:
     ggplot2
 Imports:
     Rsolnp,
+    nloptr,
     pracma,
     signal,
     zoo,
     lubridate,
+    rlang,
     crayon,
-    utils,
-    nloptr,
-    BB,
-    GA,
-    dfoptim,
-    pso,
-    FKF,
-    tswge,
-    hypergeo,
-    ltsa
+    utils
 Suggests:
     longmemo,
     yardstick,
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
     rmarkdown
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
+Config/testthat/edition: 3

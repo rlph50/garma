@@ -1,3 +1,11 @@
+# garma 0.9.20
+
+- Log likelihood and AIC calc now include various constants to match with the AIC calculation of the "Forecast" package.
+- Number of required optimisation packages has been reduced.
+- both garma() and ggbr_semipara() now support the `periods` parameter allowing the user to specify fixed periods instead of estimating them from the data.
+- The "xreg" parameter is now supported, although unlike "arima" this is a 2 stage process where a linear regression is first fit to the data and then a GARMA model is fit to the residuals of the regression.
+- A number of optimisation methods have been removed as they rarely seemed to provide any benefit.
+
 # garma 0.9.13
 
 Fixes to the garma-package.rd file.
@@ -10,7 +18,7 @@ so this option may save time during the model fitting stage.
 # garma 0.9.7
 
 Version 0.9.7 adds the "tsdiag" function for garma models. The essential white noise test is set to be the Bartletts Tp test,
-since this is the only white noise test which has been theopretically justified on GARMA models. Also the "gof" function has
+since this is the only white noise test which has been theoretically justified on GARMA models. Also the "gof" function has
 been added - this does the actual work of the Tp test, and in fact should work and should be valid for normal Arima models
 as well as GARMA models.
 

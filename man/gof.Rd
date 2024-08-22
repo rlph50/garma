@@ -16,3 +16,7 @@ Invisibly returns the array of p-values from the test.
 Provides a goodness-of-fit test for a GARMA Model, using Bartletts Tp test.
 This has been justified for long memory and for GARMA models by Delgado, Hidalgo and Velasco (2005).
 }
+\references{
+M Delgado, J Hidalgo, and C Velasco. Distribution free goodness-of-fit tests for linear processes.
+The Annals of Statistics, 33(6):2568–2609, 2005. DOI: https://doi.org/10.1214/009053605000000606.
+}

@@ -22,8 +22,8 @@ This function is copied from stats::tsdiag but modifies the fit_df for the Ljung
 }
 \examples{
 data(AirPassengers)
-ap  <- as.numeric(diff(AirPassengers,12))
-mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
+ap <- as.numeric(diff(AirPassengers, 12))
+mdl <- garma(ap, order = c(9, 1, 0), k = 0, method = "CSS", include.mean = FALSE)
 tsdiag(mdl)
 }
 \seealso{

@@ -6,25 +6,30 @@
 #' @return An R "plot" object.
 #' @examples
 #' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
+#' ap <- as.numeric(diff(AirPassengers, 12))
+#' mdl <- garma(ap, order = c(9, 1, 0), k = 0, method = "CSS", include.mean = FALSE)
 #' plot(mdl)
 #' @export
-plot.garma_model<-function(x,...) {
-  .plot_garma_model(x,...)
+plot.garma_model <- function(x, ...) {
+  .plot_garma_model(x, ...)
 }
 
 
 # This definition allows some vars to be used but not checked by the 'check' function
-utils::globalVariables(c('.dt','.value','.grp'))
+utils::globalVariables(c(".dt", ".value", ".grp"))
 
 # default title for plots
-.generate_default_plot_title<-function(mdl,h) {
-  if (h>0) main <- paste('Forecast for',mdl$series)
-  else main <- paste('Actual and Fitted for',mdl$series)
-  sub <- sprintf('Series: %s. GARMA Model details: order=(%d,%d,%d), k=%d (method: %s)',
-                 mdl$series, mdl$order[1],mdl$order[2],mdl$order[3],mdl$k,mdl$method)
-  return(list(main=main,sub=sub))
+.generate_default_plot_title <- function(mdl, h) {
+  if (h > 0) {
+    main <- paste("Forecast for", mdl$series)
+  } else {
+    main <- paste("Actual and Fitted for", mdl$series)
+  }
+  sub <- sprintf(
+    "Series: %s. GARMA Model details: order=(%d,%d,%d), k=%d (method: %s)",
+    mdl$series, mdl$order[1], mdl$order[2], mdl$order[3], mdl$k, mdl$method
+  )
+  return(list(main = main, sub = sub))
 }
 
 #' ggplot of the Forecasts of the model.
@@ -41,83 +46,87 @@ utils::globalVariables(c('.dt','.value','.grp'))
 #' library(ggplot2)
 #'
 #' data(AirPassengers)
-#' ap  <- as.numeric(diff(AirPassengers,12))
-#' mdl <- garma(ap,order=c(9,1,0),k=0,method='CSS',include.mean=FALSE)
+#' ap <- as.numeric(diff(AirPassengers, 12))
+#' mdl <- garma(ap, order = c(9, 1, 0), k = 0, method = "CSS", include.mean = FALSE)
 #' autoplot(mdl)
 #' @export
-autoplot.garma_model<-function(object,h=24,include_fitted=FALSE,...) {
+autoplot.garma_model <- function(object, h = 24, include_fitted = FALSE, ...) {
   # plot forecasts from model
 
-  if (object$y_freq>1) { # then we have actual dates not just an index; set it up on x-axis
-    by_str <- 'day'
-    if (object$y_freq==4) by_str <- 'qtr'
-    if (object$y_freq==12) by_str<-'month'
-    idx <- seq(lubridate::make_date(object$y_start[1],object$y_start[2],1),by=by_str,length.out=(length(object$y)+h))
+  if (object$y_freq > 1) { # then we have actual dates not just an index; set it up on x-axis
+    by_str <- "day"
+    if (object$y_freq == 4) by_str <- "qtr"
+    if (object$y_freq == 12) by_str <- "month"
+    idx <- seq(lubridate::make_date(object$y_start[1], object$y_start[2], 1), by = by_str, length.out = (length(object$y) + h))
     lubridate::day(idx) <- lubridate::days_in_month(idx)
-    cutoff <- lubridate::make_date(object$y_end[1],object$y_end[2],1)
+    cutoff <- lubridate::make_date(object$y_end[1], object$y_end[2], 1)
   } else {
-    idx <- (object$y_start[1]):(object$y_end[1]+h)
-    cutoff <- object$y_end[1]+1
+    idx <- (object$y_start[1]):(object$y_end[1] + h)
+    cutoff <- object$y_end[1] + 1
   }
-  titles <- .generate_default_plot_title(object,h)
+  titles <- .generate_default_plot_title(object, h)
 
-  if (h>0) {
-    fc <- predict.garma_model(object,n.ahead=h)
-    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=c(as.numeric(object$y),rep(NA,h)))
-    if (include_fitted) fitted <- as.numeric(object$fitted)
-    else fitted <- c(rep(NA,length(object$fitted)-1),as.numeric(tail(object$y,1)))
-    df2 <- data.frame(.dt=idx,.grp='Forecasts',.value=c(fitted,as.numeric(fc$pred)))
-    df <- rbind(df1,df2)
+  if (h > 0) {
+    fc <- predict.garma_model(object, n.ahead = h)
+    df1 <- data.frame(.dt = idx, .grp = "Actuals", .value = c(as.numeric(object$y), rep(NA, h)))
+    if (include_fitted) {
+      fitted <- as.numeric(object$fitted)
+    } else {
+      fitted <- c(rep(NA, length(object$fitted) - 1), as.numeric(tail(object$y, 1)))
+    }
+    df2 <- data.frame(.dt = idx, .grp = "Forecasts", .value = c(fitted, as.numeric(fc$pred)))
+    df <- rbind(df1, df2)
   } else {
-    df1 <- data.frame(.dt=idx,.grp='Actuals',.value=as.numeric(object$y))
-    df2 <- data.frame(.dt=idx,.grp='Fitted',.value=as.numeric(object$fitted))
-    df <- rbind(df1,df2)
+    df1 <- data.frame(.dt = idx, .grp = "Actuals", .value = as.numeric(object$y))
+    df2 <- data.frame(.dt = idx, .grp = "Fitted", .value = as.numeric(object$fitted))
+    df <- rbind(df1, df2)
   }
 
-  ggplot2::ggplot(df[!is.na(df$.value),],ggplot2::aes(x=.dt,y=.value,color=.grp),...) +
-    ggplot2::geom_line() + ggplot2::labs(title=titles$main,caption=titles$sub,x='',y='') +
-    #ggplot2::ylab('') + ggplot2::xlab('') + ggplot2::ggtitle(title) +
-    ggplot2::geom_vline(xintercept=cutoff,color='red',linetype=2) +
-    ggplot2::theme_bw() + ggplot2::theme(legend.title=ggplot2::element_blank()) +
-    ggplot2::scale_colour_manual(values=c('gray20','mediumblue',rep('gray',10)))
+  ggplot2::ggplot(df[!is.na(df$.value), ], ggplot2::aes(x = .dt, y = .value, color = .grp), ...) +
+    ggplot2::geom_line() +
+    ggplot2::labs(title = titles$main, caption = titles$sub, x = "", y = "") +
+    # ggplot2::ylab('') + ggplot2::xlab('') + ggplot2::ggtitle(title) +
+    ggplot2::geom_vline(xintercept = cutoff, color = "red", linetype = 2) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(legend.title = ggplot2::element_blank()) +
+    ggplot2::scale_colour_manual(values = c("gray20", "mediumblue", rep("gray", 10)))
 }
 
-.plot_garma_model<-function(mdl,h=24,include_fitted=FALSE,xlab,ylab,main,sub,ylim,...) {
+.plot_garma_model <- function(mdl, h = 24, include_fitted = FALSE, xlab, ylab, main, sub, ylim, ...) {
   # plot forecasts from model
-  if (missing(xlab)) xlab<-''
-  if (missing(ylab)) ylab<-ifelse(is.null(mdl$series),'',mdl$series)
-  actuals <- zoo(stats::ts(c(as.numeric(mdl$y),rep(NA,h)),start=mdl$y_start,frequency=mdl$y_freq))
-  fitted <- zoo(stats::ts(as.numeric(mdl$fitted),start=mdl$y_start,end=mdl$y_end,frequency=mdl$y_freq))
+  if (missing(xlab)) xlab <- ""
+  if (missing(ylab)) ylab <- ifelse(is.null(mdl$series), "", mdl$series)
+  actuals <- zoo(stats::ts(c(as.numeric(mdl$y), rep(NA, h)), start = mdl$y_start, frequency = mdl$y_freq))
+  fitted <- zoo(stats::ts(as.numeric(mdl$fitted), start = mdl$y_start, end = mdl$y_end, frequency = mdl$y_freq))
 
   # Titles
-  titles <- .generate_default_plot_title(mdl,h)
+  titles <- .generate_default_plot_title(mdl, h)
   if (missing(main)) main <- titles$main
-  if (missing(sub))  sub  <- titles$sub
+  if (missing(sub)) sub <- titles$sub
 
   if (missing(ylim)) {
-    if (h>0) {
-      fc <- zoo(predict.garma_model(mdl,n.ahead=h)$pred)
+    if (h > 0) {
+      fc <- zoo(predict.garma_model(mdl, n.ahead = h)$pred)
       # y-limits
-      y_min <- min(mdl$y,mdl$fitted,fc)
-      y_max <- max(mdl$y,mdl$fitted,fc)
+      y_min <- min(mdl$y, mdl$fitted, fc)
+      y_max <- max(mdl$y, mdl$fitted, fc)
     } else {
       # y-limits
-      y_min <- min(mdl$y,mdl$fitted)
-      y_max <- max(mdl$y,mdl$fitted)
+      y_min <- min(mdl$y, mdl$fitted)
+      y_max <- max(mdl$y, mdl$fitted)
     }
     # Always include 0
     # if (y_min<0&y_max<0) y_max=0
     # if (y_min>0&y_max>0) y_min=0
 
-    ylim <- c(y_min,y_max)
+    ylim <- c(y_min, y_max)
   }
 
-  graphics::plot(actuals,col='black',type='l',xlab=xlab,ylab=ylab,main=main,sub=sub,ylim=ylim,...)
-  if(h==0|include_fitted) graphics::lines(fitted,col='blue')
-  if (h>0) { # then draw the predictions.
-    fc <- zoo(predict.garma_model(mdl,n.ahead=h)$pred)
-    graphics::lines(zoo::index(fc),fc,col='blue')
-    graphics::abline(v=mdl$y_end,col='red',lty=2)
+  graphics::plot(actuals, col = "black", type = "l", xlab = xlab, ylab = ylab, main = main, sub = sub, ylim = ylim, ...)
+  if (h == 0 | include_fitted) graphics::lines(fitted, col = "blue")
+  if (h > 0) { # then draw the predictions.
+    fc <- zoo(predict.garma_model(mdl, n.ahead = h)$pred)
+    graphics::lines(zoo::index(fc), fc, col = "blue")
+    graphics::abline(v = mdl$y_end, col = "red", lty = 2)
   }
 }
-

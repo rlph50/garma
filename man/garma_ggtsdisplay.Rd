@@ -24,6 +24,6 @@ The purpose of this function is to ease the process of identifying the underlyin
 }
 \examples{
 data(AirPassengers)
-ap <- as.numeric(diff(AirPassengers,12))
+ap <- as.numeric(diff(AirPassengers, 12))
 garma_ggtsdisplay(ap)
 }
