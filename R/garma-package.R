@@ -19,6 +19,5 @@
 #' @importFrom stats diffinv end sd start ts tsp var spectrum spec.pgram ks.test ecdf frequency optimise arima Box.test acf pacf tsdiag na.pass optim lm residuals coef fft formula vcov predict
 #' @importFrom utils tail packageVersion head globalVariables
 
-#' @keywords internal
 #' @aliases garma-package
 "_PACKAGE"

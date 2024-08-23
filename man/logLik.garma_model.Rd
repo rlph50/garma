@@ -15,10 +15,5 @@
 Object of class "logLik" with values for the (approx) log-likelihood for the model
 }
 \description{
-Log Likelihood, or approximate likelihood depending on the method.
-}
-\details{
-Note - like the R "arima" function, if a xreg parameter is supplied, the Log Likelihood
-does not include any component of the regression. It relates strictly to the residuals from
-the regression which are used to fit the GARMA model.
+The approximate likelihood for the model.
 }

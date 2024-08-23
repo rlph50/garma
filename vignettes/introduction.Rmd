@@ -22,13 +22,13 @@ knitr::opts_chunk$set(
 
 GARMA models are a type of time series models with special properties. These models are related to the "arima" models which can be fit in R by the standard "arima" function or the "Arima" function in the **forecast** package.
 
-If you are not very familiar with ARIMA models, it might be advisable to first have a look at the excellent online book by Rob Hyndman and George Athanasopoulos:- [Forecasting: Principals and Practice](https://otexts.com/fpp2/).
+If you are not very familiar with ARIMA models, it might be advisable to first have a look at the excellent online book by Rob Hyndman and George Athanasopoulos:- [Forecasting: Principals and Practice](https://otexts.com/fpp3/).
 
 
 ---
 
 
-GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model proceses which have a high correlation between observations which are far apart in time.
+GARMA models are a type of **long memory** model, also known as **fractal** models or **fractionally differenced** models. The reason for this is that they can model processes which have a high correlation between observations which are far apart in time.
 
 For instance, consider the data on the minimum level of the Nile [@Tousson1925], as measured from 622 to 1281 AD (from the **longmemo** package):
 ```

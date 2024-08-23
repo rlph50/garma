@@ -15,10 +15,5 @@
 (double) Approximate AIC - uses approximation of whichever methoid is used to find model params.
 }
 \description{
-AIC for model if available.
-}
-\details{
-Note - like the R "arima" function, if a xreg parameter is supplied, the Log Likelihood and the AIC
-do not include any component of the regression. It relates strictly to the residuals from
-the regression which are used to fit the GARMA model.
+Approximate AIC for model.
 }

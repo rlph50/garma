@@ -43,15 +43,11 @@
 #'     Note that no mean term is fit if the series is integer differenced.
 #' @param include.drift (bool) A boolean value indicating whether a 'drift' term should be fit to the predictions.
 #'     The default is to fit a drift term to the predictions if the process is integer-differenced.
-#' @param xreg (numeric matrix) A numerical vector or matrix of external regressors, which must have the same number
-#' of rows as x. It should not have any NA values. It should not be a data frame. The default value is NULL.
+#' @param xreg (numeric matrix) A numerical vector or matrix of external regressors, which must have the same number of rows as x.
+#'   It should not have any NA values. It should not be a data frame. The default value is NULL.
 #'
-#' Note that the algorithm used here is the same as that used by the R "arima" function - if any `xreg` is supplied, then
-#' a linear regression model is fit first, and the GARMA model is then based on the residuals from that regression model.
-#'
-#' Note also that the log likelihood and the AIC calculations relate only to the fit of the GARMA model to the residuals
-#' of the regression, and do not include any measure of the likelihood of the regression - again this follow the practice
-#' from the R "arima" function.
+#'    Note that the algorithm used here is that if any `xreg` is supplied, then a linear regression model is fit first, and the
+#'    GARMA model is then based on the residuals from that regression model.
 #' @param method (character) This defines the estimation method for the routine. The valid values are 'CSS', 'Whittle', and
 #'   'WLL'. The default ('Whittle') method will generally return very accurate estimates quite quickly, provided the assumption
 #'   of a Gaussian distribution is even approximately correct, and is probably the method of choice for most users. For the
