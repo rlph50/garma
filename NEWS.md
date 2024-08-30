@@ -1,8 +1,12 @@
+# garma 0.9.21
+
+- fixed bug in `gg_raw_pgram()`.
+
 # garma 0.9.20
 
 - Log likelihood and AIC calc now include various constants to match with the AIC calculation of the "Forecast" package.
 - Number of required optimisation packages has been reduced.
-- both garma() and ggbr_semipara() now support the `periods` parameter allowing the user to specify fixed periods instead of estimating them from the data.
+- both `garma()` and `ggbr_semipara()` now support the `periods` parameter allowing the user to specify fixed periods instead of estimating them from the data.
 - The "xreg" parameter is now supported, although unlike "arima" this is a 2 stage process where a linear regression is first fit to the data and then a GARMA model is fit to the residuals of the regression.
 - A number of optimisation methods have been removed as they rarely seemed to provide any benefit.
 
@@ -12,27 +16,28 @@ Fixes to the garma-package.rd file.
 
 # garma 0.9.8
 
-Version 0.9.8 includes an option to stop the automatic generation of fitted values for the garma function. This can take a while if the process is long,
-so this option may save time during the model fitting stage.
+Version 0.9.8 includes an option to stop the automatic generation of fitted values for the `garma()` function. This can take a
+while if the process is long, so this option may save time during the model fitting stage.
 
 # garma 0.9.7
 
-Version 0.9.7 adds the "tsdiag" function for garma models. The essential white noise test is set to be the Bartletts Tp test,
-since this is the only white noise test which has been theoretically justified on GARMA models. Also the "gof" function has
+Version 0.9.7 adds the `tsdiag()` function for garma models. The essential white noise test is set to be the Bartletts Tp test,
+since this is the only white noise test which has been theoretically justified on GARMA models. Also the `gof()` function has
 been added - this does the actual work of the Tp test, and in fact should work and should be valid for normal Arima models
 as well as GARMA models.
 
-In the 'estimation' process - "garma" - there was a bug with the standard errors which resulted in Nan being returned for some parameters. This has been fixed.
-Further fixes have applied to the Whittle estimation of the standard errors and to the likelihood calculation.
+In the 'estimation' process - `garma()` - there was a bug with the standard errors which resulted in Nan being returned for some
+parameters. This has been fixed. Further fixes have applied to the Whittle estimation of the standard errors and to the likelihood
+calculation.
 
 The fitted values/residuals were not being properly calculated as per 1-step ahead forecasts. This has been rectified
 (although for non-Gegenbauer ARIMA models there may still be some issues which will be looked at later).
 
 The override of the ggplot function for garma models has been removed as this was not standard - the correct way to do this
-is 'autoplot' so now the autoplot function has the ability to generate forecasts and plot them. If no titles and 
+is `autoplot()` so now the autoplot function has the ability to generate forecasts and plot them. If no titles and 
 subtitles are supplied, these routines will now generate some default ones for you.
 
-A new optimisation method has been added for the "garma" function - this is a genetic algorithm from package GA.
+A new optimisation method has been added for the `garma()` function - this is a genetic algorithm from package GA.
 It can be used by specifying opt_method='ga'.
 
 The "QML" method of estimation was producing too many errors and appeared to be converging to non-optimal solutions too often.
@@ -45,14 +50,14 @@ only - general integer differencing is now supported.
 
 Version 0.9.6 implements new functions to more accurately reflect residuals, fitted values and predictions. 
 Some changes have been made to the plotting routines to provide default titles and captions etc. 
-Further some functions like AIC(), logLik(), vcov(), and coef() have been implemented, to provide 
+Further some functions like `AIC()`, `logLik()`, `vcov()`, and `coef()` have been implemented, to provide 
 greater similarity with the standard 'arima' functionality.
 
 Finally given the trouble with forecasting with integer differencing > 1, there is a new restriction in the code to restrict
 the integer differencing to be either 0 or 1. This does not affect the fractional differencing component of the models. 
 If the problems with forecasting higher integer differencing can be resolved, this restriction will be lifted in the future.
 
-In particular please note that the 'predict'/'forecast' function(s) now use the algorithm of (2009) Godet, F
+In particular please note that the `predict()`/`forecast()` function(s) now use the algorithm of (2009) Godet, F
 "Linear prediction of long-range dependent time series", ESAIM: PS 13 115-134. DOI: 10.1051/ps:2008015.
 
 **WARNING**: forecasts generated by this version will be different from previous versions.

@@ -22,10 +22,11 @@ gg_raw_pgram <- function(x, k = 1) {
 
   sp <- ggbr_semipara(x, k = k)
   annotate_df <- data.frame(x = numeric(0), y = numeric(0), label = character(0))
-  for (factor in sp$ggbr_factors) {
+  for (factor in sp) {
+    idx <- which(ssx$freq == factor$freq)
     annotate_df <- rbind(
       annotate_df,
-      data.frame(x = factor$f, y = ssx$spec[factor$f_idx], label = sprintf(" Period: %.2f", 1.0 / factor$f))
+      data.frame(x = factor$freq, y = ssx$spec[idx], label = sprintf(" Period: %.2f", 1.0 / factor$freq))
     )
   }
 
