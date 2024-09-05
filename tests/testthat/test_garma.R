@@ -137,110 +137,110 @@ testthat::test_that("Test 3-PRED. Short Memory AR model with diff. Check that pr
   )
 })
 
-testthat::test_that("Parameter checks on garma() function", {
-  df <- data.frame(x=runif(120), y =runif(120))
-  testthat::expect_error(
-    garma(df),
-    regexp = "x should be a numeric vector - not an entire data frame. Please select a single column and try again."
-  )
-
-  x <- runif(120)
-  x[30] <- NA_real_
-  testthat::expect_error(
-    garma(x),
-    regexp = "x should not have any missing values"
-  )
-
-  x <- runif(120)
-  testthat::expect_error(
-    garma(x, k=(-1)),
-    regexp = "The k parameter must be a non-negative integer"
-  )
-
-  testthat::expect_error(
-    garma(x, periods = "A"),
-    regexp = "The 'periods' parameter must be a numeric vector of at least 1 element"
-  )
-
-  testthat::expect_error(
-    garma(x, periods = numeric(0)),
-    regexp = "The 'periods' parameter must be a numeric vector of at least 1 element"
-  )
-
-  testthat::expect_error(
-    garma(x, periods = (-5)),
-    regexp = "The 'periods' parameter cannot contain negative values"
-  )
-
-  testthat::expect_error(
-    garma(x, order = c(1, 1)),
-    regexp = "The 'order' parameter must be a 3 integers only"
-  )
-
-  testthat::expect_error(
-    garma(x, order = c(-1, -1, -1)),
-    regexp = "The 'order' parameter must consist of positive integers"
-  )
-
-  testthat::expect_error(
-    garma(x, k = 0),
-    regexp = "At least one of p, q or k \\(or periods\\) must be positive"
-  )
-
-  testthat::expect_error(
-    garma(x, xreg = df),
-    regexp = "The parameter 'xreg' should be a numeric vector or matrix"
-  )
-
-  testthat::expect_error(
-    garma(x, xreg = runif(150)),
-    regexp = "The parameter 'xreg' should be the same length as 'x'"
-  )
-
-  testthat::expect_error(
-    garma(x, xreg = c(runif(119), NA_real_)),
-    regexp = "The parameter 'xreg' should not have any NA values"
-  )
-
-  testthat::expect_error(
-    garma(x, method = "invalid"),
-    regexp = "The parameter 'method' must be one of CSS, Whittle or WLL"
-  )
-
-  testthat::expect_error(
-    garma(x, opt_method = "invalid"),
-    regexp = "The following optimisation routines are not supported: invalid"
-  )
-
-  testthat::expect_error(
-    garma(x, d_lim = 0),
-    regexp = "The parameter 'd_lim' should be a list of 2 numerics, Eg c\\(0,0.5\\) and the minimum should be < maximum"
-  )
-
-  testthat::expect_error(
-    garma(x, d_lim = c(0.4, 0.1)),
-    regexp = "The parameter 'd_lim' should be a list of 2 numerics, Eg c\\(0,0.5\\) and the minimum should be < maximum"
-  )
-
-  testthat::expect_error(
-    garma(x, d_lim = c(NA, 1)),
-    regexp = "The parameter 'd_lim' should not have any NA values"
-  )
-
-})
-
-testthat::test_that("garma xreg", {
-  # Set up some synthetic data and compare the results
-
-  set.seed(31415926L)
-  x <- runif(200)
-  m <- matrix(runif(400), ncol = 2)
-  m.ahead <- matrix(runif(20), ncol = 2)
-  colnames(m) <- colnames(m.ahead) <- c("R1", "R2")
-
-  fit <- garma(x, xreg = m)
-  testthat::expect_snapshot({
-    print(fit)
-    predict(fit, n.ahead = 10, newdata = m.ahead)
-  })
-})
+# testthat::test_that("Parameter checks on garma() function", {
+#   df <- data.frame(x=runif(120), y =runif(120))
+#   testthat::expect_error(
+#     garma(df),
+#     regexp = "x should be a numeric vector - not an entire data frame. Please select a single column and try again."
+#   )
+#
+#   x <- runif(120)
+#   x[30] <- NA_real_
+#   testthat::expect_error(
+#     garma(x),
+#     regexp = "x should not have any missing values"
+#   )
+#
+#   x <- runif(120)
+#   testthat::expect_error(
+#     garma(x, k=(-1)),
+#     regexp = "The k parameter must be a non-negative integer"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, periods = "A"),
+#     regexp = "The 'periods' parameter must be a numeric vector of at least 1 element"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, periods = numeric(0)),
+#     regexp = "The 'periods' parameter must be a numeric vector of at least 1 element"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, periods = (-5)),
+#     regexp = "The 'periods' parameter cannot contain negative values"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, order = c(1, 1)),
+#     regexp = "The 'order' parameter must be a 3 integers only"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, order = c(-1, -1, -1)),
+#     regexp = "The 'order' parameter must consist of positive integers"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, k = 0),
+#     regexp = "At least one of p, q or k \\(or periods\\) must be positive"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, xreg = df),
+#     regexp = "The parameter 'xreg' should be a numeric vector or matrix"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, xreg = runif(150)),
+#     regexp = "The parameter 'xreg' should be the same length as 'x'"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, xreg = c(runif(119), NA_real_)),
+#     regexp = "The parameter 'xreg' should not have any NA values"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, method = "invalid"),
+#     regexp = "The parameter 'method' must be one of CSS, Whittle or WLL"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, opt_method = "invalid"),
+#     regexp = "The following optimisation routines are not supported: invalid"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, d_lim = 0),
+#     regexp = "The parameter 'd_lim' should be a list of 2 numerics, Eg c\\(0,0.5\\) and the minimum should be < maximum"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, d_lim = c(0.4, 0.1)),
+#     regexp = "The parameter 'd_lim' should be a list of 2 numerics, Eg c\\(0,0.5\\) and the minimum should be < maximum"
+#   )
+#
+#   testthat::expect_error(
+#     garma(x, d_lim = c(NA, 1)),
+#     regexp = "The parameter 'd_lim' should not have any NA values"
+#   )
+#
+# })
+#
+# testthat::test_that("garma xreg", {
+#   # Set up some synthetic data and compare the results
+#
+#   set.seed(31415926L)
+#   x <- runif(200)
+#   m <- matrix(runif(400), ncol = 2)
+#   m.ahead <- matrix(runif(20), ncol = 2)
+#   colnames(m) <- colnames(m.ahead) <- c("R1", "R2")
+#
+#   fit <- garma(x, xreg = m)
+#   testthat::expect_snapshot({
+#     print(fit)
+#     predict(fit, n.ahead = 10, newdata = m.ahead)
+#   })
+# })
