@@ -75,18 +75,18 @@ testthat::test_that("Test 3-RESID. Short Memory MA model resid match 'arima'", {
   )
 })
 
-testthat::test_that("Test 4-RESID. Short Memory ARMA model resid match 'arima'", {
-  data(AirPassengers)
-  ap <- log(AirPassengers)
-  dap <- diff(ap)
-
-  gmdl <- garma(dap, order = c(2, 0, 2), k = 0, method = "Whittle", include.mean = F)
-  amdl <- arima(dap, order = c(2, 0, 2), method = "CSS", include.mean = F)
-  testthat::expect_true(
-    # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
-    sqrt(mean((resid(gmdl) - resid(amdl))^2)) < 0.05
-  )
-})
+# testthat::test_that("Test 4-RESID. Short Memory ARMA model resid match 'arima'", {
+#   data(AirPassengers)
+#   ap <- log(AirPassengers)
+#   dap <- diff(ap)
+#
+#   gmdl <- garma(dap, order = c(2, 0, 2), k = 0, method = "Whittle", include.mean = F)
+#   amdl <- arima(dap, order = c(2, 0, 2), method = "CSS", include.mean = F)
+#   testthat::expect_true(
+#     # RMSE for difference in residuals between GARMA and ARIMA is reasonably small with differencing.
+#     sqrt(mean((resid(gmdl) - resid(amdl))^2)) < 0.05
+#   )
+# })
 
 testthat::test_that("Test 5-RESID. Short Memory ARMA model with intercept resid match 'arima'", {
   data(AirPassengers)

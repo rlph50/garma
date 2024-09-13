@@ -249,7 +249,8 @@ garma <- function(x,
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Set up a default 'control'
   if (missing(control) | is.null(control)) {
-    control <- list(tol = 1e-15, maxeval = 10000, max_eval = 10000, maxit = 10000, trace = 0, delta = 1e-10)
+    control <- list(tol = 1e-8, maxeval = 10000, max_eval = 10000, maxit = 10000, trace = 0, delta = 1e-8,
+                    inner.iter = 100, outer.iter = 100)
   }
 
 
