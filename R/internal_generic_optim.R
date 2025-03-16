@@ -46,7 +46,12 @@ internal_generic_optim <- function(opt_method, initial_pars, fcn, lb, ub, params
     )
   }
 
+  # ensure that if NA values are returned, that we at least keep the initial_pars as a value
+  if (any(is.na(fit$par))) {
+    fit$par[is.na(fit$par)] <- initial_pars[is.na(fit$par)]
+  }
 
+  # ensure we have a hessian calculated
   if (!is.null(fit$hessian)) fit$hessian <- pracma::hessian(fcn, fit$par, params = params)
 
   return(fit)

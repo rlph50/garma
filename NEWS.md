@@ -1,3 +1,7 @@
+# garma 0.9.24
+
+- Changes to "nlopt" version 2.10 (as used by nloptr) have changed the output for the 'cobyla' algorithm; some small checks have been introduced to ensure that a value is always returned.
+
 # garma 0.9.21
 
 - fixed bug in `gg_raw_pgram()`.
