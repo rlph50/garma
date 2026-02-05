@@ -92,7 +92,7 @@
 #' L Giraitis, J Hidalgo, and P Robinson. Gaussian estimation of parametric spectral density with unknown pole.
 #' The Annals of Statistics, 29(4):987–1023, 2001. DOI: https://doi.org/10.1214/AOS/1013699989
 #'
-#' R Hunt, S Peiris, N Webe. A General Frequency Domain Estimation Method for Gegenbauer Processes.
+#' R Hunt, S Peiris, N Weber. A General Frequency Domain Estimation Method for Gegenbauer Processes.
 #' Journal of Time Series Econometrics, 13(2):119-144, 2021. DOI: https://doi.org/10.1515/jtse-2019-0031
 #'
 #' R Hunt, S Peiris, N Weber. Estimation methods for stationary Gegenbauer processes.

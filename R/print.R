@@ -62,9 +62,6 @@ internal_print_garma_model <- function(mdl, verbose = TRUE) {
 
   phi_vec <- c(1, -mdl$model$phi)
   theta_vec <- c(1, -mdl$model$theta)
-  if (any(Mod(polyroot(phi_vec)) < 1) | any(Mod(polyroot(theta_vec)) < 1)) {
-    warning("model estimates are not Stationary! Forecasts may become unbounded.\n")
-  }
   cat("\nCoefficients:\n")
   coef <- mdl$coef
   print.default(coef, print.gap = 2, digits = 4)

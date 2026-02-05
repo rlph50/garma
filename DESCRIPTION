@@ -1,8 +1,8 @@
 Package: garma
 Type: Package
 Title: Fitting and Forecasting Gegenbauer ARMA Time Series Models
-Version: 0.9.24
-Date: 2025-03-16
+Version: 1.0.0
+Date: 2026-02-03
 Authors@R: person("Richard", "Hunt", email = "maint@huntemail.id.au",
   role = c("aut", "cre"))
 Maintainer: Richard Hunt <maint@huntemail.id.au>
@@ -32,6 +32,6 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -121,9 +121,6 @@ predict.garma_model <- function(object, n.ahead = 1, newdata=NULL, ...) {
   mean_y <- mean(y)
   phi_vec <- c(1, -object$model$phi)
   theta_vec <- c(1, -object$model$theta)
-  if (any(Mod(polyroot(phi_vec)) < 1) | any(Mod(polyroot(theta_vec)) < 1)) {
-    rlang::warn("model estimates are not Stationary! Forecasts may become unbounded.\n")
-  }
 
 
   if (length(object$model$ggbr_factors) > 0) {

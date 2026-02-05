@@ -18,6 +18,34 @@
 #' forecast(mdl, h = 12)
 #' @export
 forecast.garma_model <- function(object, h = 1, newdata = NULL, ...) {
-  res <- predict.garma_model(object, n.ahead = h, newdata = NULL, ...)
-  return(list(mean = res$pred))
+  temp_pred <- predict.garma_model(object, n.ahead = h, newdata = NULL, ...)
+
+  x_res <- ts(object$y, start = object$y_start, frequency = object$y_freq)
+  result <- list(
+    mean = temp_pred$pred,
+    model = object,
+    fitted = fitted.garma_model(object),
+    residuals = residuals.garma_model(object),
+    x = x_res
+  )
+  class(result) <- c("garma_forecast", "forecast")
+  return(result)
+}
+
+#' Return the fitted values for a GARMA forecast.
+#' @param object (garma_model) A 'fit' object from the `garma()` function.
+#' @param ... other parameters, which are ignored.
+#' @export
+fitted.garma_forecast <- function(object, ...) {
+  result <- object$fitted
+  return(result)
+}
+
+#' Return the residuals for a GARMA forecast.
+#' @param object (garma_model) A 'fit' object from the `garma()` function.
+#' @param ... other parameters, which are ignored.
+#' @export
+residuals.garma_forecast <- function(object, ...) {
+  result <- object$residuals
+  return(result)
 }
