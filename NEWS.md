@@ -1,6 +1,6 @@
 # garma 1.0.1
 
-- Small fix to tests to ensure they work on MKR version of R
+- Small fix to tests to ensure they work on the Intel MKL version of R
 
 # garma 1.0.0
 
